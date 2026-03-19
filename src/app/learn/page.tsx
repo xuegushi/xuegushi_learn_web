@@ -408,15 +408,29 @@ export default function LearnPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="border-b shadow-sm pb-4 pt-2 px-4 bg-background/50 backdrop-blur">
           <div className="flex justify-between items-center">
-            <div className="text-lg font-medium">
-              {mode === "learn" ? (
-                poems.length > 0 ? `${currentIndex + 1} / ${poems.length}` : "0 / 0"
-              ) : (
-                poems.length > 0
+            {mode === "learn" && poems.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <button onClick={prevPoem} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <span className="text-sm text-muted-foreground">
+                  {currentIndex + 1} / {poems.length}
+                </span>
+                <button onClick={nextPoem} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="text-lg font-medium">
+                {poems.length > 0
                   ? `${correctCount + errorCount} / ${poems.length}`
-                  : "0 / 0"
-              )}
-            </div>
+                  : "0 / 0"}
+              </div>
+            )}
             {mode === "recite" && (
               <div className="flex gap-4 text-sm">
                 <span className="text-red-500">错误：{errorCount}</span>
@@ -439,14 +453,7 @@ export default function LearnPage() {
                 请选择年级和学期
               </div>
             ) : mode === "learn" ? (
-              <div className="relative flex justify-center items-center min-h-[calc(100%-4rem)]">
-                <button
-                  onClick={prevPoem}
-                  className="absolute left-8 top-1/2 -translate-y-1/2 p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors shadow-md z-10 cursor-pointer">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
+              <div className="flex justify-center">
                 <Card className="shadow-lg w-full max-w-2xl">
                   <CardContent className="p-6 space-y-6">
                     <div className="text-center space-y-2">
@@ -522,13 +529,6 @@ export default function LearnPage() {
                     </div>
                   </CardContent>
                 </Card>
-                <button
-                  onClick={nextPoem}
-                  className="absolute right-8 top-1/2 -translate-y-1/2 p-3 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors shadow-md z-10 cursor-pointer">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
               </div>
             ) : (
               <div className="grid grid-cols-4 gap-6 auto-rows-min">
