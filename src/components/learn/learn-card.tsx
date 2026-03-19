@@ -1,0 +1,151 @@
+"use client";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { PoemDetail, PinyinData } from "@/types/poem";
+
+interface LearnCardProps {
+  poemDetail: PoemDetail | null;
+  pinyinData: PinyinData | null;
+  currentIndex: number;
+  onPrev: () => void;
+  onNext: () => void;
+}
+
+export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext }: LearnCardProps) {
+  if (!poemDetail) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-muted-foreground">加载中...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center h-full px-6 md:px-2 py-4">
+      <div className="relative">
+        {/* 序号标记 */}
+        <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg z-10">
+          {currentIndex + 1}
+        </div>
+        <Card className="shadow-lg w-full max-w-2xl max-h-[70vh] flex flex-col">
+          <CardContent className="p-4 md:p-6 py-3 flex flex-col flex-1 overflow-hidden">
+
+          {/* 内容区域 */}
+          <div className="overflow-y-auto max-h-[calc(70vh-120px)]">
+            {/* 标题+拼音 */}
+            <div className="text-center space-y-1 mb-4">
+              <div className="flex justify-center gap-1 flex-wrap">
+                {poemDetail.poem?.title?.split("").map((char, idx) => (
+                  <div key={idx} className="flex flex-col items-center">
+                    <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
+                      {pinyinData?.title?.[idx] || ""}
+                    </span>
+                    <span className="text-2xl font-bold">{char}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="text-sm font-medium text-muted-foreground">
+                {poemDetail.poem?.author} [{poemDetail.poem?.dynasty}]
+              </div>
+            </div>
+
+            {/* 诗词正文 */}
+            {poemDetail.poem?.content?.content && (
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                {poemDetail.poem.xu && (
+                  <div className="text-center text-muted-foreground text-base mb-4 italic">
+                    {poemDetail.poem.xu}
+                  </div>
+                )}
+                <div className={`${poemDetail.poem?.type === "文言文" ? "text-left" : "text-center"} space-y-3`}>
+                  {poemDetail.poem.content.content.map((line, lineIdx) => {
+                    const chars = line.split("");
+                    const pinyinLine = pinyinData?.content?.[lineIdx] || [];
+                    return (
+                      <div key={lineIdx} className="flex justify-center gap-1 flex-wrap mb-1">
+                        {chars.map((char, charIdx) => (
+                          <div key={charIdx} className="flex flex-col items-center">
+                            <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
+                              {pinyinLine[charIdx] || ""}
+                            </span>
+                            <span className="text-base md:text-lg">{char}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 译文 */}
+            {poemDetail.detail?.yi?.content && (
+              <Section title="译文" content={poemDetail.detail.yi.content} />
+            )}
+
+            {/* 注释 - HTML渲染 */}
+            {poemDetail.detail?.zhu?.content && (
+              <Section title="注释" content={poemDetail.detail.zhu.content} isHtml />
+            )}
+
+            {/* 背景 - HTML渲染 */}
+            {(poemDetail.poem?.intro || poemDetail.poem?.background) && (
+              <Section
+                title={poemDetail.poem?.intro ? "简介" : "创作背景"}
+                content={[poemDetail.poem?.intro || poemDetail.poem?.background || ""]}
+                isHtml
+              />
+            )}
+
+            {/* 赏析 - HTML渲染 */}
+            {poemDetail.detail?.shangxi?.content && (
+              <Section title="赏析" content={poemDetail.detail.shangxi.content} isHtml />
+            )}
+          </div>
+
+          {/* 底部导航 */}
+          <div className="flex gap-4 pt-4 border-t flex-shrink-0">
+            <button
+              onClick={onPrev}
+              className="flex-1 py-2 px-4 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+            >
+              上一首
+            </button>
+            <button
+              onClick={onNext}
+              className="flex-1 py-2 px-4 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+            >
+              下一首
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+      </div>
+    </div>
+  );
+}
+
+/** 通用章节组件 */
+function Section({ title, content, isHtml }: { title: string; content: string[]; isHtml?: boolean }) {
+  return (
+    <div className="mt-4">
+      <div className="flex items-center gap-4 mb-2">
+        <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+        <h3 className="font-semibold">{title}</h3>
+        <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+      </div>
+      {isHtml ? (
+        <div
+          className="text-muted-foreground text-sm leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: content.join("") }}
+        />
+      ) : (
+        content.map((text, idx) => (
+          <p key={idx} className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
+            {text}
+          </p>
+        ))
+      )}
+    </div>
+  );
+}
