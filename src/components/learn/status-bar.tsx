@@ -1,5 +1,6 @@
 "use client";
 
+import { PanelLeft } from "lucide-react";
 import { Poem } from "@/types/poem";
 
 interface StatusBarProps {
@@ -13,6 +14,7 @@ interface StatusBarProps {
   onPrev: () => void;
   onNext: () => void;
   onJumpTo: (index: number) => void;
+  onToggleSidebar: () => void;
 }
 
 /**
@@ -29,6 +31,7 @@ export function StatusBar({
   onPrev,
   onNext,
   onJumpTo,
+  onToggleSidebar,
 }: StatusBarProps) {
   const accuracy = errorCount + correctCount > 0
     ? Math.round((correctCount / (errorCount + correctCount)) * 100)
@@ -37,6 +40,15 @@ export function StatusBar({
   return (
     <div className="border-b shadow-sm py-2 md:py-3 px-2 md:px-4 bg-background/50 backdrop-blur flex-shrink-0">
       <div className="flex items-center gap-2">
+        {/* 侧边栏切换按钮 */}
+        <button
+          onClick={onToggleSidebar}
+          className="hidden md:flex p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
+          title="切换侧边栏"
+        >
+          <PanelLeft className="h-5 w-5" />
+        </button>
+
         {mode === "recite" && poems.length > 0 && (
           <>
             <NavButton onClick={onPrev} direction="prev" />
@@ -74,7 +86,7 @@ export function StatusBar({
 
       {/* 状态指示点 - PC端 */}
       {mode === "recite" && poems.length > 0 && (
-        <div className="hidden md:flex flex-wrap items-center gap-1 mt-2">
+        <div className="hidden md:flex flex-wrap items-center justify-center gap-1 mt-2">
           {poems.map((poem, idx) => {
             const key = poem.targetId?.toString();
             const isMastered = masteredPoems.has(key);
@@ -94,7 +106,7 @@ export function StatusBar({
 
       {/* 状态指示点 - 移动端 */}
       {mode === "recite" && poems.length > 0 && (
-        <div className="md:hidden flex flex-wrap items-center gap-1 mt-2">
+        <div className="md:hidden flex flex-wrap items-center justify-center gap-1 mt-2">
           {poems.map((poem, idx) => {
             const key = poem.targetId?.toString();
             const isMastered = masteredPoems.has(key);

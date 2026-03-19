@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { getFromDB, setToDB, STORES } from "@/lib/db";
 import { LocalDataManager } from "@/components/local-data-manager";
 import { Sidebar, StatusBar, LearnCard, ReciteCard, PoemDetailDialog, ResultDialog } from "@/components/learn";
@@ -31,6 +32,7 @@ export default function LearnPage() {
   // 模式
   const [mode, setMode] = useState<"recite" | "learn">("recite");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [localDataOpen, setLocalDataOpen] = useState(false);
 
   // 详情弹窗
@@ -211,7 +213,18 @@ export default function LearnPage() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-56px-40px)] md:h-[calc(100vh-64px-48px)]">
+    <div className={`flex flex-col md:flex-row h-[calc(100vh-56px-40px)] md:h-[calc(100vh-64px-48px)] ${sidebarCollapsed ? "md:w-full" : ""}`}>
+      {/* 侧边栏收起时的展开按钮 */}
+      {sidebarCollapsed && (
+        <button
+          onClick={() => setSidebarCollapsed(false)}
+          className="hidden md:flex fixed left-0 top-1/2 z-40 p-2 bg-primary/80 text-primary-foreground rounded-r-lg shadow-lg cursor-pointer ml-0"
+          title="展开侧边栏"
+        >
+          <PanelLeftOpen className="h-5 w-5" />
+        </button>
+      )}
+
       {/* 侧边栏 */}
       <Sidebar
         catalogList={catalogList}
@@ -231,6 +244,8 @@ export default function LearnPage() {
         onSidebarClose={() => setSidebarOpen(false)}
         mode={mode}
         onModeChange={setMode}
+        collapsed={sidebarCollapsed}
+        onCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
       {/* 本地数据管理弹窗 */}
@@ -250,6 +265,7 @@ export default function LearnPage() {
           onPrev={prevPoem}
           onNext={nextPoem}
           onJumpTo={setCurrentIndex}
+          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
 
         {/* 内容区 */}

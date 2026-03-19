@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail } from "@/types/poem";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Shuffle } from "lucide-react";
 
 interface ReciteCardProps {
   poemDetail: PoemDetail | null;
@@ -33,24 +35,34 @@ export function ReciteCard({
   onViewDetail,
   targetId,
 }: ReciteCardProps) {
-  // 随机字符索引 - 使用ref保持稳定性
+  // 随机字符索引
   const [randomIndices, setRandomIndices] = useState<number[]>([]);
   const prevPoemIdRef = useRef<number | null>(null);
+
+  // 生成随机索引
+  const generateRandomIndices = useCallback(() => {
+    if (!poemDetail?.poem?.content?.content) return [];
+    return poemDetail.poem.content.content.map((line) => {
+      const chars = line.split("").filter((c) => !/[，。？！、]/.test(c));
+      return chars.length > 0 ? Math.floor(Math.random() * chars.length) : -1;
+    });
+  }, [poemDetail]);
 
   useEffect(() => {
     if (showRandomChar && poemDetail?.poem?.content?.content) {
       // 仅当诗词变化时重新生成
       if (poemDetail.poem.id !== prevPoemIdRef.current) {
         prevPoemIdRef.current = poemDetail.poem.id || null;
-        const indices = poemDetail.poem.content.content.map((line) => {
-          const chars = line.split("").filter((c) => !/[，。？！、]/.test(c));
-          return chars.length > 0 ? Math.floor(Math.random() * chars.length) : -1;
-        });
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setRandomIndices(indices);
+        setRandomIndices(generateRandomIndices());
       }
     }
-  }, [showRandomChar, poemDetail]);
+  }, [showRandomChar, poemDetail, generateRandomIndices]);
+
+  // 点击随机提示按钮
+  const handleRandomHint = useCallback(() => {
+    setRandomIndices(generateRandomIndices());
+  }, [generateRandomIndices]);
 
   const key = targetId?.toString();
   const isMastered = masteredPoems.has(key);
@@ -61,25 +73,57 @@ export function ReciteCard({
 
   if (!poemDetail) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-muted-foreground">加载中...</div>
+      <div className="flex items-center justify-center h-full px-6 md:px-2 py-4">
+        <Card className="w-full max-w-2xl max-h-[70vh]">
+          <CardContent className="p-4 md:p-6 space-y-6">
+            <div className="flex justify-center">
+              <Skeleton className="h-8 w-48" />
+            </div>
+            <div className="flex justify-center">
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div className="flex justify-center space-x-1">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <Skeleton key={i} className="h-7 w-7" />
+              ))}
+            </div>
+            <div className="flex justify-center space-x-1">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-7 w-7" />
+              ))}
+            </div>
+            <div className="flex gap-4">
+              <Skeleton className="h-12 flex-1" />
+              <Skeleton className="h-12 flex-1" />
+              <Skeleton className="h-12 w-16" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center h-full px-6 md:px-2 py-4">
-      <div className="relative">
+      <div className="flex items-center justify-center h-full px-6 md:px-2 py-4">
+        <div className="relative w-full min-w-80 max-w-4xl">
         {/* 序号标记 */}
         <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg z-10">
           {currentIndex + 1}
         </div>
-        <Card className="shadow-lg w-full max-w-2xl max-h-[70vh] flex flex-col">
+        <Card className="shadow-lg w-full max-h-[70vh] flex flex-col relative overflow-visible">
           <CardContent className="p-4 md:p-6 space-y-3 md:space-y-6 flex flex-col flex-1 overflow-hidden">
             {/* 顶部状态栏 */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`w-4 h-4 rounded ${statusColor} transition-colors`} />
+                <button
+                  onClick={handleRandomHint}
+                  className="flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer"
+                  title="点击随机显示每行一个汉字"
+                >
+                  <Shuffle className="h-3 w-3" />
+                  随机提示
+                </button>
               </div>
               <button
                 onClick={onViewDetail}
@@ -125,7 +169,7 @@ export function ReciteCard({
               )}
 
               {/* 随机显示 */}
-              {showRandomChar && poemDetail.poem?.content?.content && (
+              {(showRandomChar || randomIndices.length > 0) && poemDetail.poem?.content?.content && (
                 <ContentDisplay
                   lines={poemDetail.poem.content.content}
                   mode="random"
@@ -134,7 +178,7 @@ export function ReciteCard({
               )}
 
               {/* 都不显示 */}
-              {!showFirstChar && !showLastChar && !showRandomChar && poemDetail.poem?.content?.content && (
+              {!showFirstChar && !showLastChar && !showRandomChar && randomIndices.length === 0 && poemDetail.poem?.content?.content && (
                 <ContentDisplay
                   lines={poemDetail.poem.content.content}
                   mode="none"

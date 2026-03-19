@@ -1,6 +1,13 @@
 "use client";
 
 import { CatalogItem, CatalogDetail } from "@/types/poem";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SidebarProps {
   catalogList: CatalogItem[];
@@ -20,6 +27,8 @@ interface SidebarProps {
   onSidebarClose: () => void;
   mode: "recite" | "learn";
   onModeChange: (mode: "recite" | "learn") => void;
+  collapsed: boolean;
+  onCollapse: () => void;
 }
 
 export function Sidebar({
@@ -40,6 +49,8 @@ export function Sidebar({
   onSidebarClose,
   mode,
   onModeChange,
+  collapsed,
+  onCollapse,
 }: SidebarProps) {
   return (
     <>
@@ -51,9 +62,9 @@ export function Sidebar({
       )}
 
       <aside
-        className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:relative inset-y-0 left-0 z-50 md:z-auto w-72 border-r bg-gray-50 dark:bg-gray-800 overflow-y-auto transition-transform duration-300 h-full`}
+        className={`${collapsed ? "-translate-x-full" : "translate-x-0"} ${sidebarOpen ? "translate-x-0" : ""} fixed md:relative inset-y-0 left-0 z-50 md:z-auto w-72 border-r bg-gray-50 dark:bg-gray-800 overflow-y-auto transition-transform duration-300 h-full ${collapsed ? "md:w-0 md:hidden" : ""}`}
       >
-        <div className="p-4 md:p-6 space-y-6">
+        <div className="p-4 md:p-6 space-y-4">
           <div className="flex items-center justify-between md:hidden">
             <h2 className="font-semibold text-lg">筛选</h2>
             <button onClick={onSidebarClose} className="p-2">
@@ -86,33 +97,39 @@ export function Sidebar({
           {/* 选集 */}
           <div>
             <h2 className="font-semibold mb-3">选集</h2>
-            <select
-              value={system}
-              onChange={(e) => onSystemChange(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg text-sm bg-background dark:bg-gray-800"
-            >
-              {catalogList.map((item) => (
-                <option key={item.catalog} value={item.catalog}>
-                  {item.catalog_name}
-                </option>
-              ))}
-            </select>
+            <Select value={system} onValueChange={onSystemChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {catalogList.find((c) => c.catalog === system)?.catalog_name || "选择选集"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {catalogList.map((item) => (
+                  <SelectItem key={item.catalog} value={item.catalog}>
+                    {item.catalog_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* 分册 */}
           <div>
             <h2 className="font-semibold mb-3">分册</h2>
-            <select
-              value={selectedFascicule}
-              onChange={(e) => onFasciculeChange(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg text-sm bg-background dark:bg-gray-800"
-            >
-              {catalogDetail?.fasciculeList?.map((fasc) => (
-                <option key={fasc._id} value={fasc._id}>
-                  {fasc.fascicule_name}
-                </option>
-              ))}
-            </select>
+            <Select value={selectedFascicule} onValueChange={onFasciculeChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {catalogDetail?.fasciculeList?.find((f) => f._id === selectedFascicule)?.fascicule_name || "选择分册"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {catalogDetail?.fasciculeList?.map((fasc) => (
+                  <SelectItem key={fasc._id} value={fasc._id}>
+                    {fasc.fascicule_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* 背诵设置 */}
@@ -187,6 +204,17 @@ export function Sidebar({
               本地数据管理
             </button>
           </div>
+
+          {/* 折叠按钮 */}
+          <button
+            onClick={onCollapse}
+            className="hidden md:flex w-full py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+            隐藏侧边栏
+          </button>
         </div>
       </aside>
     </>

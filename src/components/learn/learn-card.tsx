@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail, PinyinData } from "@/types/poem";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface LearnCardProps {
   poemDetail: PoemDetail | null;
@@ -14,8 +15,28 @@ interface LearnCardProps {
 export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext }: LearnCardProps) {
   if (!poemDetail) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-muted-foreground">加载中...</div>
+      <div className="flex items-center justify-center h-full px-6 md:px-2 py-4">
+        <Card className="w-full min-w-80 max-w-4xl max-h-[70vh]">
+          <CardContent className="p-4 md:p-6 space-y-6">
+            <div className="flex justify-center">
+              <Skeleton className="h-8 w-48" />
+            </div>
+            <div className="flex justify-center">
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-6 w-5/6" />
+            </div>
+            <Skeleton className="h-20 w-full" />
+            <div className="flex gap-4 pt-4 border-t">
+              <Skeleton className="h-10 flex-1" />
+              <Skeleton className="h-10 flex-1" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
