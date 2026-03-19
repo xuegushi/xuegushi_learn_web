@@ -96,7 +96,7 @@ export default function LearnPage() {
   ]);
   const [showFirstChar, setShowFirstChar] = useState(false);
   const [showLastChar, setShowLastChar] = useState(false);
-  const [showRandomChar, setShowRandomChar] = useState(true);
+  const [showRandomChar, setShowRandomChar] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -105,6 +105,63 @@ export default function LearnPage() {
   const [notMasteredPoems, setNotMasteredPoems] = useState<Set<string>>(new Set());
   const [showResult, setShowResult] = useState(false);
   const [mode, setMode] = useState<"recite" | "learn">("recite");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const resetProgress = () => {
+    setCurrentIndex(0);
+    setErrorCount(0);
+    setCorrectCount(0);
+    setMasteredPoems(new Set());
+    setNotMasteredPoems(new Set());
+  };
+
+  const handleContinueLearning = () => {
+    const currentGrade = poems[currentIndex]?.grade;
+    const currentSemester = poems[currentIndex]?.semester;
+
+    if (!currentGrade || !currentSemester) {
+      setShowResult(false);
+      resetProgress();
+      return;
+    }
+
+    const allGrades = currentSystem?.grades.map(g => g.年级) || [];
+    const sortedGrades = [...allGrades].sort((a, b) => {
+      const gradeA = parseInt(a.replace(/[^0-9]/g, ''));
+      const gradeB = parseInt(b.replace(/[^0-9]/g, ''));
+      return gradeA - gradeB;
+    });
+    const currentGradeIndex = sortedGrades.indexOf(currentGrade);
+
+    const bothSemestersSelected = selectedSemesters.includes("上册") && selectedSemesters.includes("下册");
+
+    if (bothSemestersSelected) {
+      if (currentGradeIndex >= 0 && currentGradeIndex < sortedGrades.length - 1) {
+        const nextGrade = sortedGrades[currentGradeIndex + 1];
+        setSelectedGrades([nextGrade]);
+        resetProgress();
+      } else {
+        setShowResult(false);
+        resetProgress();
+      }
+    } else {
+      if (currentSemester === "上册") {
+        setSelectedGrades([currentGrade]);
+        setSelectedSemesters(["下册"]);
+        resetProgress();
+      } else if (currentSemester === "下册") {
+        if (currentGradeIndex >= 0 && currentGradeIndex < sortedGrades.length - 1) {
+          const nextGrade = sortedGrades[currentGradeIndex + 1];
+          setSelectedGrades([nextGrade]);
+          resetProgress();
+        } else {
+          setShowResult(false);
+          resetProgress();
+        }
+      }
+    }
+    setShowResult(false);
+  };
 
   const currentSystem = systems.find((s) => s.id === system);
 
@@ -132,7 +189,7 @@ export default function LearnPage() {
     } else {
       setSelectedGrades([...selectedGrades, grade]);
     }
-    setCurrentIndex(0);
+    resetProgress();
   };
 
   const handleSelectAllGrades = () => {
@@ -141,7 +198,7 @@ export default function LearnPage() {
     } else {
       setSelectedGrades(currentSystem?.grades.map((g) => g.年级) || []);
     }
-    setCurrentIndex(0);
+    resetProgress();
   };
 
   const handleSemesterToggle = (semester: string) => {
@@ -150,7 +207,7 @@ export default function LearnPage() {
     } else {
       setSelectedSemesters([...selectedSemesters, semester]);
     }
-    setCurrentIndex(0);
+    resetProgress();
   };
 
   const handleSelectAllSemesters = () => {
@@ -159,7 +216,7 @@ export default function LearnPage() {
     } else {
       setSelectedSemesters([...semesters]);
     }
-    setCurrentIndex(0);
+    resetProgress();
   };
 
   const handleNotMastered = (key: string) => {
@@ -203,6 +260,8 @@ export default function LearnPage() {
       ? Math.round((correctCount / (correctCount + errorCount)) * 100)
       : 0;
 
+  const allCompleted = poems.length > 0 && masteredPoems.size + notMasteredPoems.size === poems.length;
+
   const renderPinyinWithText = (original?: string[], pinyin?: string[]) => {
     if (!original || !pinyin || original.length === 0 || pinyin.length === 0) {
       return null;
@@ -236,15 +295,57 @@ export default function LearnPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px-48px)]">
-      <aside className="w-80 border-r bg-gray-50 dark:bg-gray-800 overflow-y-auto">
-        <div className="p-6 space-y-6">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-56px-40px)] md:h-[calc(100vh-64px-48px)]">
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="md:hidden fixed bottom-20 left-4 z-50 p-2 bg-primary/80 text-primary-foreground rounded-full shadow-lg"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </button>
+      
+      <div className="md:hidden fixed bottom-20 right-4 z-50 flex gap-2">
+        <button
+          onClick={resetProgress}
+          className="p-2 bg-gray-500/80 text-white rounded-full shadow-lg text-sm"
+        >
+          重新开始
+        </button>
+        {allCompleted && (
+          <button
+            onClick={handleContinueLearning}
+            className="p-2 bg-primary/80 text-primary-foreground rounded-full shadow-lg text-sm"
+          >
+            {mode === "learn" ? "继续学习" : "继续背诵"}
+          </button>
+        )}
+      </div>
+      
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative inset-y-0 left-0 z-50 md:z-auto w-72 border-r bg-gray-50 dark:bg-gray-800 overflow-y-auto transition-transform duration-300 h-full`}>
+        <div className="p-4 md:p-6 space-y-6">
+          <div className="flex items-center justify-between md:hidden">
+            <h2 className="font-semibold text-lg">筛选</h2>
+            <button onClick={() => setSidebarOpen(false)} className="p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
           <div>
             <h2 className="font-semibold mb-3">模式</h2>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setMode("recite")}
-                className={`py-1 px-1.5 rounded-lg border text-center text-xs transition-all cursor-pointer ${
+                className={`py-1.5 px-2 rounded-lg border text-center text-xs transition-all cursor-pointer ${
                   mode === "recite"
                     ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                     : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
@@ -253,7 +354,7 @@ export default function LearnPage() {
               </button>
               <button
                 onClick={() => setMode("learn")}
-                className={`py-1 px-1.5 rounded-lg border text-center text-xs transition-all cursor-pointer ${
+                className={`py-1.5 px-2 rounded-lg border text-center text-xs transition-all cursor-pointer ${
                   mode === "learn"
                     ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                     : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
@@ -273,7 +374,7 @@ export default function LearnPage() {
                     setSystem(s.id);
                     setSelectedGrades(["一年级"]);
                     setSelectedSemesters(["上册", "下册"]);
-                    setCurrentIndex(0);
+                    resetProgress();
                   }}
                   className={`py-1 px-1.5 rounded-lg border text-center text-xs transition-all cursor-pointer ${
                     system === s.id
@@ -405,11 +506,11 @@ export default function LearnPage() {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b shadow-sm pb-4 pt-2 px-4 bg-background/50 backdrop-blur">
-          <div className="flex justify-between items-center">
-            {mode === "learn" && poems.length > 0 ? (
-              <div className="flex items-center gap-2">
+      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+        <div className="border-b shadow-sm py-2 md:py-3 px-2 md:px-4 bg-background/50 backdrop-blur flex-shrink-0">
+          <div className="flex items-center gap-2">
+            {mode === "recite" && poems.length > 0 ? (
+              <>
                 <button onClick={prevPoem} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -423,7 +524,31 @@ export default function LearnPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
-              </div>
+                <div className="flex gap-2 md:gap-4 text-xs md:text-sm ml-auto">
+                  <span className="text-red-500">错误：{errorCount}</span>
+                  <span className="text-green-500">正确：{correctCount}</span>
+                  <span className="text-muted-foreground">正确率：{accuracy}%</span>
+                </div>
+              </>
+            ) : mode === "learn" && poems.length > 0 ? (
+              <>
+                <button onClick={prevPoem} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <span className="text-sm text-muted-foreground">
+                  {currentIndex + 1} / {poems.length}
+                </span>
+                <button onClick={nextPoem} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+                <span className="text-sm text-muted-foreground ml-auto">
+                  {poems[currentIndex]?.grade} · {poems[currentIndex]?.semester}
+                </span>
+              </>
             ) : (
               <div className="text-lg font-medium">
                 {poems.length > 0
@@ -431,39 +556,70 @@ export default function LearnPage() {
                   : "0 / 0"}
               </div>
             )}
-            {mode === "recite" && (
-              <div className="flex gap-4 text-sm">
-                <span className="text-red-500">错误：{errorCount}</span>
-                <span className="text-green-500">正确：{correctCount}</span>
-                <span className="text-muted-foreground">正确率：{accuracy}%</span>
-              </div>
-            )}
-            {mode === "learn" && poems.length > 0 && (
-              <div className="text-sm text-muted-foreground">
-                {poems[currentIndex]?.grade} · {poems[currentIndex]?.semester}
-              </div>
-            )}
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="container mx-auto py-8 px-12">
+        {mode === "recite" && poems.length > 0 && (
+          <div className="hidden md:block border-b py-2 px-4 bg-background/30 flex-shrink-0">
+            <div className="flex flex-wrap items-center gap-1">
+              {poems.map((_, idx) => {
+                const key = `${poems[idx].grade}-${poems[idx].semester}-${idx}`;
+                const isMastered = masteredPoems.has(key);
+                const isNotMastered = notMasteredPoems.has(key);
+                const color = isMastered ? 'bg-green-500' : isNotMastered ? 'bg-red-500' : 'bg-gray-300';
+                return (
+                  <div
+                    key={idx}
+                    className={`w-3 h-3 rounded cursor-pointer ${color}`}
+                    onClick={() => setCurrentIndex(idx)}
+                  ></div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {mode === "recite" && poems.length > 0 && (
+          <div className="md:hidden border-b py-2 px-4 bg-background/30 flex-shrink-0">
+            <div className="flex flex-wrap items-center gap-1">
+              {poems.map((_, idx) => {
+                const key = `${poems[idx].grade}-${poems[idx].semester}-${idx}`;
+                const isMastered = masteredPoems.has(key);
+                const isNotMastered = notMasteredPoems.has(key);
+                const color = isMastered ? 'bg-green-500' : isNotMastered ? 'bg-red-500' : 'bg-gray-300';
+                return (
+                  <div
+                    key={idx}
+                    className={`w-4 h-4 rounded cursor-pointer ${color}`}
+                    onClick={() => setCurrentIndex(idx)}
+                  ></div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-hidden min-h-0 relative">
+          <div className="h-full">
             {poems.length === 0 ? (
-              <div className="text-center text-muted-foreground py-20">
-                请选择年级和学期
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center text-muted-foreground">
+                  请选择年级和学期
+                </div>
               </div>
             ) : mode === "learn" ? (
-              <div className="flex justify-center">
-                <Card className="shadow-lg w-full max-w-2xl">
-                  <CardContent className="p-6 space-y-6">
-                    <div className="text-center space-y-2">
-                      <div className="font-bold text-2xl">
-                        {poems[currentIndex].data.标题}
+              <div className="flex items-center justify-center h-full px-6 md:px-2 py-4">
+                <Card className="shadow-lg w-full max-w-2xl max-h-[70vh] flex flex-col">
+                  <CardContent className="p-4 md:p-6 py-3 flex flex-col flex-1 overflow-hidden">
+                    <div className="overflow-y-auto max-h-[calc(70vh-80px)]">
+                      <div className="text-center space-y-2">
+                        <div className="font-bold text-2xl">
+                          {poems[currentIndex].data.标题}
+                        </div>
+                        <div className="text-sm font-medium text-muted-foreground">
+                          {poems[currentIndex].data.作者} [{poems[currentIndex].data.朝代}]
+                        </div>
                       </div>
-                      <div className="text-sm font-medium text-muted-foreground">
-                        {poems[currentIndex].data.作者} [{poems[currentIndex].data.朝代}]
-                      </div>
-                    </div>
 
                     {(poems[currentIndex].data.拼音 || poems[currentIndex].data.原文) && (
                       <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
@@ -471,6 +627,19 @@ export default function LearnPage() {
                           poems[currentIndex].data.原文,
                           poems[currentIndex].data.拼音
                         )}
+                      </div>
+                    )}
+
+                    {poems[currentIndex].data.译文 && (
+                      <div>
+                        <div className="flex items-center gap-4 mb-2">
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
+                          <h3 className="font-semibold">译文</h3>
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
+                        </div>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          {poems[currentIndex].data.译文}
+                        </p>
                       </div>
                     )}
 
@@ -515,7 +684,8 @@ export default function LearnPage() {
                       </div>
                     )}
 
-                    <div className="flex gap-4 pt-4 border-t">
+                    </div>
+                    <div className="flex gap-4 pt-4 border-t flex-shrink-0">
                       <button
                         onClick={prevPoem}
                         className="flex-1 py-2 px-4 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
@@ -531,143 +701,175 @@ export default function LearnPage() {
                 </Card>
               </div>
             ) : (
-              <div className="grid grid-cols-4 gap-6 auto-rows-min">
-                {poems.map((item, idx) => (
-                  <Card
-                    key={`${item.grade}-${item.semester}-${idx}`}
-                    className="hover:shadow-md transition-shadow min-h-40">
-                    <CardContent className="space-y-3 flex flex-col h-full justify-between">
-                      <div className="text-center mb-4">
-                        <div className="font-bold text-xl">
-                          {item.data.标题}
+              <div className="flex items-center justify-center h-full px-6 md:px-2 py-4">
+                <Card className="shadow-lg w-full max-w-2xl max-h-[70vh] flex flex-col relative overflow-visible">
+                  <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg z-10">
+                    {currentIndex + 1}
+                  </div>
+                  <CardContent className="p-4 md:p-6 space-y-3 md:space-y-6 flex flex-col flex-1 overflow-hidden">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-4 h-4 rounded ${(() => {
+                            const key = `${poems[currentIndex]?.grade}-${poems[currentIndex]?.semester}-${currentIndex}`;
+                            if (masteredPoems.has(key)) return 'bg-green-500';
+                            if (notMasteredPoems.has(key)) return 'bg-red-500';
+                            return 'bg-gray-300';
+                          })()}`}></div>
                         </div>
-                      </div>
-                      <ScrollArea className="max-h-60 h-40">
-                        <div className="text-center h-full flex items-end justify-center">
-                          {showFirstChar && item.data.原文 && item.data.原文.length > 0 && (
-                            <div className="flex flex-col items-center mt-1">
-                              {item.data.原文.map((line, lineIdx) => {
-                                const chars = line.split('');
-                                return (
-                                  <div key={lineIdx} className="flex gap-1 mb-1 flex-wrap justify-center">
-                                    {chars.map((char, charIdx) => {
-                                      const isFirstChar = charIdx === 0;
-                                      const isPunct = /[，。？！、]/.test(char);
-                                      return (
-                                        <span key={charIdx} className="inline-flex items-center justify-center w-5.5 h-5.5 border border-gray-300 rounded text-xs">
-                                          {isFirstChar ? char : (isPunct ? <span className="text-gray-400">{char}</span> : ' ')}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                          {showLastChar && item.data.原文 && item.data.原文.length > 0 && (
-                            <div className="flex flex-col items-center mt-1">
-                              {item.data.原文.map((line, lineIdx) => {
-                                const chars = line.split('');
-                                let lastCharIdx = chars.length - 1;
-                                while (lastCharIdx >= 0 && /[，。？！、]/.test(chars[lastCharIdx])) {
-                                  lastCharIdx--;
-                                }
-                                return (
-                                  <div key={lineIdx} className="flex gap-1 mb-1 flex-wrap justify-center">
-                                    {chars.map((char, charIdx) => {
-                                      const isLastChar = charIdx === lastCharIdx;
-                                      const isPunct = /[，。？！、]/.test(char);
-                                      return (
-                                        <span key={charIdx} className="inline-flex items-center justify-center w-5.5 h-5.5 border border-gray-300 rounded text-xs">
-                                          {isLastChar ? char : (isPunct ? <span className="text-gray-400">{char}</span> : ' ')}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                          {!showFirstChar && !showLastChar && !showRandomChar && item.data.原文 && item.data.原文.length > 0 && (
-                            <div className="flex flex-col items-center mt-1">
-                              {item.data.原文.map((line, lineIdx) => {
-                                const chars = line.split('');
-                                return (
-                                  <div key={lineIdx} className="flex gap-1 mb-1 flex-wrap justify-center">
-                                    {chars.map((char, charIdx) => {
-                                      const isPunct = /[，。？！、]/.test(char);
-                                      return (
-                                        <span key={charIdx} className="inline-flex items-center justify-center w-5.5 h-5.5 border border-gray-300 rounded text-xs">
-                                          {isPunct ? <span className="text-gray-400">{char}</span> : ' '}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                          {showRandomChar && item.data.原文 && item.data.原文.length > 0 && (
-                            <div className="flex flex-col items-center mt-1">
-                              {item.data.原文.map((line, lineIdx) => {
-                                const chars = line.split('');
-                                const chineseChars = chars.filter(c => !/[，。？！、]/.test(c));
-                                const randomIdx = chineseChars.length > 0 ? Math.floor(Math.random() * chineseChars.length) : -1;
-                                let currentChineseIdx = 0;
-                                return (
-                                  <div key={lineIdx} className="flex gap-1 mb-1 flex-wrap justify-center">
-                                    {chars.map((char, charIdx) => {
-                                      const isPunct = /[，。？！、]/.test(char);
-                                      const isRandomChar = !isPunct && currentChineseIdx++ === randomIdx;
-                                      return (
-                                        <span key={charIdx} className="inline-flex items-center justify-center w-5.5 h-5.5 border border-gray-300 rounded text-xs">
-                                          {isRandomChar ? char : (isPunct ? <span className="text-gray-400">{char}</span> : ' ')}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </ScrollArea>
-                      <div className="space-y-2">
                         <button
-                          onClick={() => setSelectedPoem(item.data)}
-                          className="w-full text-sm text-blue-500 hover:underline cursor-pointer">
-                          查看古诗详情
+                          onClick={() => setSelectedPoem(poems[currentIndex]?.data)}
+                          className="text-sm text-blue-500 hover:underline cursor-pointer">
+                          查看详情
                         </button>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setCurrentIndex(idx);
-                              const key = `${item.grade}-${item.semester}-${idx}`;
-                              handleNotMastered(key);
-                            }}
-                            className="flex-1 py-1.5 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={notMasteredPoems.has(`${item.grade}-${item.semester}-${idx}`) || masteredPoems.has(`${item.grade}-${item.semester}-${idx}`)}>
-                            未掌握
-                          </button>
-                          <button
-                            onClick={() => {
-                              setCurrentIndex(idx);
-                              const key = `${item.grade}-${item.semester}-${idx}`;
-                              handleMastered(key);
-                            }}
-                            className="flex-1 py-1.5 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={notMasteredPoems.has(`${item.grade}-${item.semester}-${idx}`) || masteredPoems.has(`${item.grade}-${item.semester}-${idx}`)}>
-                            掌握
-                          </button>
-                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    <div className="text-center space-y-2">
+                      <div className="font-bold text-2xl">
+                        {poems[currentIndex]?.data.标题}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {poems[currentIndex]?.grade} · {poems[currentIndex]?.semester}
+                      </div>
+                      </div>
+
+                      <div className="overflow-y-auto max-h-[calc(70vh-180px)] min-h-42">
+                      <div className="text-center py-4">
+                        {showFirstChar && poems[currentIndex]?.data.原文 && poems[currentIndex]?.data.原文.length > 0 && (
+                          <div className="flex flex-col items-center mt-1">
+                            {poems[currentIndex]?.data.原文.map((line: string, lineIdx: number) => {
+                              const chars = line.split('');
+                              return (
+                                <div key={lineIdx} className="flex gap-1 mb-1 flex-wrap justify-center">
+                                  {chars.map((char, charIdx) => {
+                                    const isFirstChar = charIdx === 0;
+                                    const isPunct = /[，。？！、]/.test(char);
+                                    return (
+                                      <span key={charIdx} className="inline-flex items-center justify-center w-7 h-7 border border-gray-300 rounded text-sm">
+                                        {isFirstChar ? char : (isPunct ? <span className="text-gray-400">{char}</span> : ' ')}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {showLastChar && poems[currentIndex]?.data.原文 && poems[currentIndex]?.data.原文.length > 0 && (
+                          <div className="flex flex-col items-center mt-1">
+                            {poems[currentIndex]?.data.原文.map((line: string, lineIdx: number) => {
+                              const chars = line.split('');
+                              let lastCharIdx = chars.length - 1;
+                              while (lastCharIdx >= 0 && /[，。？！、]/.test(chars[lastCharIdx])) {
+                                lastCharIdx--;
+                              }
+                              return (
+                                <div key={lineIdx} className="flex gap-1 mb-1 flex-wrap justify-center">
+                                  {chars.map((char, charIdx) => {
+                                    const isLastChar = charIdx === lastCharIdx;
+                                    const isPunct = /[，。？！、]/.test(char);
+                                    return (
+                                      <span key={charIdx} className="inline-flex items-center justify-center w-7 h-7 border border-gray-300 rounded text-sm">
+                                        {isLastChar ? char : (isPunct ? <span className="text-gray-400">{char}</span> : ' ')}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {!showFirstChar && !showLastChar && !showRandomChar && poems[currentIndex]?.data.原文 && poems[currentIndex]?.data.原文.length > 0 && (
+                          <div className="flex flex-col items-center mt-1">
+                            {poems[currentIndex]?.data.原文.map((line: string, lineIdx: number) => {
+                              const chars = line.split('');
+                              return (
+                                <div key={lineIdx} className="flex gap-1 mb-1 flex-wrap justify-center">
+                                  {chars.map((char, charIdx) => {
+                                    const isPunct = /[，。？！、]/.test(char);
+                                    return (
+                                      <span key={charIdx} className="inline-flex items-center justify-center w-7 h-7 border border-gray-300 rounded text-sm">
+                                        {isPunct ? <span className="text-gray-400">{char}</span> : ' '}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {showRandomChar && poems[currentIndex]?.data.原文 && poems[currentIndex]?.data.原文.length > 0 && (
+                          <div className="flex flex-col items-center mt-1">
+                            {poems[currentIndex]?.data.原文.map((line: string, lineIdx: number) => {
+                              const chars = line.split('');
+                              const chineseChars = chars.filter((c: string) => !/[，。？！、]/.test(c));
+                              const randomIdx = chineseChars.length > 0 ? Math.floor(Math.random() * chineseChars.length) : -1;
+                              let currentChineseIdx = 0;
+                              return (
+                                <div key={lineIdx} className="flex gap-1 mb-1 flex-wrap justify-center">
+                                  {chars.map((char, charIdx) => {
+                                    const isPunct = /[，。？！、]/.test(char);
+                                    const isRandomChar = !isPunct && currentChineseIdx++ === randomIdx;
+                                    return (
+                                      <span key={charIdx} className="inline-flex items-center justify-center w-7 h-7 border border-gray-300 rounded text-sm">
+                                        {isRandomChar ? char : (isPunct ? <span className="text-gray-400">{char}</span> : ' ')}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-auto pt-2 flex-shrink-0">
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => {
+                            const key = `${poems[currentIndex]?.grade}-${poems[currentIndex]?.semester}-${currentIndex}`;
+                            handleNotMastered(key);
+                          }}
+                          className="flex-1 py-3 px-4 bg-red-100 text-red-700 rounded hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 cursor-pointer"
+                          disabled={notMasteredPoems.has(`${poems[currentIndex]?.grade}-${poems[currentIndex]?.semester}-${currentIndex}`) || masteredPoems.has(`${poems[currentIndex]?.grade}-${poems[currentIndex]?.semester}-${currentIndex}`)}>
+                          未掌握
+                        </button>
+                        <button
+                          onClick={() => {
+                            const key = `${poems[currentIndex]?.grade}-${poems[currentIndex]?.semester}-${currentIndex}`;
+                            handleMastered(key);
+                          }}
+                          className="flex-1 py-3 px-4 bg-green-100 text-green-700 rounded hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 cursor-pointer"
+                          disabled={notMasteredPoems.has(`${poems[currentIndex]?.grade}-${poems[currentIndex]?.semester}-${currentIndex}`) || masteredPoems.has(`${poems[currentIndex]?.grade}-${poems[currentIndex]?.semester}-${currentIndex}`)}>
+                          掌握
+                        </button>
+                        <button
+                          onClick={nextPoem}
+                          className="py-3 px-4 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer">
+                          跳过
+                        </button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
+            )}
+
+          <div className="hidden md:flex absolute bottom-8 right-8 gap-2 z-10">
+            <button
+              onClick={resetProgress}
+              className="px-4 py-2 bg-gray-500/90 text-white rounded-lg shadow-lg text-sm hover:bg-gray-600 transition-colors">
+              重新开始
+            </button>
+            {allCompleted && (
+              <button
+                onClick={handleContinueLearning}
+                className="px-4 py-2 bg-primary/90 text-primary-foreground rounded-lg shadow-lg text-sm hover:bg-primary transition-colors">
+                {mode === "learn" ? "继续学习" : "继续背诵"}
+              </button>
             )}
           </div>
         </div>
+      </div>
       </div>
 
       <Dialog open={!!selectedPoem} onOpenChange={() => setSelectedPoem(null)}>
@@ -786,7 +988,7 @@ export default function LearnPage() {
               共 {poems.length} 首诗词
             </div>
           </div>
-          <div className="flex justify-center pb-4">
+          <div className="flex justify-center gap-4 pb-4">
             <button
               onClick={() => {
                 setShowResult(false);
@@ -796,8 +998,13 @@ export default function LearnPage() {
                 setErrorCount(0);
                 setCurrentIndex(0);
               }}
-              className="px-6 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90">
+              className="px-6 py-2 border border-primary text-primary rounded hover:bg-primary/10">
               重新开始
+            </button>
+            <button
+              onClick={handleContinueLearning}
+              className="px-6 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90">
+              继续学习
             </button>
           </div>
         </DialogContent>

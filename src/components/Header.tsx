@@ -4,12 +4,12 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Header() {
   return (
-    <header className="h-16 border-b bg-white dark:bg-gray-900">
-      <div className="mx-auto w-[var(--ui-container)] flex items-center justify-between px-6 h-full">
-        <Link href="/" className="text-xl font-bold text-primary">
+    <header className="h-14 md:h-16 border-b bg-white dark:bg-gray-900 flex-shrink-0">
+      <div className="mx-auto h-full flex items-center justify-between px-4 md:px-6" style={{ maxWidth: 'var(--ui-container-max)' }}>
+        <Link href="/" className="text-lg md:text-xl font-bold text-primary">
           学古诗
         </Link>
-        <nav className="flex gap-6 items-center">
+        <nav className="hidden md:flex gap-6 items-center">
           {headerNav.map((item) => (
             <Link
               key={item.href}
@@ -20,7 +20,7 @@ export default function Header() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <ThemeToggle />
         </div>
       </div>

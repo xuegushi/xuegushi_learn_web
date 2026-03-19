@@ -48,7 +48,8 @@
 }
 
 :root {
-  --ui-container: 80rem;
+  --ui-container: 100%;
+  --ui-container-max: 1280px;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
