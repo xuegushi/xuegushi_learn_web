@@ -40,6 +40,9 @@ export default function LearnPage() {
   const [currentPoemDetail, setCurrentPoemDetail] = useState<PoemDetail | null>(null);
   const [pinyinData, setPinyinData] = useState<PinyinData | null>(null);
 
+  // 随机字符索引
+  const [randomIndices, setRandomIndices] = useState<number[]>([]);
+
   // ==================== 诗词列表 ====================
   const poems = useMemo(() => {
     if (!selectedFascicule || !catalogDetail?.fasciculeList) return [];
@@ -204,6 +207,29 @@ export default function LearnPage() {
     }
   }, [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem]);
 
+  // 生成随机索引
+  const generateRandomIndices = useCallback(() => {
+    if (!currentPoemDetail?.poem?.content?.content) return [];
+    return currentPoemDetail.poem.content.content.map((line) => {
+      const chars = line.split("").filter((c) => !/[，。？！、]/.test(c));
+      return chars.length > 0 ? Math.floor(Math.random() * chars.length) : -1;
+    });
+  }, [currentPoemDetail]);
+
+  // 随机提示按钮
+  const handleRandomHint = useCallback(() => {
+    setShowRandomChar(true);
+    setRandomIndices(generateRandomIndices());
+  }, [generateRandomIndices]);
+
+  // 诗词变化时生成随机索引
+  useEffect(() => {
+    if (showRandomChar && currentPoemDetail?.poem?.content?.content) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRandomIndices(generateRandomIndices());
+    }
+  }, [showRandomChar, currentIndex, currentPoemDetail, generateRandomIndices]);
+
   const accuracy = errorCount + correctCount > 0
     ? Math.round((correctCount / (errorCount + correctCount)) * 100)
     : 0;
@@ -304,12 +330,14 @@ export default function LearnPage() {
               showFirstChar={showFirstChar}
               showLastChar={showLastChar}
               showRandomChar={showRandomChar}
+              randomIndices={randomIndices}
               masteredPoems={masteredPoems}
               notMasteredPoems={notMasteredPoems}
               onMastered={handleMastered}
               onNotMastered={handleNotMastered}
               onSkip={nextPoem}
               onViewDetail={() => setSelectedPoem(currentPoemDetail as unknown as PoemDetail)}
+              onRandomHint={handleRandomHint}
               targetId={poems[currentIndex]?.targetId || 0}
             />
           )}

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,12 +11,14 @@ interface ReciteCardProps {
   showFirstChar: boolean;
   showLastChar: boolean;
   showRandomChar: boolean;
+  randomIndices: number[];
   masteredPoems: Set<string>;
   notMasteredPoems: Set<string>;
   onMastered: (key: string) => void;
   onNotMastered: (key: string) => void;
   onSkip: () => void;
   onViewDetail: () => void;
+  onRandomHint: () => void;
   targetId: number;
 }
 
@@ -27,50 +28,16 @@ export function ReciteCard({
   showFirstChar,
   showLastChar,
   showRandomChar,
+  randomIndices,
   masteredPoems,
   notMasteredPoems,
   onMastered,
   onNotMastered,
   onSkip,
   onViewDetail,
+  onRandomHint,
   targetId,
 }: ReciteCardProps) {
-  // 随机字符索引 - 使用客户端状态避免水合错误
-  const [randomIndices, setRandomIndices] = useState<number[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
-  const prevPoemIdRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsMounted(true);
-  }, []);
-
-  // 生成随机索引
-  const generateRandomIndices = useCallback(() => {
-    if (!poemDetail?.poem?.content?.content) return [];
-    return poemDetail.poem.content.content.map((line) => {
-      const chars = line.split("").filter((c) => !/[，。？！、]/.test(c));
-      return chars.length > 0 ? Math.floor(Math.random() * chars.length) : -1;
-    });
-  }, [poemDetail]);
-
-  useEffect(() => {
-    if (!isMounted) return;
-    if (showRandomChar && poemDetail?.poem?.content?.content) {
-      // 仅当诗词变化时重新生成
-      if (poemDetail.poem.id !== prevPoemIdRef.current) {
-        prevPoemIdRef.current = poemDetail.poem.id || null;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setRandomIndices(generateRandomIndices());
-      }
-    }
-  }, [isMounted, showRandomChar, poemDetail, generateRandomIndices]);
-
-  // 点击随机提示按钮
-  const handleRandomHint = useCallback(() => {
-    setRandomIndices(generateRandomIndices());
-  }, [generateRandomIndices]);
-
   const key = targetId?.toString();
   const isMastered = masteredPoems.has(key);
   const isNotMastered = notMasteredPoems.has(key);
@@ -124,7 +91,7 @@ export function ReciteCard({
               <div className="flex items-center gap-3">
                 <div className={`w-4 h-4 rounded ${statusColor} transition-colors`} />
                 <button
-                  onClick={handleRandomHint}
+                  onClick={onRandomHint}
                   className="flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer"
                   title="点击随机显示每行一个汉字"
                 >
@@ -175,8 +142,8 @@ export function ReciteCard({
                 />
               )}
 
-              {/* 随机显示 - 只在客户端挂载后显示随机内容 */}
-              {isMounted && (showRandomChar || randomIndices.length > 0) && poemDetail.poem?.content?.content && (
+              {/* 随机显示 */}
+              {showRandomChar && randomIndices.length > 0 && poemDetail.poem?.content?.content && (
                 <ContentDisplay
                   lines={poemDetail.poem.content.content}
                   mode="random"
@@ -185,7 +152,7 @@ export function ReciteCard({
               )}
 
               {/* 都不显示 */}
-              {!showFirstChar && !showLastChar && !showRandomChar && !(isMounted && randomIndices.length > 0) && poemDetail.poem?.content?.content && (
+              {!showFirstChar && !showLastChar && !showRandomChar && poemDetail.poem?.content?.content && (
                 <ContentDisplay
                   lines={poemDetail.poem.content.content}
                   mode="none"
