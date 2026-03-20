@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Shuffle } from "lucide-react";
+import { Shuffle, X, Check } from "lucide-react";
 
 interface ReciteCardProps {
   poemDetail: PoemDetail | null;
@@ -166,21 +166,23 @@ export function ReciteCard({
             <div className="flex gap-4">
               <button
                 onClick={() => onNotMastered(key)}
-                className="flex-1 py-3 px-4 bg-red-100 text-red-700 rounded hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled={isDisabled}
               >
+                <X className="h-4 w-4" />
                 未掌握
               </button>
               <button
                 onClick={() => onMastered(key)}
-                className="flex-1 py-3 px-4 bg-green-100 text-green-700 rounded hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled={isDisabled}
               >
+                <Check className="h-4 w-4" />
                 掌握
               </button>
               <button
                 onClick={onSkip}
-                className="py-3 px-4 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+                className="py-3 px-4 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors"
               >
                 跳过
               </button>
