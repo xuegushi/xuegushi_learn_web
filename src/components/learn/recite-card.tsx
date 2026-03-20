@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Shuffle, X, Check } from "lucide-react";
+import { Shuffle, Circle, CheckCircle2 } from "lucide-react";
 
 interface ReciteCardProps {
   poemDetail: PoemDetail | null;
@@ -169,7 +169,7 @@ export function ReciteCard({
                 className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled={isDisabled}
               >
-                <X className="h-4 w-4" />
+                <Circle className="h-4 w-4" />
                 未掌握
               </button>
               <button
@@ -177,7 +177,7 @@ export function ReciteCard({
                 className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled={isDisabled}
               >
-                <Check className="h-4 w-4" />
+                <CheckCircle2 className="h-4 w-4" />
                 掌握
               </button>
               <button
