@@ -9,7 +9,7 @@ export default function AboutPage() {
           <p className="text-lg text-muted-foreground leading-relaxed">
             学古诗是一个基于 Next.js 开发的诗词学习网站，帮助用户学习和背诵古诗词。
           </p>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-lg text-muted-foreground leading-relaxed mt-2">
             本项目由 <a href="https://opencode.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenCode</a> 生成，基于 AI 辅助开发。
           </p>
         </section>
