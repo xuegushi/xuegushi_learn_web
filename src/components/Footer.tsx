@@ -10,7 +10,8 @@ export default function Footer() {
             鲁ICP备15006514号-6
           </a>
         </div>
-        <nav className="hidden md:flex gap-6">
+        <nav className="hidden md:flex items-center gap-6">
+          <span className="text-xs md:text-sm text-muted-foreground">友情链接：</span>
           {friendLinks.map((item) => (
             <a
               key={item.href}
