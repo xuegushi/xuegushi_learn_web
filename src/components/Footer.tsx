@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { footerNav } from "@/config/navigation";
+import { friendLinks } from "@/config/navigation";
 
 export default function Footer() {
   return (
@@ -9,14 +8,16 @@ export default function Footer() {
           copyright@2026
         </div>
         <nav className="hidden md:flex gap-6">
-          {footerNav.map((item) => (
-            <Link
+          {friendLinks.map((item) => (
+            <a
               key={item.href}
               href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-xs md:text-sm hover:text-primary transition-colors"
             >
               {item.label}
-            </Link>
+            </a>
           ))}
         </nav>
         <div className="relative group">
