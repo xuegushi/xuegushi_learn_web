@@ -33,7 +33,6 @@ export default function LearnPage() {
   // 模式
   const [mode, setMode] = useState<"recite" | "learn">("recite");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [localDataOpen, setLocalDataOpen] = useState(false);
 
   // 详情弹窗
@@ -248,17 +247,7 @@ export default function LearnPage() {
   const allCompleted = poems.length > 0 && masteredPoems.size + notMasteredPoems.size === poems.length;
 
   return (
-    <div className={`flex flex-col md:flex-row h-[calc(100vh-56px-40px)] md:h-[calc(100vh-64px-48px)] ${sidebarCollapsed ? "md:w-full" : ""}`}>
-      {/* 侧边栏收起时的展开按钮 */}
-      {sidebarCollapsed && (
-        <button
-          onClick={() => setSidebarCollapsed(false)}
-          className="hidden md:flex fixed left-0 top-1/2 z-40 p-2 bg-primary/80 text-primary-foreground rounded-r-lg shadow-lg cursor-pointer ml-0"
-          title="展开侧边栏"
-        >
-          <PanelLeftOpen className="h-5 w-5" />
-        </button>
-      )}
+    <div className="flex flex-col md:flex-row h-[calc(100vh-56px-40px)] md:h-[calc(100vh-64px-48px)]">
 
       {/* 侧边栏 */}
       <Sidebar
@@ -279,8 +268,6 @@ export default function LearnPage() {
         onSidebarClose={() => setSidebarOpen(false)}
         mode={mode}
         onModeChange={setMode}
-        collapsed={sidebarCollapsed}
-        onCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
       {/* 本地数据管理弹窗 */}
@@ -301,13 +288,8 @@ export default function LearnPage() {
           onNext={nextPoem}
           onJumpTo={setCurrentIndex}
           onToggleSidebar={() => {
-            // PC端：切换侧边栏折叠状态
-            // 移动端：切换侧边栏显示/隐藏
-            if (typeof window !== "undefined" && window.innerWidth >= 768) {
-              setSidebarCollapsed(!sidebarCollapsed);
-            } else {
-              setSidebarOpen(!sidebarOpen);
-            }
+            // 切换侧边栏显示/隐藏
+            setSidebarOpen(!sidebarOpen);
           }}
         />
 

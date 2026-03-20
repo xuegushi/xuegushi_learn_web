@@ -1,6 +1,7 @@
 "use client";
 
 import { CatalogItem, CatalogDetail } from "@/types/poem";
+import { Database } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -27,8 +28,6 @@ interface SidebarProps {
   onSidebarClose: () => void;
   mode: "recite" | "learn";
   onModeChange: (mode: "recite" | "learn") => void;
-  collapsed: boolean;
-  onCollapse: () => void;
 }
 
 export function Sidebar({
@@ -49,8 +48,6 @@ export function Sidebar({
   onSidebarClose,
   mode,
   onModeChange,
-  collapsed,
-  onCollapse,
 }: SidebarProps) {
   return (
     <>
@@ -63,10 +60,10 @@ export function Sidebar({
 
       <aside
         className={`fixed md:relative inset-y-0 left-0 z-50 md:z-auto w-72 border-r bg-gray-50 dark:bg-gray-800 overflow-y-auto transition-transform duration-300 h-full
-          ${sidebarOpen ? "translate-x-0 md:translate-x-0" : "-translate-x-full md:translate-x-0"}
-          ${collapsed ? "md:w-0 md:overflow-hidden md:hidden" : "md:w-72"}`}
+          ${sidebarOpen ? "translate-x-0 md:translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-        <div className="p-4 md:p-6 space-y-4">
+        <div className="flex h-full flex-col p-4 md:p-6">
+          <div className="flex-1 overflow-y-auto space-y-4">
           <div className="flex items-center justify-between md:hidden">
             <h2 className="font-semibold text-lg">筛选</h2>
             <button onClick={onSidebarClose} className="p-2">
@@ -197,26 +194,18 @@ export function Sidebar({
             </div>
           </div>
 
-          {/* 本地数据管理 */}
-          <div>
+          </div>
+
+          {/* 本地数据管理 - 固定到底部 */}
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
             <button
               onClick={onLocalDataClick}
-              className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+              className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center justify-center gap-2"
             >
+              <Database className="h-4 w-4" />
               本地数据管理
             </button>
           </div>
-
-          {/* 折叠按钮 */}
-          <button
-            onClick={onCollapse}
-            className="hidden md:flex w-full py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer items-center justify-center gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-            </svg>
-            隐藏侧边栏
-          </button>
         </div>
       </aside>
     </>

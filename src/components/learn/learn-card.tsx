@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail, PinyinData } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 
 interface LearnCardProps {
   poemDetail: PoemDetail | null;
@@ -13,6 +14,8 @@ interface LearnCardProps {
 }
 
 export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext }: LearnCardProps) {
+  const [showTranslation, setShowTranslation] = useState(false);
+
   if (!poemDetail) {
     return (
       <div className="flex items-center justify-center h-full px-6 md:px-2 py-4">
@@ -48,8 +51,16 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
         <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg z-10">
           {currentIndex + 1}
         </div>
+        {/* 译文按钮 */}
+        <button
+          onClick={() => setShowTranslation(!showTranslation)}
+          className={`absolute top-7 right-12 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showTranslation ? 'bg-primary text-primary-foreground' : 'text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10'} border border-${showTranslation ? 'primary/50' : 'primary/20'}`}
+          title="显示/隐藏译文"
+        >
+          译
+        </button>
         <Card className="shadow-lg w-full max-w-2xl max-h-[70vh] flex flex-col">
-          <CardContent className="p-4 md:p-6 py-3 flex flex-col flex-1 overflow-hidden">
+          <CardContent className="p-4 md:p-6 py-3 md:py-2 flex flex-col flex-1 overflow-hidden">
 
           {/* 内容区域 */}
           <div className="overflow-y-auto max-h-[calc(70vh-120px)]">
@@ -83,25 +94,29 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                     const chars = line.split("");
                     const pinyinLine = pinyinData?.content?.[lineIdx] || [];
                     return (
-                      <div key={lineIdx} className="flex justify-center gap-1 flex-wrap mb-1">
-                        {chars.map((char, charIdx) => (
-                          <div key={charIdx} className="flex flex-col items-center">
-                            <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
-                              {pinyinLine[charIdx] || ""}
-                            </span>
-                            <span className="text-base md:text-lg">{char}</span>
+                      <>
+                        <div key={`${lineIdx}-original`} className="flex justify-center gap-1 flex-wrap mb-1">
+                          {chars.map((char, charIdx) => (
+                            <div key={charIdx} className="flex flex-col items-center">
+                              <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
+                                {pinyinLine[charIdx] || ""}
+                              </span>
+                              <span className="text-base md:text-lg">{char}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {showTranslation && poemDetail.detail?.yi?.content?.[lineIdx] && (
+                          <div key={`${lineIdx}-translation`} className="mt-2">
+                            <div className="text-xs text-muted-foreground italic bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                              {poemDetail.detail.yi.content[lineIdx]}
+                            </div>
                           </div>
-                        ))}
-                      </div>
+                        )}
+                      </>
                     );
                   })}
                 </div>
               </div>
-            )}
-
-            {/* 译文 */}
-            {poemDetail.detail?.yi?.content && (
-              <Section title="译文" content={poemDetail.detail.yi.content} />
             )}
 
             {/* 注释 - HTML渲染 */}
