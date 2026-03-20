@@ -21,11 +21,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "学古诗",
-  description: "学习古诗词",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
