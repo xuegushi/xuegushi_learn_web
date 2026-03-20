@@ -84,6 +84,39 @@ export default function AboutPage() {
             本项目使用 <a href="https://api.xuegushi.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">学古诗 API</a> 获取诗词数据。
           </p>
         </section>
+
+        {/* 关注我们 */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4">关注我们</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="text-center">
+              <img src="/images/wechat.jpg" alt="微信公众号" className="w-48 h-48 mx-auto rounded-lg shadow-md" />
+              <p className="mt-2 text-sm text-muted-foreground">微信公众号</p>
+            </div>
+            <div className="text-center">
+              <img src="/images/xcx.jpg" alt="小程序" className="w-48 h-48 mx-auto rounded-lg shadow-md" />
+              <p className="mt-2 text-sm text-muted-foreground">小程序</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 赞助支持 */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4">赞助支持</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="text-center">
+              <img src="/images/wx_zs.jpg" alt="微信赞助" className="w-48 h-48 mx-auto rounded-lg shadow-md" />
+              <p className="mt-2 text-sm text-muted-foreground">微信赞助</p>
+            </div>
+            <div className="text-center">
+              <img src="/images/zfb_zs.jpg" alt="支付宝赞助" className="w-48 h-48 mx-auto rounded-lg shadow-md" />
+              <p className="mt-2 text-sm text-muted-foreground">支付宝赞助</p>
+            </div>
+          </div>
+          <p className="text-center text-muted-foreground mt-6">
+            感谢大家的赞助和支持
+          </p>
+        </section>
       </div>
     </div>
   );
