@@ -4,6 +4,12 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Script from "next/script";
+
+export const metadata: Metadata = {
+  title: "学古诗",
+  description: "学习古诗词",
+};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,8 +33,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
+      <head>
+        <link rel="stylesheet" href="https://unpkg.com/heti/umd/heti.min.css" />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased heti--classic`}
       >
         <ThemeProvider
           attribute="class"
