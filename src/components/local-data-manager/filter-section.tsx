@@ -11,7 +11,7 @@ interface FilterSectionProps {
   keyword: string;
   onKeywordChange: (value: string) => void;
   dynasty: string;
-  onDynastyChange: (value: string) => void;
+  onDynastyChange: (value: string | null) => void;
   totalCount: number;
 }
 

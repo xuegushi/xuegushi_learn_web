@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm build:*)",
+      "Bash(curl -s \"https://api.xuegushi.com/api/catalog/list?platform=web&page=1&size=10\")",
+      "Bash(curl -s \"https://api.xuegushi.com/api/catalog/detail?platform=web&catalog_id=68da4514d42b75c207c99ab1\")",
+      "Bash(curl -s \"https://api.xuegushi.com/api/poem/3852?platform=web\")",
+      "Bash(curl -s \"https://api.xuegushi.com/api/pinyin/poem?platform=web&poem_id=3852\")",
+      "Bash(curl -s \"http://localhost:3000/api/catalog/list?page=1&size=5\")",
+      "Bash(curl -s \"http://localhost:1234/api/catalog/detail?catalog_id=68da4514d42b75c207c99ab1\")",
+      "Bash(curl -s \"http://localhost:1234/api/poem/3852\")",
+      "Bash(curl:*)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(pnpm add:*)"
+    ]
+  }
+}

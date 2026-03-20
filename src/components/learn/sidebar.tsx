@@ -17,8 +17,8 @@ interface SidebarProps {
   showFirstChar: boolean;
   showLastChar: boolean;
   showRandomChar: boolean;
-  onSystemChange: (catalogId: string) => void;
-  onFasciculeChange: (fasciculeId: string) => void;
+  onSystemChange: (catalogId: string | null) => void;
+  onFasciculeChange: (fasciculeId: string | null) => void;
   onShowFirstCharChange: (value: boolean) => void;
   onShowLastCharChange: (value: boolean) => void;
   onShowRandomCharChange: (value: boolean) => void;

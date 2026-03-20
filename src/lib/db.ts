@@ -1,10 +1,10 @@
 const DB_NAME = 'poem_learn_db';
 const DB_VERSION = 1;
 
-const STORES = {
+export const STORES = {
   POEMS: 'poems',
   PINYIN: 'pinyin',
-};
+} as const;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -78,7 +78,7 @@ export async function deleteFromDB(storeName: string, key: string | number): Pro
       request.onsuccess = () => resolve();
     });
   } catch {
-    // Silent fail
+    // Silent fail for cache deletion
   }
 }
 
@@ -113,4 +113,3 @@ export async function clearDB(): Promise<void> {
   }
 }
 
-export { STORES };

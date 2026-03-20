@@ -221,7 +221,7 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                 keyword={keyword}
                 onKeywordChange={(v) => { setKeyword(v); setPage(1); }}
                 dynasty={filterDynasty}
-                onDynastyChange={(v) => { setFilterDynasty(v); setPage(1); }}
+                onDynastyChange={(v) => { setFilterDynasty(v ?? ''); setPage(1); }}
                 totalCount={filteredItems.length}
               />
 

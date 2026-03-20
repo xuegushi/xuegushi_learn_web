@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { ApiErrorDialog } from "@/components/api-error-dialog";
 import Script from "next/script";
 
 export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default function RootLayout({
             </main>
             <Footer />
           </div>
+          <ApiErrorDialog />
         </ThemeProvider>
       </body>
     </html>
