@@ -8,11 +8,19 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="w-14 h-14 flex items-center justify-center"><Sun className="w-5 h-5 opacity-0" /></div>;
+  }
 
   return (
     <Select value={theme || "system"} onValueChange={(value) => { if (value) setTheme(value); }}>

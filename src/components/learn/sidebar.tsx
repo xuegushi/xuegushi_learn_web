@@ -62,7 +62,9 @@ export function Sidebar({
       )}
 
       <aside
-        className={`${collapsed ? "-translate-x-full" : "translate-x-0"} ${sidebarOpen ? "translate-x-0" : ""} fixed md:relative inset-y-0 left-0 z-50 md:z-auto w-72 border-r bg-gray-50 dark:bg-gray-800 overflow-y-auto transition-transform duration-300 h-full ${collapsed ? "md:w-0 md:hidden" : ""}`}
+        className={`fixed md:relative inset-y-0 left-0 z-50 md:z-auto w-72 border-r bg-gray-50 dark:bg-gray-800 overflow-y-auto transition-transform duration-300 h-full
+          ${sidebarOpen ? "translate-x-0 md:translate-x-0" : "-translate-x-full md:translate-x-0"}
+          ${collapsed ? "md:w-0 md:overflow-hidden md:hidden" : "md:w-72"}`}
       >
         <div className="p-4 md:p-6 space-y-4">
           <div className="flex items-center justify-between md:hidden">

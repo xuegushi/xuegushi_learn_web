@@ -7,9 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getAllFromDB, deleteFromDB, setToDB, STORES } from "@/lib/db";
+import { FilterSection } from "./local-data-manager/filter-section";
 
 interface PoemCache {
   id: number;
@@ -18,12 +20,28 @@ interface PoemCache {
     title?: string;
     author?: string;
     dynasty?: string;
+    type?: string;
+    xu?: string | null;
+    intro?: string;
+    background?: string;
+    content?: {
+      content?: string[];
+    };
+  };
+  detail?: {
+    yi?: { content?: string[] };
+    zhu?: { content?: string[] };
+    shangxi?: { content?: string[] };
   };
 }
 
 interface PinyinCache {
   poem_id: number;
   title?: string[];
+  title_cn?: string;
+  author?: string;
+  dynasty?: string;
+  content?: string[][];
 }
 
 interface LocalDataManagerProps {
@@ -31,19 +49,26 @@ interface LocalDataManagerProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface CacheItem {
+  id: number;
+  poem?: PoemCache["poem"];
+  detail?: PoemCache["detail"];
+  pinyin?: PinyinCache;
+  hasPinyin: boolean;
+}
+
 const PAGE_SIZE = 10;
 
 export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) {
-  const [poems, setPoems] = useState<PoemCache[]>([]);
-  const [pinyins, setPinyins] = useState<PinyinCache[]>([]);
-  const [selectedPoems, setSelectedPoems] = useState<Set<number>>(new Set());
-  const [selectedPinyins, setSelectedPinyins] = useState<Set<number>>(new Set());
+  const [items, setItems] = useState<CacheItem[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [updateProgress, setUpdateProgress] = useState({ current: 0, total: 0 });
-  const [poemPage, setPoemPage] = useState(1);
-  const [pinyinPage, setPinyinPage] = useState(1);
-  const [activeTab, setActiveTab] = useState<"poems" | "pinyins">("poems");
+  const [page, setPage] = useState(1);
+  const [previewItem, setPreviewItem] = useState<CacheItem | null>(null);
+  const [keyword, setKeyword] = useState("");
+  const [filterDynasty, setFilterDynasty] = useState("不限");
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -51,12 +76,21 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
       getAllFromDB<PoemCache>(STORES.POEMS),
       getAllFromDB<PinyinCache>(STORES.PINYIN),
     ]);
-    setPoems(poemData);
-    setPinyins(pinyinData);
-    setSelectedPoems(new Set());
-    setSelectedPinyins(new Set());
-    setPoemPage(1);
-    setPinyinPage(1);
+
+    const pinyinMap = new Map<number, PinyinCache>();
+    pinyinData.forEach((p) => pinyinMap.set(p.poem_id, p));
+
+    const merged: CacheItem[] = poemData.map((poem) => ({
+      id: poem.id,
+      poem: poem.poem,
+      detail: poem.detail,
+      pinyin: pinyinMap.get(poem.poem?.id || poem.id),
+      hasPinyin: pinyinMap.has(poem.poem?.id || poem.id),
+    }));
+
+    setItems(merged);
+    setSelectedIds(new Set());
+    setPage(1);
     setLoading(false);
   }, []);
 
@@ -67,8 +101,8 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
     }
   }, [open, loadData]);
 
-  const togglePoem = (id: number) => {
-    setSelectedPoems((prev) => {
+  const toggleItem = (id: number) => {
+    setSelectedIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
@@ -79,57 +113,33 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
     });
   };
 
-  const togglePinyin = (poemId: number) => {
-    setSelectedPinyins((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(poemId)) {
-        newSet.delete(poemId);
-      } else {
-        newSet.add(poemId);
-      }
-      return newSet;
-    });
-  };
-
-  const toggleAllPoems = () => {
-    if (selectedPoems.size === poems.length) {
-      setSelectedPoems(new Set());
+  const toggleAll = () => {
+    if (selectedIds.size === filteredItems.length) {
+      setSelectedIds(new Set());
     } else {
-      setSelectedPoems(new Set(poems.map((p) => p.id)));
-    }
-  };
-
-  const toggleAllPinyins = () => {
-    if (selectedPinyins.size === pinyins.length) {
-      setSelectedPinyins(new Set());
-    } else {
-      setSelectedPinyins(new Set(pinyins.map((p) => p.poem_id)));
+      setSelectedIds(new Set(filteredItems.map((item) => item.id)));
     }
   };
 
   const deleteSelected = async () => {
-    const poemIds = Array.from(selectedPoems);
-    const pinyinIds = Array.from(selectedPinyins);
-
-    for (const id of poemIds) {
-      await deleteFromDB(STORES.POEMS, id);
+    for (const id of selectedIds) {
+      const item = items.find((i) => i.id === id);
+      if (item) {
+        await deleteFromDB(STORES.POEMS, id);
+        const poemId = item.poem?.id || id;
+        await deleteFromDB(STORES.PINYIN, poemId);
+      }
     }
-    for (const id of pinyinIds) {
-      await deleteFromDB(STORES.PINYIN, id);
-    }
-
     await loadData();
   };
 
   const updateSelected = async () => {
-    const poemIds = Array.from(selectedPoems);
-    if (poemIds.length === 0) return;
-
+    if (selectedIds.size === 0) return;
     setUpdating(true);
-    setUpdateProgress({ current: 0, total: poemIds.length });
+    setUpdateProgress({ current: 0, total: selectedIds.size });
+    let count = 0;
 
-    for (let i = 0; i < poemIds.length; i++) {
-      const id = poemIds[i];
+    for (const id of selectedIds) {
       try {
         const res = await fetch(`https://api.xuegushi.com/api/poem/${id}?platform=web`);
         const data = await res.json();
@@ -141,88 +151,84 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
             `https://api.xuegushi.com/api/pinyin/poem?platform=web&poem_id=${data.poem.id}`
           );
           const pinyinData = await pinyinRes.json();
-          await setToDB(STORES.PINYIN, { poem_id: data.poem.id, ...pinyinData });
+          await setToDB(STORES.PINYIN, {
+            poem_id: data.poem.id,
+            ...pinyinData,
+            title_cn: data.poem?.title || "",
+            author: data.poem?.author || "",
+            dynasty: data.poem?.dynasty || "",
+          });
         }
-
         await new Promise((resolve) => setTimeout(resolve, 200));
       } catch {
-        // Continue with next
+        // Continue
       }
-
-      setUpdateProgress({ current: i + 1, total: poemIds.length });
+      count++;
+      setUpdateProgress({ current: count, total: selectedIds.size });
     }
 
     setUpdating(false);
     await loadData();
   };
 
-  const paginatedPoems = poems.slice((poemPage - 1) * PAGE_SIZE, poemPage * PAGE_SIZE);
-  const paginatedPinyins = pinyins.slice((pinyinPage - 1) * PAGE_SIZE, pinyinPage * PAGE_SIZE);
-  const poemTotalPages = Math.ceil(poems.length / PAGE_SIZE);
-  const pinyinTotalPages = Math.ceil(pinyins.length / PAGE_SIZE);
+  // 筛选
+  const filteredItems = items.filter((item) => {
+    const matchKeyword = !keyword ||
+      (item.poem?.title?.includes(keyword) || item.poem?.author?.includes(keyword));
+    const matchDynasty = filterDynasty === "不限" || item.poem?.dynasty === filterDynasty;
+    return matchKeyword && matchDynasty;
+  });
+
+  const paginatedItems = filteredItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(filteredItems.length / PAGE_SIZE);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[90vw] md:w-[70vw] lg:w-[50vw] max-w-[90vw] sm:max-w-[800px] max-h-[80vh] flex flex-col p-0">
-        <DialogHeader className="px-6 py-4 border-b">
-          <DialogTitle>本地数据管理</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="w-[90vw] md:w-[70vw] lg:w-[50vw] max-w-[90vw] sm:max-w-[800px] max-h-[80vh] flex flex-col p-0 !gap-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle>本地数据管理</DialogTitle>
+          </DialogHeader>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            加载中...
-          </div>
-        ) : (
-          <>
-            <div className="px-6 py-4 border-b flex flex-wrap gap-2">
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={deleteSelected}
-                disabled={selectedPoems.size === 0 && selectedPinyins.size === 0}
-              >
-                删除选中 ({selectedPoems.size + selectedPinyins.size})
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={updateSelected}
-                disabled={selectedPoems.size === 0 || updating}
-              >
-                {updating
-                  ? `更新中 (${updateProgress.current}/${updateProgress.total})`
-                  : `更新选中 (${selectedPoems.size})`}
-              </Button>
+          {loading ? (
+            <div className="flex items-center justify-center py-4">
+              加载中...
             </div>
+          ) : (
+            <>
+              <div className="px-6 py-2 border-b flex flex-wrap gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={deleteSelected}
+                  disabled={selectedIds.size === 0}
+                >
+                  删除选中 ({selectedIds.size})
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={updateSelected}
+                  disabled={selectedIds.size === 0 || updating}
+                >
+                  {updating
+                    ? `更新中 (${updateProgress.current}/${updateProgress.total})`
+                    : `更新选中 (${selectedIds.size})`}
+                </Button>
+              </div>
 
-            <div className="flex border-b">
-              <button
-                onClick={() => setActiveTab("poems")}
-                className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === "poems"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                诗词缓存 ({poems.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("pinyins")}
-                className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === "pinyins"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                拼音缓存 ({pinyins.length})
-              </button>
-            </div>
+              <FilterSection
+                keyword={keyword}
+                onKeywordChange={(v) => { setKeyword(v); setPage(1); }}
+                dynasty={filterDynasty}
+                onDynastyChange={(v) => { setFilterDynasty(v); setPage(1); }}
+                totalCount={filteredItems.length}
+              />
 
-            <div className="flex-1 overflow-auto">
-              {activeTab === "poems" ? (
-                poems.length === 0 ? (
+              <div className="flex-1 overflow-auto">
+                {filteredItems.length === 0 ? (
                   <div className="flex items-center justify-center h-40 text-muted-foreground">
-                    暂无缓存数据
+                    {items.length === 0 ? "暂无缓存数据" : "没有找到匹配的缓存数据"}
                   </div>
                 ) : (
                   <>
@@ -231,153 +237,181 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                         <tr>
                           <th className="w-10 px-2 py-2 text-left">
                             <Checkbox
-                              checked={poems.length > 0 && selectedPoems.size === poems.length}
-                              onCheckedChange={toggleAllPoems}
+                              checked={filteredItems.length > 0 && selectedIds.size === filteredItems.length}
+                              onCheckedChange={toggleAll}
                             />
                           </th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">ID</th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">标题</th>
-                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">作者</th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">朝代</th>
+                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">作者</th>
+                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">拼音</th>
+                          <th className="w-16 px-2 py-2 text-left text-xs font-medium text-muted-foreground">操作</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {paginatedPoems.map((poem) => (
-                          <tr key={poem.id} className="border-b hover:bg-muted/30">
+                        {paginatedItems.map((item) => (
+                          <tr key={item.id} className="border-b hover:bg-muted/30">
                             <td className="px-2 py-2">
                               <Checkbox
-                                checked={selectedPoems.has(poem.id)}
-                                onCheckedChange={() => togglePoem(poem.id)}
+                                checked={selectedIds.has(item.id)}
+                                onCheckedChange={() => toggleItem(item.id)}
                               />
                             </td>
-                            <td className="px-2 py-2 text-muted-foreground">{poem.id}</td>
-                            <td className="px-2 py-2">{poem.poem?.title || "-"}</td>
-                            <td className="px-2 py-2 text-muted-foreground">{poem.poem?.author || "-"}</td>
-                            <td className="px-2 py-2 text-muted-foreground">{poem.poem?.dynasty || "-"}</td>
+                            <td className="px-2 py-2 text-muted-foreground">{item.id}</td>
+                            <td className="px-2 py-2">{item.poem?.title || "-"}</td>
+                            <td className="px-2 py-2 text-muted-foreground">{item.poem?.dynasty || "-"}</td>
+                            <td className="px-2 py-2 text-muted-foreground">{item.poem?.author || "-"}</td>
+                            <td className="px-2 py-2">
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${item.hasPinyin ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-500 dark:bg-gray-800"}`}>
+                                {item.hasPinyin ? "已缓存" : "未缓存"}
+                              </span>
+                            </td>
+                            <td className="px-2 py-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                onClick={() => setPreviewItem(item)}
+                              >
+                                预览
+                              </Button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                    {poemTotalPages > 1 && (
+                    {totalPages > 1 && (
                       <div className="flex items-center justify-center gap-2 py-3 border-t">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPoemPage(1)}
-                          disabled={poemPage === 1}
-                        >
-                          首页
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPoemPage((p) => Math.max(1, p - 1))}
-                          disabled={poemPage === 1}
-                        >
-                          上一页
-                        </Button>
-                        <span className="text-sm text-muted-foreground">
-                          第 {poemPage} / {poemTotalPages} 页
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPoemPage((p) => Math.min(poemTotalPages, p + 1))}
-                          disabled={poemPage === poemTotalPages}
-                        >
-                          下一页
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPoemPage(poemTotalPages)}
-                          disabled={poemPage === poemTotalPages}
-                        >
-                          尾页
-                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={page === 1}>首页</Button>
+                        <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>上一页</Button>
+                        <span className="text-sm text-muted-foreground">第 {page} / {totalPages} 页</span>
+                        <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>下一页</Button>
+                        <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={page === totalPages}>尾页</Button>
                       </div>
                     )}
                   </>
-                )
-              ) : pinyins.length === 0 ? (
-                <div className="flex items-center justify-center h-40 text-muted-foreground">
-                  暂无缓存数据
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 预览弹窗 */}
+      <Dialog open={!!previewItem} onOpenChange={(open) => !open && setPreviewItem(null)}>
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-3xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold px-3 border-b pb-2">
+              {previewItem?.poem?.title || "预览"}
+            </DialogTitle>
+          </DialogHeader>
+          {previewItem && (
+            <ScrollArea className="h-[60vh] pr-4 px-3">
+              <div className="space-y-6">
+                {/* 标题+拼音 */}
+                <div className="text-center">
+                  <div className="flex justify-center gap-1 flex-wrap mb-3">
+                    {(previewItem.poem?.title || "").split("").map((char, idx) => (
+                      <div key={idx} className="flex flex-col items-center">
+                        <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-5">
+                          {previewItem.pinyin?.title?.[idx] || ""}
+                        </span>
+                        <span className="text-2xl font-bold">{char}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ) : (
-                <>
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50 sticky top-0">
-                      <tr>
-                        <th className="w-10 px-2 py-2 text-left">
-                          <Checkbox
-                            checked={pinyins.length > 0 && selectedPinyins.size === pinyins.length}
-                            onCheckedChange={toggleAllPinyins}
-                          />
-                        </th>
-                        <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">诗词ID</th>
-                        <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">标题</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedPinyins.map((pinyin) => (
-                        <tr key={pinyin.poem_id} className="border-b hover:bg-muted/30">
-                          <td className="px-2 py-2">
-                            <Checkbox
-                              checked={selectedPinyins.has(pinyin.poem_id)}
-                              onCheckedChange={() => togglePinyin(pinyin.poem_id)}
-                            />
-                          </td>
-                          <td className="px-2 py-2 text-muted-foreground">{pinyin.poem_id}</td>
-                          <td className="px-2 py-2">{pinyin.title?.[0] || "-"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {pinyinTotalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 py-3 border-t">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPinyinPage(1)}
-                        disabled={pinyinPage === 1}
-                      >
-                        首页
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPinyinPage((p) => Math.max(1, p - 1))}
-                        disabled={pinyinPage === 1}
-                      >
-                        上一页
-                      </Button>
-                      <span className="text-sm text-muted-foreground">
-                        第 {pinyinPage} / {pinyinTotalPages} 页
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPinyinPage((p) => Math.min(pinyinTotalPages, p + 1))}
-                        disabled={pinyinPage === pinyinTotalPages}
-                      >
-                        下一页
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPinyinPage(pinyinTotalPages)}
-                        disabled={pinyinPage === pinyinTotalPages}
-                      >
-                        尾页
-                      </Button>
+
+                {/* 作者信息 */}
+                <div className="text-center text-sm font-medium text-muted-foreground">
+                  {previewItem.poem?.author} [{previewItem.poem?.dynasty}]
+                </div>
+
+                {/* 诗词正文 */}
+                {previewItem.poem?.content?.content && (
+                  <div className="pt-0">
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      {previewItem.poem.xu && (
+                        <div className="text-center text-muted-foreground text-sm mb-2 italic">
+                          {previewItem.poem.xu}
+                        </div>
+                      )}
+                      <div className={previewItem.poem?.type === "文言文" ? "text-left" : "text-center"}>
+                        {previewItem.poem.content.content.map((line, lineIdx) => {
+                          const chars = line.split("");
+                          const pinyinLine = previewItem.pinyin?.content?.[lineIdx] || [];
+                          return (
+                            <div key={lineIdx} className="flex justify-center gap-1 mb-2 flex-wrap">
+                              {chars.map((char, charIdx) => (
+                                <div key={charIdx} className="flex flex-col items-center min-w-[1.5rem]">
+                                  <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-5">
+                                    {previewItem.hasPinyin ? (pinyinLine[charIdx] || "") : ""}
+                                  </span>
+                                  <span className="text-lg">{char}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  )}
-                </>
-              )}
-            </div>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
+                  </div>
+                )}
+
+                {/* 译文 */}
+                {previewItem.detail?.yi?.content && (
+                  <DetailSection title="译文" content={previewItem.detail.yi.content} />
+                )}
+
+                {/* 注释 */}
+                {previewItem.detail?.zhu?.content && (
+                  <DetailSection title="注释" content={previewItem.detail.zhu.content} isHtml />
+                )}
+
+                {/* 简介/背景 */}
+                {(previewItem.poem?.intro || previewItem.poem?.background) && (
+                  <DetailSection
+                    title={previewItem.poem?.intro ? "简介" : "创作背景"}
+                    content={[previewItem.poem?.intro || previewItem.poem?.background || ""]}
+                    isHtml
+                  />
+                )}
+
+                {/* 赏析 */}
+                {previewItem.detail?.shangxi?.content && (
+                  <DetailSection title="赏析" content={previewItem.detail.shangxi.content} isHtml />
+                )}
+              </div>
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+/** 详情章节组件 */
+function DetailSection({ title, content, isHtml }: { title: string; content: string[]; isHtml?: boolean }) {
+  return (
+    <div className="pb-4">
+      <div className="flex items-center gap-4 mb-2">
+        <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+        <h3 className="font-semibold text-base">{title}</h3>
+        <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+      </div>
+      {isHtml ? (
+        <div
+          className="text-muted-foreground leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: content.join("") }}
+        />
+      ) : (
+        content.map((text, idx) => (
+          <p key={idx} className="text-muted-foreground leading-relaxed">
+            {text}
+          </p>
+        ))
+      )}
+    </div>
   );
 }

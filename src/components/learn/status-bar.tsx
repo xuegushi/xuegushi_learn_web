@@ -39,11 +39,11 @@ export function StatusBar({
 
   return (
     <div className="border-b shadow-sm py-2 md:py-3 px-2 md:px-4 bg-background/50 backdrop-blur flex-shrink-0">
-      <div className="flex items-center gap-2">
-        {/* 侧边栏切换按钮 */}
+      {/* PC端：一行显示 */}
+      <div className="hidden md:flex items-center gap-2 flex-wrap">
         <button
           onClick={onToggleSidebar}
-          className="hidden md:flex p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
+          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
           title="切换侧边栏"
         >
           <PanelLeft className="h-5 w-5" />
@@ -56,7 +56,25 @@ export function StatusBar({
               {currentIndex + 1} / {poems.length}
             </span>
             <NavButton onClick={onNext} direction="next" />
-            <div className="flex gap-2 md:gap-4 text-xs md:text-sm ml-auto">
+
+            <div className="flex flex-wrap items-center gap-1 flex-1 justify-center">
+              {poems.map((poem, idx) => {
+                const key = poem.targetId?.toString();
+                const isMastered = masteredPoems.has(key);
+                const isNotMastered = notMasteredPoems.has(key);
+                const color = isMastered ? "bg-green-500" : isNotMastered ? "bg-red-500" : "bg-gray-300";
+                return (
+                  <div
+                    key={idx}
+                    className={`w-3 h-3 rounded cursor-pointer ${color} transition-colors hover:ring-2 hover:ring-primary`}
+                    onClick={() => onJumpTo(idx)}
+                    title={`${poem.title} (${idx + 1}/${poems.length})`}
+                  />
+                );
+              })}
+            </div>
+
+            <div className="flex gap-4 text-sm ml-auto">
               <span className="text-red-500">错误：{errorCount}</span>
               <span className="text-green-500">正确：{correctCount}</span>
               <span className="text-muted-foreground">正确率：{accuracy}%</span>
@@ -78,50 +96,73 @@ export function StatusBar({
         )}
 
         {poems.length === 0 && (
-          <div className="text-lg font-medium">
-            0 / 0
-          </div>
+          <div className="text-lg font-medium">0 / 0</div>
         )}
       </div>
 
-      {/* 状态指示点 - PC端 */}
-      {mode === "recite" && poems.length > 0 && (
-        <div className="hidden md:flex flex-wrap items-center justify-center gap-1 mt-2">
-          {poems.map((poem, idx) => {
-            const key = poem.targetId?.toString();
-            const isMastered = masteredPoems.has(key);
-            const isNotMastered = notMasteredPoems.has(key);
-            const color = isMastered ? "bg-green-500" : isNotMastered ? "bg-red-500" : "bg-gray-300";
-            return (
-              <div
-                key={idx}
-                className={`w-3 h-3 rounded cursor-pointer ${color} transition-colors hover:ring-2 hover:ring-primary`}
-                onClick={() => onJumpTo(idx)}
-                title={`${poem.title} (${idx + 1}/${poems.length})`}
-              />
-            );
-          })}
-        </div>
-      )}
+      {/* 移动端：多行显示 */}
+      <div className="md:hidden">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleSidebar}
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
+            title="切换侧边栏"
+          >
+            <PanelLeft className="h-5 w-5" />
+          </button>
 
-      {/* 状态指示点 - 移动端 */}
-      {mode === "recite" && poems.length > 0 && (
-        <div className="md:hidden flex flex-wrap items-center justify-center gap-1 mt-2">
-          {poems.map((poem, idx) => {
-            const key = poem.targetId?.toString();
-            const isMastered = masteredPoems.has(key);
-            const isNotMastered = notMasteredPoems.has(key);
-            const color = isMastered ? "bg-green-500" : isNotMastered ? "bg-red-500" : "bg-gray-300";
-            return (
-              <div
-                key={idx}
-                className={`w-4 h-4 rounded cursor-pointer ${color} transition-colors hover:ring-2 hover:ring-primary`}
-                onClick={() => onJumpTo(idx)}
-              />
-            );
-          })}
+          {mode === "recite" && poems.length > 0 && (
+            <>
+              <NavButton onClick={onPrev} direction="prev" />
+              <span className="text-sm text-muted-foreground">
+                {currentIndex + 1} / {poems.length}
+              </span>
+              <NavButton onClick={onNext} direction="next" />
+              <div className="flex gap-2 text-xs ml-auto">
+                <span className="text-red-500">错误：{errorCount}</span>
+                <span className="text-green-500">正确：{correctCount}</span>
+                <span className="text-muted-foreground">正确率：{accuracy}%</span>
+              </div>
+            </>
+          )}
+
+          {mode === "learn" && poems.length > 0 && (
+            <>
+              <NavButton onClick={onPrev} direction="prev" />
+              <span className="text-sm text-muted-foreground">
+                {currentIndex + 1} / {poems.length}
+              </span>
+              <NavButton onClick={onNext} direction="next" />
+              <span className="text-sm text-muted-foreground ml-auto">
+                {poems[currentIndex]?.grade} · {poems[currentIndex]?.semester}
+              </span>
+            </>
+          )}
+
+          {poems.length === 0 && (
+            <div className="text-lg font-medium">0 / 0</div>
+          )}
         </div>
-      )}
+
+        {/* 状态指示点 - 移动端单独显示在下方 */}
+        {mode === "recite" && poems.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-1 mt-2">
+            {poems.map((poem, idx) => {
+              const key = poem.targetId?.toString();
+              const isMastered = masteredPoems.has(key);
+              const isNotMastered = notMasteredPoems.has(key);
+              const color = isMastered ? "bg-green-500" : isNotMastered ? "bg-red-500" : "bg-gray-300";
+              return (
+                <div
+                  key={idx}
+                  className={`w-4 h-4 rounded cursor-pointer ${color} transition-colors hover:ring-2 hover:ring-primary`}
+                  onClick={() => onJumpTo(idx)}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

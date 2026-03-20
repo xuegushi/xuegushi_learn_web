@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftOpen } from "lucide-react";
 import { getFromDB, setToDB, STORES } from "@/lib/db";
 import { LocalDataManager } from "@/components/local-data-manager";
 import { Sidebar, StatusBar, LearnCard, ReciteCard, PoemDetailDialog, ResultDialog } from "@/components/learn";
@@ -124,7 +124,14 @@ export default function LearnPage() {
         const res = await fetch(`https://api.xuegushi.com/api/pinyin/poem?platform=web&poem_id=${poemId}`);
         const data = await res.json();
         setPinyinData(data);
-        await setToDB(STORES.PINYIN, { poem_id: poemId, ...data });
+        const currentPoem = poems[currentIndex];
+        await setToDB(STORES.PINYIN, {
+          poem_id: poemId,
+          ...data,
+          title_cn: currentPoem?.title || "",
+          author: currentPoem?.author || "",
+          dynasty: currentPoem?.dynasty || "",
+        });
       } catch {
         // 静默失败
       }
@@ -265,7 +272,15 @@ export default function LearnPage() {
           onPrev={prevPoem}
           onNext={nextPoem}
           onJumpTo={setCurrentIndex}
-          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onToggleSidebar={() => {
+            // PC端：切换侧边栏折叠状态
+            // 移动端：切换侧边栏显示/隐藏
+            if (typeof window !== "undefined" && window.innerWidth >= 768) {
+              setSidebarCollapsed(!sidebarCollapsed);
+            } else {
+              setSidebarOpen(!sidebarOpen);
+            }
+          }}
         />
 
         {/* 内容区 */}

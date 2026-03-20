@@ -35,9 +35,15 @@ export function ReciteCard({
   onViewDetail,
   targetId,
 }: ReciteCardProps) {
-  // 随机字符索引
+  // 随机字符索引 - 使用客户端状态避免水合错误
   const [randomIndices, setRandomIndices] = useState<number[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
   const prevPoemIdRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []);
 
   // 生成随机索引
   const generateRandomIndices = useCallback(() => {
@@ -49,6 +55,7 @@ export function ReciteCard({
   }, [poemDetail]);
 
   useEffect(() => {
+    if (!isMounted) return;
     if (showRandomChar && poemDetail?.poem?.content?.content) {
       // 仅当诗词变化时重新生成
       if (poemDetail.poem.id !== prevPoemIdRef.current) {
@@ -57,7 +64,7 @@ export function ReciteCard({
         setRandomIndices(generateRandomIndices());
       }
     }
-  }, [showRandomChar, poemDetail, generateRandomIndices]);
+  }, [isMounted, showRandomChar, poemDetail, generateRandomIndices]);
 
   // 点击随机提示按钮
   const handleRandomHint = useCallback(() => {
@@ -168,8 +175,8 @@ export function ReciteCard({
                 />
               )}
 
-              {/* 随机显示 */}
-              {(showRandomChar || randomIndices.length > 0) && poemDetail.poem?.content?.content && (
+              {/* 随机显示 - 只在客户端挂载后显示随机内容 */}
+              {isMounted && (showRandomChar || randomIndices.length > 0) && poemDetail.poem?.content?.content && (
                 <ContentDisplay
                   lines={poemDetail.poem.content.content}
                   mode="random"
@@ -178,7 +185,7 @@ export function ReciteCard({
               )}
 
               {/* 都不显示 */}
-              {!showFirstChar && !showLastChar && !showRandomChar && randomIndices.length === 0 && poemDetail.poem?.content?.content && (
+              {!showFirstChar && !showLastChar && !showRandomChar && !(isMounted && randomIndices.length > 0) && poemDetail.poem?.content?.content && (
                 <ContentDisplay
                   lines={poemDetail.poem.content.content}
                   mode="none"
