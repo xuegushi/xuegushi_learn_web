@@ -137,13 +137,19 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                 />
               )}
 
-              {/* 背景 - HTML渲染 */}
-              {(poemDetail.poem?.intro || poemDetail.poem?.background) && (
+              {/* 引文 */}
+              {poemDetail.poem?.intro && (
                 <Section
-                  title={poemDetail.poem?.intro ? "简介" : "创作背景"}
-                  content={[
-                    poemDetail.poem?.intro || poemDetail.poem?.background || "",
-                  ]}
+                  title="引文"
+                  content={[poemDetail.poem.intro]}
+                />
+              )}
+
+              {/* 背景 - HTML渲染 */}
+              {poemDetail.poem?.background && (
+                <Section
+                  title="创作背景"
+                  content={[poemDetail.poem.background]}
                   isHtml
                 />
               )}
