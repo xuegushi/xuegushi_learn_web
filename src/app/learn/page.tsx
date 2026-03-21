@@ -165,6 +165,13 @@ export default function LearnPage() {
   }, [catalogList, resetProgress, fetchCatalogDetail]);
 
   const handleContinueLearning = () => {
+    // 如果是提前结束，还有跳过的诗词，只关闭弹窗，不跳转下一分册
+    if (skippedCount > 0) {
+      setShowResult(false);
+      setSkippedCount(0);
+      return;
+    }
+
     if (!catalogDetail?.fasciculeList || !selectedFascicule) {
       setShowResult(false);
       resetProgress();
