@@ -63,10 +63,11 @@ export function StatusBar({
                 const isMastered = masteredPoems.has(key);
                 const isNotMastered = notMasteredPoems.has(key);
                 const color = isMastered ? "bg-green-500" : isNotMastered ? "bg-red-500" : "bg-gray-300";
+                const isCurrent = idx === currentIndex;
                 return (
                   <div
                     key={idx}
-                    className={`w-3 h-3 rounded cursor-pointer ${color} transition-colors hover:ring-2 hover:ring-primary`}
+                    className={`w-3 h-3 rounded cursor-pointer ${color} transition-colors ${isCurrent ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-primary"}`}
                     onClick={() => onJumpTo(idx)}
                     title={`${poem.title} (${idx + 1}/${poems.length})`}
                   />
@@ -152,10 +153,11 @@ export function StatusBar({
               const isMastered = masteredPoems.has(key);
               const isNotMastered = notMasteredPoems.has(key);
               const color = isMastered ? "bg-green-500" : isNotMastered ? "bg-red-500" : "bg-gray-300";
+              const isCurrent = idx === currentIndex;
               return (
                 <div
                   key={idx}
-                  className={`w-4 h-4 rounded cursor-pointer ${color} transition-colors hover:ring-2 hover:ring-primary`}
+                  className={`w-4 h-4 rounded cursor-pointer ${color} transition-colors ${isCurrent ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-primary"}`}
                   onClick={() => onJumpTo(idx)}
                 />
               );
