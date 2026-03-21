@@ -207,3 +207,26 @@ export async function clearDB(): Promise<void> {
   }
 }
 
+/**
+ * 获取 IndexedDB 数据库大小（估算）
+ */
+export async function getDBSize(): Promise<{ bytes: number; mb: string }> {
+  try {
+    const db = await openDB();
+    let totalBytes = 0;
+
+    // 获取所有数据并计算大小
+    const stores = [STORES.POEMS, STORES.PINYIN];
+    for (const storeName of stores) {
+      const data = await getAllFromDB(storeName);
+      const jsonString = JSON.stringify(data);
+      totalBytes += new TextEncoder().encode(jsonString).length;
+    }
+
+    const mb = (totalBytes / (1024 * 1024)).toFixed(2);
+    return { bytes: totalBytes, mb };
+  } catch {
+    return { bytes: 0, mb: '0.00' };
+  }
+}
+

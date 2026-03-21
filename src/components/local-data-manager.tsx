@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
-import { getAllFromDB, deleteFromDB, setToDB, STORES } from "@/lib/db";
+import { getAllFromDB, deleteFromDB, setToDB, STORES, getDBSize } from "@/lib/db";
 import { FilterSection } from "./local-data-manager/filter-section";
 
 interface PoemCache {
@@ -76,6 +76,7 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
   const [previewItem, setPreviewItem] = useState<CacheItem | null>(null);
   const [keyword, setKeyword] = useState("");
   const [filterDynasty, setFilterDynasty] = useState("不限");
+  const [dbSize, setDbSize] = useState<string>("0.00");
   // Sorting state
   type SortKey = 'id' | 'createdAt' | 'updatedAt';
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({
@@ -133,6 +134,11 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
     setItems(merged);
     setSelectedIds(new Set());
     setPage(1);
+
+    // Get DB size
+    const { mb } = await getDBSize();
+    setDbSize(mb);
+
     setLoading(false);
   }, []);
 
@@ -304,6 +310,9 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                 >
                   刷新数据
                 </Button>
+                <span className="ml-auto text-xs text-muted-foreground self-center">
+                  本地大小：{dbSize} MB
+                </span>
               </div>
 
               <FilterSection
