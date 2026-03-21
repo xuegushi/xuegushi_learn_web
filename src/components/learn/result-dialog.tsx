@@ -32,6 +32,7 @@ export function ResultDialog({
   totalCount,
   onRestart,
   onContinue,
+  mode,
 }: ResultDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
