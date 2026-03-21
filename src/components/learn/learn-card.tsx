@@ -5,6 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail, PinyinData } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { CheckCheck } from "lucide-react";
+import { CreateUserDialog } from "@/components/create-user-dialog";
+import { setToDB, getAllFromDB, STORES } from "@/lib/db";
 
 interface LearnCardProps {
   poemDetail: PoemDetail | null;
@@ -16,6 +19,99 @@ interface LearnCardProps {
 
 export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext }: LearnCardProps) {
   const [showTranslation, setShowTranslation] = useState(false);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+
+  // 获取用户信息
+  const getUser = () => {
+    try {
+      const userStr = localStorage.getItem("user");
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // 保存用户信息
+  const saveUser = (user: { user_id: number; user_name: string }) => {
+    localStorage.setItem("user", JSON.stringify(user));
+  };
+
+  // 创建用户
+  const handleCreateUser = async (userName: string) => {
+    const userData = {
+      user_name: userName,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    await setToDB(STORES.USERS, userData);
+
+    // 获取刚创建的用户
+    const users = await getAllFromDB<{ id: number; user_name: string }>(STORES.USERS);
+    const newUser = users[users.length - 1];
+    saveUser({ user_id: newUser.id, user_name: newUser.user_name });
+
+    // 创建用户后直接打卡
+    await handleCheckIn({ user_id: newUser.id, user_name: newUser.user_name });
+  };
+
+  // 打卡
+  const handleCheckIn = async (user?: { user_id: number; user_name: string }) => {
+    const currentUser = user || getUser();
+    if (!currentUser) {
+      setShowCreateUser(true);
+      return;
+    }
+
+    const poem = poemDetail?.poem;
+    if (!poem?.id) return;
+
+    const now = new Date().toISOString();
+
+    // 新增打卡明细
+    await setToDB(STORES.POEM_STUDY, {
+      user_id: currentUser.user_id,
+      poem_id: poem.id,
+      poem_title: poem.title || "",
+      author: poem.author || "",
+      dynasty: poem.dynasty || "",
+      check_in_time: now,
+    });
+
+    // 更新汇总
+    const allSummary = await getAllFromDB<{ id: number; user_id: number; poem_id: number; count: number; created_at: string; updated_at: string }>(STORES.POEM_STUDY_SUMMARY);
+    const existingSummary = allSummary.find(
+      (s) => s.user_id === currentUser.user_id && s.poem_id === poem.id
+    );
+
+    if (existingSummary) {
+      // 更新已有记录
+      await setToDB(STORES.POEM_STUDY_SUMMARY, {
+        ...existingSummary,
+        count: existingSummary.count + 1,
+        updated_at: now,
+      });
+    } else {
+      // 新增记录
+      await setToDB(STORES.POEM_STUDY_SUMMARY, {
+        user_id: currentUser.user_id,
+        poem_id: poem.id,
+        poem_title: poem.title || "",
+        count: 1,
+        created_at: now,
+        updated_at: now,
+      });
+    }
+  };
+
+  // 打卡按钮点击
+  const handleCheckInClick = () => {
+    const user = getUser();
+    if (!user) {
+      setShowCreateUser(true);
+    } else {
+      handleCheckIn(user);
+    }
+  };
 
   if (!poemDetail) {
     return (
@@ -165,7 +261,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
             </div>
 
             {/* 底部导航 */}
-            <div className="flex gap-4 pt-4 border-t flex-shrink-0">
+            <div className="flex items-center gap-4 pt-4 border-t flex-shrink-0">
               <button
                 onClick={onPrev}
                 className="flex-1 py-2 px-4 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">
@@ -176,10 +272,22 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                 className="flex-1 py-2 px-4 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">
                 下一首
               </button>
+              <button
+                onClick={handleCheckInClick}
+                className="flex items-center gap-1 py-2 px-4 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-pointer">
+                <CheckCheck className="h-4 w-4" />
+                打卡
+              </button>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <CreateUserDialog
+        open={showCreateUser}
+        onOpenChange={setShowCreateUser}
+        onSubmit={handleCreateUser}
+      />
     </div>
   );
 }
