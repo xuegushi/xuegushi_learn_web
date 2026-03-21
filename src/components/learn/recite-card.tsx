@@ -166,7 +166,7 @@ export function ReciteCard({
             <div className="flex gap-4">
               <button
                 onClick={() => onNotMastered(key)}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-base bg-red-100 text-red-700 rounded-xl hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-red-100 text-red-700 rounded-xl hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled={isDisabled}
               >
                 <CircleX className="h-5 w-5" />
@@ -174,7 +174,7 @@ export function ReciteCard({
               </button>
               <button
                 onClick={() => onMastered(key)}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-base bg-green-100 text-green-700 rounded-xl hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-green-100 text-green-700 rounded-xl hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled={isDisabled}
               >
                 <CheckCircle2 className="h-5 w-5" />
@@ -182,7 +182,7 @@ export function ReciteCard({
               </button>
               <button
                 onClick={onSkip}
-                className="py-2.5 px-4 text-base bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+                className="py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors"
               >
                 跳过
               </button>
