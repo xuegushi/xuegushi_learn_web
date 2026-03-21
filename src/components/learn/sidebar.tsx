@@ -136,8 +136,9 @@ export function Sidebar({
             </Select>
           </div>
 
-          {/* 背诵设置 */}
-          <div>
+          {/* 背诵设置 - 仅背诵模式显示 */}
+          {mode === "recite" && (
+            <div>
             <h2 className="font-semibold mb-3">背诵设置</h2>
             <div className="grid grid-cols-2 gap-2">
               <label className={`flex items-center justify-center gap-1 text-xs cursor-pointer py-1.5 px-1.5 rounded border ${showRandomChar && !showFirstChar && !showLastChar ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" : "border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100"}`}>
@@ -198,6 +199,7 @@ export function Sidebar({
               </label>
             </div>
           </div>
+          )}
 
           </div>
 

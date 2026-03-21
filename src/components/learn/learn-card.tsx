@@ -16,9 +16,10 @@ interface LearnCardProps {
   currentIndex: number;
   onPrev: () => void;
   onNext: () => void;
+  onCheckInSuccess?: () => void;
 }
 
-export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext }: LearnCardProps) {
+export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext, onCheckInSuccess }: LearnCardProps) {
   const [showTranslation, setShowTranslation] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showCheckInSuccess, setShowCheckInSuccess] = useState(false);
@@ -140,6 +141,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
     setCheckedInToday(true);
     setShowCheckInSuccess(true);
     setCheckingIn(false);
+    onCheckInSuccess?.();
   };
 
   // 打卡按钮点击

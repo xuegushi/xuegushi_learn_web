@@ -30,7 +30,7 @@ export function MobileButtons({
       </button>
 
       {/* 重新开始/继续学习 */}
-      <div className="md:hidden fixed bottom-20 right-4 z-50 flex gap-2">
+      <div className="md:hidden fixed bottom-20 right-4 z-30 flex gap-2">
         <button
           onClick={onReset}
           className="p-2 bg-gray-500/80 text-white rounded-full shadow-lg text-sm"

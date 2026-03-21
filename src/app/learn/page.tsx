@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { PanelLeftOpen } from "lucide-react";
-import { getFromDB, setToDB, STORES } from "@/lib/db";
+import { getAllFromDB, getFromDB, setToDB, STORES } from "@/lib/db";
 import { LocalDataManager } from "@/components/local-data-manager";
 import { CheckInRecordsDialog } from "@/components/check-in-records-dialog";
 import {
@@ -64,6 +64,33 @@ export default function LearnPage() {
   // 随机字符索引
   const [randomIndices, setRandomIndices] = useState<number[]>([]);
 
+  // 当天打卡记录
+  const [todayCheckedPoemIds, setTodayCheckedPoemIds] = useState<Set<number>>(new Set());
+
+  const loadTodayCheckInData = useCallback(async () => {
+    const currentUserStr = localStorage.getItem("user");
+    if (!currentUserStr) return;
+    const currentUser = JSON.parse(currentUserStr);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const allRecords = await getAllFromDB<{ poem_id: number; check_in_time: string }>(STORES.POEM_STUDY);
+    const todayChecked = new Set<number>();
+
+    allRecords.forEach(record => {
+      const checkDate = new Date(record.check_in_time);
+      checkDate.setHours(0, 0, 0, 0);
+      if (checkDate.getTime() >= today.getTime() && checkDate.getTime() < tomorrow.getTime() && record.poem_id) {
+        todayChecked.add(record.poem_id);
+      }
+    });
+
+    setTodayCheckedPoemIds(todayChecked);
+  }, []);
+
   // ==================== 诗词列表 ====================
   const poems = useMemo(() => {
     if (!selectedFascicule || !catalogDetail?.fasciculeList) return [];
@@ -114,6 +141,11 @@ export default function LearnPage() {
       })
       .catch(() => setLoading(false));
   }, [fetchCatalogDetail]);
+
+  // 加载当天打卡数据
+  useEffect(() => {
+    loadTodayCheckInData();
+  }, [loadTodayCheckInData, selectedFascicule]);
 
   // 获取诗词详情和拼音
   useEffect(() => {
@@ -350,7 +382,15 @@ export default function LearnPage() {
       <LocalDataManager open={localDataOpen} onOpenChange={setLocalDataOpen} />
 
       {/* 打卡记录弹窗 */}
-      <CheckInRecordsDialog open={checkInRecordsOpen} onOpenChange={setCheckInRecordsOpen} />
+      <CheckInRecordsDialog 
+        open={checkInRecordsOpen} 
+        onOpenChange={(open) => {
+          setCheckInRecordsOpen(open);
+          if (open === false) {
+            loadTodayCheckInData();
+          }
+        }} 
+      />
 
       {/* 主内容区 */}
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
@@ -376,6 +416,7 @@ export default function LearnPage() {
             }
           }}
           onCheckInRecordsClick={() => setCheckInRecordsOpen(true)}
+          checkedPoemIds={todayCheckedPoemIds}
         />
 
         {/* 内容区 */}
@@ -391,6 +432,7 @@ export default function LearnPage() {
               currentIndex={currentIndex}
               onPrev={prevPoem}
               onNext={nextPoem}
+              onCheckInSuccess={loadTodayCheckInData}
             />
           ) : (
             <ReciteCard

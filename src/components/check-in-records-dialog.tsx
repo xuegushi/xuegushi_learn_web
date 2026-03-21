@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DynastyArr } from "@/config/poem";
 import { getAllFromDB, STORES } from "@/lib/db";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 
 interface CheckInDetail {
   id: number;
@@ -72,6 +74,11 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     direction: 'desc'
   });
 
+  // Pagination state
+  const [detailPage, setDetailPage] = useState(1);
+  const [summaryPage, setSummaryPage] = useState(1);
+  const pageSize = 10;
+
   const loadData = useCallback(async () => {
     setLoading(true);
     const [userList, detailList, summaryList] = await Promise.all([
@@ -79,6 +86,12 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
       getAllFromDB<CheckInDetail>(STORES.POEM_STUDY),
       getAllFromDB<CheckInSummary>(STORES.POEM_STUDY_SUMMARY),
     ]);
+
+    const currentUserStr = localStorage.getItem("user");
+    const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+    if (currentUser) {
+      setSelectedUser(currentUser.user_id.toString());
+    }
 
     // Enrich with user names
     const userMap = new Map(userList.map(u => [u.id, u.user_name]));
@@ -97,12 +110,31 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     setLoading(false);
   }, []);
 
+  const dateCheckInCount = useMemo(() => {
+    const countMap = new Map<string, number>();
+    details.forEach(d => {
+      const date = d.check_in_time.split('T')[0];
+      countMap.set(date, (countMap.get(date) || 0) + 1);
+    });
+    return countMap;
+  }, [details]);
+
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       loadData();
     }
   }, [open, loadData]);
+
+  useEffect(() => {
+    setDetailPage(1);
+  }, [selectedUser, searchKeyword, selectedDynasty, detailSort]);
+
+  useEffect(() => {
+    setSummaryPage(1);
+  }, [selectedUser, searchKeyword, selectedDynasty, summarySort]);
 
   // Filter details
   const filteredDetails = details.filter(d => {
@@ -149,6 +181,12 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
       : String(valueB).localeCompare(String(valueA));
   });
 
+  // Paginated data
+  const paginatedDetails = sortedDetails.slice((detailPage - 1) * pageSize, detailPage * pageSize);
+  const paginatedSummaries = sortedSummaries.slice((summaryPage - 1) * pageSize, summaryPage * pageSize);
+  const detailTotalPages = Math.ceil(sortedDetails.length / pageSize) || 1;
+  const summaryTotalPages = Math.ceil(sortedSummaries.length / pageSize) || 1;
+
   const toggleDetailSort = (key: DetailSortKey) => {
     setDetailSort(prev => ({
       key,
@@ -170,7 +208,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[90vw] md:w-[80vw] lg:w-[70vw] max-w-[1000px] max-h-[80vh] flex flex-col p-0 !gap-0">
+      <DialogContent className="w-[95vw] md:w-[90vw] lg:w-[85vw] max-w-[1400px] max-h-[85vh] flex flex-col p-0 !gap-0 sm:max-w-[1400px]">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>打卡记录</DialogTitle>
         </DialogHeader>
@@ -178,7 +216,19 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
         {loading ? (
           <div className="flex items-center justify-center py-8">加载中...</div>
         ) : (
-          <Tabs defaultValue="detail" className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex flex-1 overflow-hidden">
+            <div className="w-80 flex-shrink-0 px-6 py-3 overflow-y-auto border-r">
+              <h3 className="font-medium mb-4">打卡日历</h3>
+              <Calendar
+                dateData={dateCheckInCount}
+                selectedDate={selectedDate}
+                onSelect={setSelectedDate}
+                className="border rounded-lg p-4"
+              />
+            </div>
+
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <Tabs defaultValue="detail" className="flex-1 flex flex-col overflow-hidden" onValueChange={() => { setDetailPage(1); setSummaryPage(1); }}>
             <div className="px-6 pt-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="detail">打卡明细</TabsTrigger>
@@ -186,11 +236,13 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
               </TabsList>
             </div>
 
-            <TabsContent value="detail" className="flex-1 overflow-hidden flex flex-col px-6 mt-4">
+            <TabsContent value="detail" className="flex-1 overflow-hidden flex flex-col px-6 mt-4 pb-6">
               <div className="flex flex-wrap gap-3 mb-4">
                 <Select value={selectedUser} onValueChange={(v) => v && setSelectedUser(v)}>
                   <SelectTrigger className="w-32">
-                    <SelectValue placeholder="全部用户" />
+                    <SelectValue>
+                      {selectedUser === "all" ? "全部用户" : users.find(u => u.id.toString() === selectedUser)?.user_name}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部用户</SelectItem>
@@ -227,7 +279,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                       <th className="px-2 py-2 text-left">ID</th>
                       <th className="px-2 py-2 text-left">用户</th>
                       <th className="px-2 py-2 text-left">诗词标题</th>
-                      <th className="px-2 py-2 text-left">诗人+朝代</th>
+                      <th className="px-2 py-2 text-left">诗人</th>
                       <th className="px-2 py-2 text-left cursor-pointer" onClick={() => toggleDetailSort('check_in_time')}>
                         <span className="flex items-center gap-1">
                           打卡时间
@@ -237,12 +289,12 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedDetails.length === 0 ? (
+                    {paginatedDetails.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="text-center py-8 text-muted-foreground">暂无数据</td>
                       </tr>
                     ) : (
-                      sortedDetails.map(d => (
+                      paginatedDetails.map(d => (
                         <tr key={d.id} className="border-b hover:bg-muted/30">
                           <td className="px-2 py-2">{d.id}</td>
                           <td className="px-2 py-2">{d.user_name}</td>
@@ -255,13 +307,40 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                   </tbody>
                 </table>
               </ScrollArea>
+
+              <div className="flex items-center justify-between mt-4 px-1">
+                <span className="text-xs text-muted-foreground">
+                  共 {sortedDetails.length} 条
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setDetailPage(p => Math.max(1, p - 1))}
+                    disabled={detailPage === 1}
+                    className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="text-xs">
+                    {detailPage} / {detailTotalPages}
+                  </span>
+                  <button
+                    onClick={() => setDetailPage(p => Math.min(detailTotalPages, p + 1))}
+                    disabled={detailPage === detailTotalPages}
+                    className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </TabsContent>
 
-            <TabsContent value="summary" className="flex-1 overflow-hidden flex flex-col px-6 mt-4">
+            <TabsContent value="summary" className="flex-1 overflow-hidden flex flex-col px-6 mt-4 pb-6">
               <div className="flex flex-wrap gap-3 mb-4">
                 <Select value={selectedUser} onValueChange={(v) => v && setSelectedUser(v)}>
                   <SelectTrigger className="w-32">
-                    <SelectValue placeholder="全部用户" />
+                    <SelectValue>
+                      {selectedUser === "all" ? "全部用户" : users.find(u => u.id.toString() === selectedUser)?.user_name}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部用户</SelectItem>
@@ -298,7 +377,6 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                       <th className="px-2 py-2 text-left">ID</th>
                       <th className="px-2 py-2 text-left">用户</th>
                       <th className="px-2 py-2 text-left">诗词标题</th>
-                      <th className="px-2 py-2 text-left">诗人+朝代</th>
                       <th className="px-2 py-2 text-left cursor-pointer" onClick={() => toggleSummarySort('count')}>
                         <span className="flex items-center gap-1">
                           打卡次数
@@ -320,17 +398,16 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedSummaries.length === 0 ? (
+                    {paginatedSummaries.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="text-center py-8 text-muted-foreground">暂无数据</td>
+                        <td colSpan={6} className="text-center py-8 text-muted-foreground">暂无数据</td>
                       </tr>
                     ) : (
-                      sortedSummaries.map(s => (
+                      paginatedSummaries.map(s => (
                         <tr key={s.id} className="border-b hover:bg-muted/30">
                           <td className="px-2 py-2">{s.id}</td>
                           <td className="px-2 py-2">{s.user_name}</td>
                           <td className="px-2 py-2">{s.poem_title}</td>
-                          <td className="px-2 py-2">{s.author}「{s.dynasty}」</td>
                           <td className="px-2 py-2">{s.count}</td>
                           <td className="px-2 py-2">{new Date(s.created_at).toLocaleString()}</td>
                           <td className="px-2 py-2">{new Date(s.updated_at).toLocaleString()}</td>
@@ -340,8 +417,35 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                   </tbody>
                 </table>
               </ScrollArea>
+
+              <div className="flex items-center justify-between mt-4 px-1">
+                <span className="text-xs text-muted-foreground">
+                  共 {sortedSummaries.length} 条
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSummaryPage(p => Math.max(1, p - 1))}
+                    disabled={summaryPage === 1}
+                    className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="text-xs">
+                    {summaryPage} / {summaryTotalPages}
+                  </span>
+                  <button
+                    onClick={() => setSummaryPage(p => Math.min(summaryTotalPages, p + 1))}
+                    disabled={summaryPage === summaryTotalPages}
+                    className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </TabsContent>
-          </Tabs>
+            </Tabs>
+            </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>
