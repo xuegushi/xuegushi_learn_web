@@ -139,7 +139,7 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
       // eslint-disable-next-line react-hooks/set-state-in-effect
       loadData();
     }
-  }, [open, loadData]);
+  }, [open, loadData, sortConfig]);
 
   const toggleItem = (id: number) => {
     setSelectedIds((prev) => {
