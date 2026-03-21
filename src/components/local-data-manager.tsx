@@ -139,7 +139,7 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
       // eslint-disable-next-line react-hooks/set-state-in-effect
       loadData();
     }
-  }, [open, loadData, sortConfig]);
+  }, [open, loadData]);
 
   const toggleItem = (id: number) => {
     setSelectedIds((prev) => {
@@ -224,8 +224,34 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
     setPage(1);
   };
 
-  // 筛选
-  const filteredItems = items.filter((item) => {
+  // 排序并筛选
+  const sortedItems = [...items].sort((a, b) => {
+    const valueA = a[sortConfig.key];
+    const valueB = b[sortConfig.key];
+
+    // Handle undefined/null values
+    if (valueA === undefined || valueA === null) return sortConfig.direction === 'asc' ? 1 : -1;
+    if (valueB === undefined || valueB === null) return sortConfig.direction === 'asc' ? -1 : 1;
+
+    // For string values (like dates), use localeCompare
+    if (typeof valueA === 'string' && typeof valueB === 'string') {
+      return sortConfig.direction === 'asc'
+        ? valueA.localeCompare(valueB)
+        : valueB.localeCompare(valueA);
+    }
+
+    // For numeric values (like ID)
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      return sortConfig.direction === 'asc'
+        ? valueA - valueB
+        : valueB - valueA;
+    }
+
+    // Default fallback
+    return 0;
+  });
+
+  const filteredItems = sortedItems.filter((item) => {
     const matchKeyword = !keyword ||
       (item.poem?.title?.includes(keyword) || item.poem?.author?.includes(keyword));
     const matchDynasty = filterDynasty === "不限" || item.poem?.dynasty === filterDynasty;
