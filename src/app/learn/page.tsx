@@ -360,9 +360,9 @@ export default function LearnPage() {
         open={showResult}
         onOpenChange={setShowResult}
         accuracy={accuracy}
-        correctCount=correctCount
-        errorCount=errorCount
-        totalCount=poems.length
+        correctCount={correctCount}
+        errorCount={errorCount}
+        totalCount={poems.length}
         onRestart={() => {
           setShowResult(false);
           setMasteredPoems(new Set());
