@@ -4,15 +4,29 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { PanelLeftOpen } from "lucide-react";
 import { getFromDB, setToDB, STORES } from "@/lib/db";
 import { LocalDataManager } from "@/components/local-data-manager";
-import { Sidebar, StatusBar, LearnCard, ReciteCard, PoemDetailDialog, ResultDialog } from "@/components/learn";
-import { CatalogItem, CatalogDetail, PoemDetail, PinyinData } from "@/types/poem";
+import {
+  Sidebar,
+  StatusBar,
+  LearnCard,
+  ReciteCard,
+  PoemDetailDialog,
+  ResultDialog,
+} from "@/components/learn";
+import {
+  CatalogItem,
+  CatalogDetail,
+  PoemDetail,
+  PinyinData,
+} from "@/types/poem";
 import { MobileButtons, PcButtons } from "./components/PageButtons";
 
 /** 页面主组件 */
 export default function LearnPage() {
   // ==================== 状态定义 ====================
   const [catalogList, setCatalogList] = useState<CatalogItem[]>([]);
-  const [catalogDetail, setCatalogDetail] = useState<CatalogDetail | null>(null);
+  const [catalogDetail, setCatalogDetail] = useState<CatalogDetail | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
 
   // 筛选状态
@@ -27,7 +41,9 @@ export default function LearnPage() {
   const [errorCount, setErrorCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [masteredPoems, setMasteredPoems] = useState<Set<string>>(new Set());
-  const [notMasteredPoems, setNotMasteredPoems] = useState<Set<string>>(new Set());
+  const [notMasteredPoems, setNotMasteredPoems] = useState<Set<string>>(
+    new Set(),
+  );
   const [showResult, setShowResult] = useState(false);
 
   // 模式
@@ -38,7 +54,9 @@ export default function LearnPage() {
 
   // 详情弹窗
   const [selectedPoem, setSelectedPoem] = useState<PoemDetail | null>(null);
-  const [currentPoemDetail, setCurrentPoemDetail] = useState<PoemDetail | null>(null);
+  const [currentPoemDetail, setCurrentPoemDetail] = useState<PoemDetail | null>(
+    null,
+  );
   const [pinyinData, setPinyinData] = useState<PinyinData | null>(null);
 
   // 随机字符索引
@@ -48,7 +66,9 @@ export default function LearnPage() {
   const poems = useMemo(() => {
     if (!selectedFascicule || !catalogDetail?.fasciculeList) return [];
 
-    const fascData = catalogDetail.fasciculeList.find((f) => f._id === selectedFascicule);
+    const fascData = catalogDetail.fasciculeList.find(
+      (f) => f._id === selectedFascicule,
+    );
     if (!fascData?.doc_list) return [];
 
     return fascData.doc_list.map((poem) => ({
@@ -56,13 +76,15 @@ export default function LearnPage() {
       title: poem.title,
       author: poem.author,
       dynasty: poem.dynasty,
-      grade: fascData.fascicule_name
+      grade: fascData.fascicule_name,
     }));
   }, [catalogDetail, selectedFascicule]);
 
   // ==================== 数据获取 ====================
   const fetchCatalogDetail = useCallback((catalogId: string) => {
-    fetch(`https://api.xuegushi.com/api/catalog/detail?platform=web&catalog_id=${catalogId}`)
+    fetch(
+      `https://api.xuegushi.com/api/catalog/detail?platform=web&catalog_id=${catalogId}`,
+    )
       .then((res) => res.json())
       .then((data) => {
         setCatalogDetail(data);
@@ -75,7 +97,9 @@ export default function LearnPage() {
   }, []);
 
   useEffect(() => {
-    fetch("https://api.xuegushi.com/api/catalog/list?platform=web&page=1&size=100")
+    fetch(
+      "https://api.xuegushi.com/api/catalog/list?platform=web&page=1&size=100",
+    )
       .then((res) => res.json())
       .then((data) => {
         setCatalogList(data.list || []);
@@ -106,7 +130,9 @@ export default function LearnPage() {
 
       // 请求API
       try {
-        const res = await fetch(`https://api.xuegushi.com/api/poem/${targetId}?platform=web`);
+        const res = await fetch(
+          `https://api.xuegushi.com/api/poem/${targetId}?platform=web`,
+        );
         const data = await res.json();
         setCurrentPoemDetail(data);
         await setToDB(STORES.POEMS, { id: targetId, ...data });
@@ -124,7 +150,9 @@ export default function LearnPage() {
       }
 
       try {
-        const res = await fetch(`https://api.xuegushi.com/api/pinyin/poem?platform=web&poem_id=${poemId}`);
+        const res = await fetch(
+          `https://api.xuegushi.com/api/pinyin/poem?platform=web&poem_id=${poemId}`,
+        );
         const data = await res.json();
         setPinyinData(data);
         const currentPoem = poems[currentIndex];
@@ -156,13 +184,16 @@ export default function LearnPage() {
     setShowResult(false);
   }, []);
 
-  const handleSystemChange = useCallback((catalogId: string | null) => {
-    if (!catalogId) return;
-    setSystem(catalogId);
-    resetProgress();
-    const selected = catalogList.find((c) => c.catalog === catalogId);
-    if (selected) fetchCatalogDetail(selected._id);
-  }, [catalogList, resetProgress, fetchCatalogDetail]);
+  const handleSystemChange = useCallback(
+    (catalogId: string | null) => {
+      if (!catalogId) return;
+      setSystem(catalogId);
+      resetProgress();
+      const selected = catalogList.find((c) => c.catalog === catalogId);
+      if (selected) fetchCatalogDetail(selected._id);
+    },
+    [catalogList, resetProgress, fetchCatalogDetail],
+  );
 
   const handleContinueLearning = () => {
     // 如果是提前结束，还有跳过的诗词，只关闭弹窗，不跳转下一分册
@@ -178,7 +209,9 @@ export default function LearnPage() {
       return;
     }
 
-    const idx = catalogDetail.fasciculeList.findIndex((f) => f._id === selectedFascicule);
+    const idx = catalogDetail.fasciculeList.findIndex(
+      (f) => f._id === selectedFascicule,
+    );
     if (idx >= 0 && idx < catalogDetail.fasciculeList.length - 1) {
       setSelectedFascicule(catalogDetail.fasciculeList[idx + 1]._id);
       resetProgress();
@@ -196,27 +229,35 @@ export default function LearnPage() {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : poems.length - 1));
   }, [poems.length]);
 
-  const handleNotMastered = useCallback((key: string) => {
-    const isAllDone = masteredPoems.size + notMasteredPoems.size + 1 >= poems.length;
-    setNotMasteredPoems((prev) => new Set(prev).add(key));
-    setErrorCount((prev) => prev + 1);
-    if (isAllDone) {
-      setShowResult(true);
-    } else {
-      setTimeout(() => nextPoem(), 100);
-    }
-  }, [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem]);
+  const handleNotMastered = useCallback(
+    (key: string) => {
+      const isAllDone =
+        masteredPoems.size + notMasteredPoems.size + 1 >= poems.length;
+      setNotMasteredPoems((prev) => new Set(prev).add(key));
+      setErrorCount((prev) => prev + 1);
+      if (isAllDone) {
+        setShowResult(true);
+      } else {
+        setTimeout(() => nextPoem(), 100);
+      }
+    },
+    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem],
+  );
 
-  const handleMastered = useCallback((key: string) => {
-    const isAllDone = masteredPoems.size + notMasteredPoems.size + 1 >= poems.length;
-    setMasteredPoems((prev) => new Set(prev).add(key));
-    setCorrectCount((prev) => prev + 1);
-    if (isAllDone) {
-      setShowResult(true);
-    } else {
-      setTimeout(() => nextPoem(), 100);
-    }
-  }, [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem]);
+  const handleMastered = useCallback(
+    (key: string) => {
+      const isAllDone =
+        masteredPoems.size + notMasteredPoems.size + 1 >= poems.length;
+      setMasteredPoems((prev) => new Set(prev).add(key));
+      setCorrectCount((prev) => prev + 1);
+      if (isAllDone) {
+        setShowResult(true);
+      } else {
+        setTimeout(() => nextPoem(), 100);
+      }
+    },
+    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem],
+  );
 
   // 提前结束
   const handleEarlyEnd = useCallback(() => {
@@ -258,17 +299,20 @@ export default function LearnPage() {
     );
   }
 
-  const accuracy = errorCount + correctCount > 0
-    ? Math.round((correctCount / (errorCount + correctCount)) * 100)
-    : 0;
+  const accuracy =
+    errorCount + correctCount > 0
+      ? Math.round((correctCount / (errorCount + correctCount)) * 100)
+      : 0;
 
-  const allCompleted = poems.length > 0 && masteredPoems.size + notMasteredPoems.size === poems.length;
+  const allCompleted =
+    poems.length > 0 &&
+    masteredPoems.size + notMasteredPoems.size === poems.length;
 
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-56px-40px)] md:h-[calc(100vh-64px-48px)]">
-
       {/* 侧边栏 */}
       <Sidebar
+        collapsed={sidebarCollapsed}
         catalogList={catalogList}
         catalogDetail={catalogDetail}
         system={system}
@@ -287,6 +331,17 @@ export default function LearnPage() {
         mode={mode}
         onModeChange={setMode}
       />
+
+      {/* PC端侧边栏收起按钮 */}
+      {sidebarCollapsed && (
+        <button
+          onClick={() => setSidebarCollapsed(false)}
+          className="hidden md:flex fixed left-0 top-1/2 z-40 p-2 bg-primary/80 text-primary-foreground rounded-r-lg shadow-lg cursor-pointer"
+          title="展开侧边栏"
+        >
+          <PanelLeftOpen className="h-5 w-5" />
+        </button>
+      )}
 
       {/* 本地数据管理弹窗 */}
       <LocalDataManager open={localDataOpen} onOpenChange={setLocalDataOpen} />
@@ -343,7 +398,9 @@ export default function LearnPage() {
               onMastered={handleMastered}
               onNotMastered={handleNotMastered}
               onSkip={nextPoem}
-              onViewDetail={() => setSelectedPoem(currentPoemDetail as unknown as PoemDetail)}
+              onViewDetail={() =>
+                setSelectedPoem(currentPoemDetail as unknown as PoemDetail)
+              }
               onRandomHint={handleRandomHint}
               targetId={poems[currentIndex]?.targetId || 0}
             />
