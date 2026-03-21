@@ -321,7 +321,7 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                   </div>
                 ) : (
                   <>
-                    <table className="w-full text-sm">
+                    <table className="w-full text-xs">
                       <thead className="bg-muted/50 sticky top-0">
                         <tr>
                           <th className="w-10 px-2 py-2 text-left">
@@ -377,7 +377,7 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                               />
                             </td>
                             <td className="px-2 py-2 text-muted-foreground">{item.id}</td>
-                            <td className="px-2 py-2">{item.poem?.title || "-"}</td>
+                            <td className="px-2 py-2 max-w-[160px] truncate">{item.poem?.title || "-"}</td>
                             <td className="px-2 py-2 text-muted-foreground">{item.poem?.dynasty || "-"}</td>
                             <td className="px-2 py-2 text-muted-foreground">{item.poem?.author || "-"}</td>
                             <td className="px-2 py-2 text-center">
