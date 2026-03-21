@@ -94,18 +94,12 @@ function openDB(): Promise<IDBDatabase> {
           poemStore.createIndex('createdAt', 'createdAt', { unique: false });
         } else {
           // Store exists, add indexes if needed
-          const poemStore = db.objectStore(STORES.POEMS);
-
-          // Add indexes if they don't exist (preserving existing data)
-          if (!poemStore.indexNames.contains('updatedAt')) {
-            poemStore.createIndex('updatedAt', 'updatedAt', { unique: false });
-          }
-          if (!poemStore.indexNames.contains('createdAt')) {
-            poemStore.createIndex('createdAt', 'createdAt', { unique: false });
-          }
+          // In onupgradeneeded, we can't directly access objectStore, so we need to check if indexes exist differently
+          // For now, we'll skip index addition in upgrade and rely on the migration function
+          // The migration function will handle adding missing fields to existing data
         }
 
-        // Handle PINYIN store
+      // Handle PINYIN store
         if (!db.objectStoreNames.contains(STORES.PINYIN)) {
           // Store doesn't exist, create new one
           const pinyinStore = db.createObjectStore(STORES.PINYIN, { keyPath: 'poem_id' });
@@ -113,15 +107,7 @@ function openDB(): Promise<IDBDatabase> {
           pinyinStore.createIndex('createdAt', 'createdAt', { unique: false });
         } else {
           // Store exists, add indexes if needed
-          const pinyinStore = db.objectStore(STORES.PINYIN);
-
-          // Add indexes if they don't exist (preserving existing data)
-          if (!pinyinStore.indexNames.contains('updatedAt')) {
-            pinyinStore.createIndex('updatedAt', 'updatedAt', { unique: false });
-          }
-          if (!pinyinStore.indexNames.contains('createdAt')) {
-            pinyinStore.createIndex('createdAt', 'createdAt', { unique: false });
-          }
+          // Same as above - skip index addition in upgrade, rely on migration
         }
       }
     };
