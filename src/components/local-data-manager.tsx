@@ -283,10 +283,18 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                             <td className="px-2 py-2">{item.poem?.title || "-"}</td>
                             <td className="px-2 py-2 text-muted-foreground">{item.poem?.dynasty || "-"}</td>
                             <td className="px-2 py-2 text-muted-foreground">{item.poem?.author || "-"}</td>
-                            <td className="px-2 py-2">
-                              <span className={`text-xs px-1.5 py-0.5 rounded ${item.hasPinyin ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-500 dark:bg-gray-800"}`}>
-                                {item.hasPinyin ? "已缓存" : "未缓存"}
-                              </span>
+                            <td className="px-2 py-2 text-center">
+                              {item.hasPinyin ? (
+                                <span className="text-xs">✓</span>
+                              ) : (
+                                <span className="text-xs">✗</span>
+                              )}
+                            </td>
+                            <td className="px-2 py-2 text-muted-foreground">
+                              {item.poem?.createdAt ? new Date(item.poem.createdAt).toLocaleString() : '-'}
+                            </td>
+                            <td className="px-2 py-2 text-muted-foreground">
+                              {item.poem?.updatedAt ? new Date(item.poem.updatedAt).toLocaleString() : '-'}
                             </td>
                             <td className="px-2 py-2">
                               <Button
