@@ -16,6 +16,7 @@ interface ResultDialogProps {
   totalCount: number;
   onRestart: () => void;
   onContinue: () => void;
+  mode: "recite" | "learn";
 }
 
 /**
@@ -69,7 +70,7 @@ export function ResultDialog({
             onClick={onContinue}
             className="px-6 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors cursor-pointer"
           >
-            继续学习
+            {mode === "recite" ? "继续背诵" : "继续学习"}
           </button>
         </div>
       </DialogContent>
