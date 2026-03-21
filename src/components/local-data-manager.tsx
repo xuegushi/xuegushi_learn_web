@@ -302,17 +302,17 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                               onCheckedChange={toggleAll}
                             />
                           </th>
-                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:bg-muted/100" onClick={() => handleSortChange('id')}>
+                          <th className={`px-2 py-2 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:bg-muted/100 ${sortConfig.key === 'id' ? 'font-semibold' : ''}`} onClick={() => handleSortChange('id')}>
                             ID{sortConfig.key === 'id' ? (sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : ''}
                           </th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">标题</th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">朝代</th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">作者</th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">拼音</th>
-                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:bg-muted/100" onClick={() => handleSortChange('createdAt')}>
+                          <th className={`px-2 py-2 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:bg-muted/100 ${sortConfig.key === 'createdAt' ? 'font-semibold' : ''}`} onClick={() => handleSortChange('createdAt')}>
                             创建时间{sortConfig.key === 'createdAt' ? (sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : ''}
                           </th>
-                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:bg-muted/100" onClick={() => handleSortChange('updatedAt')}>
+                          <th className={`px-2 py-2 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:bg-muted/100 ${sortConfig.key === 'updatedAt' ? 'font-semibold' : ''}`} onClick={() => handleSortChange('updatedAt')}>
                             更新时间{sortConfig.key === 'updatedAt' ? (sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : ''}
                           </th>
                           <th className="w-16 px-2 py-2 text-left text-xs font-medium text-muted-foreground">操作</th>
