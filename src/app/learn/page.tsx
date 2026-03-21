@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { PanelLeftOpen } from "lucide-react";
 import { getFromDB, setToDB, STORES } from "@/lib/db";
 import { LocalDataManager } from "@/components/local-data-manager";
+import { CheckInRecordsDialog } from "@/components/check-in-records-dialog";
 import {
   Sidebar,
   StatusBar,
@@ -51,6 +52,7 @@ export default function LearnPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [localDataOpen, setLocalDataOpen] = useState(false);
+  const [checkInRecordsOpen, setCheckInRecordsOpen] = useState(false);
 
   // 详情弹窗
   const [selectedPoem, setSelectedPoem] = useState<PoemDetail | null>(null);
@@ -347,6 +349,9 @@ export default function LearnPage() {
       {/* 本地数据管理弹窗 */}
       <LocalDataManager open={localDataOpen} onOpenChange={setLocalDataOpen} />
 
+      {/* 打卡记录弹窗 */}
+      <CheckInRecordsDialog open={checkInRecordsOpen} onOpenChange={setCheckInRecordsOpen} />
+
       {/* 主内容区 */}
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         {/* 顶部状态栏 */}
@@ -370,6 +375,7 @@ export default function LearnPage() {
               setSidebarOpen(!sidebarOpen);
             }
           }}
+          onCheckInRecordsClick={() => setCheckInRecordsOpen(true)}
         />
 
         {/* 内容区 */}

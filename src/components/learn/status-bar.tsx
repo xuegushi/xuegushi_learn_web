@@ -15,6 +15,7 @@ interface StatusBarProps {
   onNext: () => void;
   onJumpTo: (index: number) => void;
   onToggleSidebar: () => void;
+  onCheckInRecordsClick: () => void;
 }
 
 /**
@@ -32,6 +33,7 @@ export function StatusBar({
   onNext,
   onJumpTo,
   onToggleSidebar,
+  onCheckInRecordsClick,
 }: StatusBarProps) {
   const accuracy = errorCount + correctCount > 0
     ? Math.round((correctCount / (errorCount + correctCount)) * 100)
@@ -90,9 +92,17 @@ export function StatusBar({
               {currentIndex + 1} / {poems.length}
             </span>
             <NavButton onClick={onNext} direction="next" />
-            <span className="text-sm text-muted-foreground ml-auto">
-              {poems[currentIndex]?.grade}
-            </span>
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                onClick={onCheckInRecordsClick}
+                className="text-xs text-blue-500 hover:text-blue-700 transition-colors cursor-pointer"
+              >
+                打卡记录
+              </button>
+              <span className="text-sm text-muted-foreground">
+                {poems[currentIndex]?.grade}
+              </span>
+            </div>
           </>
         )}
 
@@ -134,9 +144,17 @@ export function StatusBar({
                 {currentIndex + 1} / {poems.length}
               </span>
               <NavButton onClick={onNext} direction="next" />
-              <span className="text-sm text-muted-foreground ml-auto">
-                {poems[currentIndex]?.grade}
-              </span>
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  onClick={onCheckInRecordsClick}
+                  className="text-xs text-blue-500 hover:text-blue-700 transition-colors cursor-pointer"
+                >
+                  打卡记录
+                </button>
+                <span className="text-sm text-muted-foreground">
+                  {poems[currentIndex]?.grade}
+                </span>
+              </div>
             </>
           )}
 
