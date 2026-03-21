@@ -305,8 +305,13 @@ export default function LearnPage() {
           onNext={nextPoem}
           onJumpTo={setCurrentIndex}
           onToggleSidebar={() => {
-            // 切换侧边栏显示/隐藏
-            setSidebarOpen(!sidebarOpen);
+            // PC端：切换侧边栏折叠状态
+            // 移动端：切换侧边栏显示/隐藏
+            if (typeof window !== "undefined" && window.innerWidth >= 768) {
+              setSidebarCollapsed(!sidebarCollapsed);
+            } else {
+              setSidebarOpen(!sidebarOpen);
+            }
           }}
         />
 
