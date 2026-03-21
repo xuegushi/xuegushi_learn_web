@@ -28,6 +28,8 @@ interface SidebarProps {
   onSidebarClose: () => void;
   mode: "recite" | "learn";
   onModeChange: (mode: "recite" | "learn") => void;
+  collapsed: boolean;
+  onCollapse: () => void;
 }
 
 export function Sidebar({
@@ -48,6 +50,8 @@ export function Sidebar({
   onSidebarClose,
   mode,
   onModeChange,
+  collapsed,
+  onCollapse,
 }: SidebarProps) {
   return (
     <>
