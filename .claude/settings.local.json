@@ -11,7 +11,11 @@
       "Bash(curl -s \"http://localhost:1234/api/poem/3852\")",
       "Bash(curl:*)",
       "Bash(pkill -f \"next dev\")",
-      "Bash(pnpm add:*)"
+      "Bash(pnpm add:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

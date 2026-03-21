@@ -33,6 +33,8 @@ interface PoemCache {
     zhu?: { content?: string[] };
     shangxi?: { content?: string[] };
   };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface PinyinCache {
@@ -42,6 +44,8 @@ interface PinyinCache {
   author?: string;
   dynasty?: string;
   content?: string[][];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface LocalDataManagerProps {
@@ -77,10 +81,17 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
       getAllFromDB<PinyinCache>(STORES.PINYIN),
     ]);
 
+    // Sort by update time descending (most recent first)
+    const sortedPoemData = [...poemData].sort((a, b) => {
+      const timeA = a.updatedAt || a.createdAt || '';
+      const timeB = b.updatedAt || b.createdAt || '';
+      return timeB.localeCompare(timeA); // Descending order
+    });
+
     const pinyinMap = new Map<number, PinyinCache>();
     pinyinData.forEach((p) => pinyinMap.set(p.poem_id, p));
 
-    const merged: CacheItem[] = poemData.map((poem) => ({
+    const merged: CacheItem[] = sortedPoemData.map((poem) => ({
       id: poem.id,
       poem: poem.poem,
       detail: poem.detail,
@@ -215,6 +226,14 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                     ? `更新中 (${updateProgress.current}/${updateProgress.total})`
                     : `更新选中 (${selectedIds.size})`}
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => loadData()}
+                  className="ml-2"
+                >
+                  刷新数据
+                </Button>
               </div>
 
               <FilterSection
@@ -246,6 +265,8 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">朝代</th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">作者</th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">拼音</th>
+                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">创建时间</th>
+                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">更新时间</th>
                           <th className="w-16 px-2 py-2 text-left text-xs font-medium text-muted-foreground">操作</th>
                         </tr>
                       </thead>
