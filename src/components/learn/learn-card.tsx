@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { CheckCheck } from "lucide-react";
 import { CreateUserDialog } from "@/components/create-user-dialog";
+import { CheckInSuccessDialog } from "@/components/check-in-success-dialog";
 import { setToDB, getAllFromDB, STORES } from "@/lib/db";
 
 interface LearnCardProps {
@@ -20,6 +21,8 @@ interface LearnCardProps {
 export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext }: LearnCardProps) {
   const [showTranslation, setShowTranslation] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
+  const [showCheckInSuccess, setShowCheckInSuccess] = useState(false);
+  const [checkInCount, setCheckInCount] = useState(1);
 
   // 获取用户信息
   const getUser = () => {
@@ -83,11 +86,13 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
       (s) => s.user_id === currentUser.user_id && s.poem_id === poem.id
     );
 
+    let finalCount = 1;
     if (existingSummary) {
       // 更新已有记录
+      finalCount = existingSummary.count + 1;
       await setToDB(STORES.POEM_STUDY_SUMMARY, {
         ...existingSummary,
-        count: existingSummary.count + 1,
+        count: finalCount,
         updated_at: now,
       });
     } else {
@@ -101,6 +106,10 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
         updated_at: now,
       });
     }
+
+    // 打卡成功弹窗
+    setCheckInCount(finalCount);
+    setShowCheckInSuccess(true);
   };
 
   // 打卡按钮点击
@@ -287,6 +296,12 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
         open={showCreateUser}
         onOpenChange={setShowCreateUser}
         onSubmit={handleCreateUser}
+      />
+
+      <CheckInSuccessDialog
+        open={showCheckInSuccess}
+        onOpenChange={setShowCheckInSuccess}
+        count={checkInCount}
       />
     </div>
   );
