@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DynastyArr } from "@/config/poem";
@@ -16,6 +16,29 @@ import { getAllFromDB, STORES } from "@/lib/db";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { SimplePagination } from "@/components/ui/pagination";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
+/** 日历面板组件 */
+function CalendarPanel({
+  dateCheckInCount,
+  selectedDate,
+  onSelect,
+}: {
+  dateCheckInCount: Map<string, number>;
+  selectedDate: Date | undefined;
+  onSelect: (date: Date) => void;
+}) {
+  return (
+    <div className="px-4 py-3">
+      <Calendar
+        dateData={dateCheckInCount}
+        selectedDate={selectedDate}
+        onSelect={onSelect}
+        className="border rounded-lg p-4 mx-auto"
+      />
+    </div>
+  );
+}
 
 /** 打卡明细数据类型 */
 interface CheckInDetail {
@@ -390,7 +413,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] md:w-[90vw] lg:w-[85vw] max-w-[1400px] max-h-[85vh] flex flex-col p-0 !gap-0 sm:max-w-[1400px]">
+      <DialogContent className="w-[95vw] md:w-[90vw] lg:w-[85vw] max-w-[1400px] max-h-[90dvh] flex flex-col p-0 !gap-0 sm:max-w-[1400px] overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>打卡记录</DialogTitle>
         </DialogHeader>
@@ -398,9 +421,27 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
         {loading ? (
           <div className="flex items-center justify-center py-8">加载中...</div>
         ) : (
-          <div className="flex flex-1 overflow-hidden">
-            {/* 左侧日历区域 */}
-            <div className="w-80 flex-shrink-0 px-6 py-3 overflow-y-auto border-r">
+          <div className="flex flex-col md:flex-row flex-auto overflow-y-auto min-h-0">
+            {/* 移动端日历区域 - Accordion 折叠 */}
+            <div className="md:hidden border-b">
+              <Accordion type="single" collapsible defaultValue="calendar">
+                <AccordionItem value="calendar">
+                  <AccordionTrigger className="px-4 py-3 font-medium">
+                    打卡日历
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <CalendarPanel
+                      dateCheckInCount={dateCheckInCount}
+                      selectedDate={selectedDate}
+                      onSelect={setSelectedDate}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+
+            {/* PC端左侧日历区域 */}
+            <div className="hidden md:block w-80 flex-shrink-0 px-6 py-3 overflow-y-auto border-r">
               <h3 className="font-medium mb-4">打卡日历</h3>
               <Calendar
                 dateData={dateCheckInCount}
@@ -411,7 +452,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
             </div>
 
             {/* 右侧表格区域 */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
               <Tabs
                 defaultValue="detail"
                 className="flex-1 flex flex-col overflow-hidden"
@@ -425,7 +466,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                 </div>
 
                 {/* 明细表格 */}
-                <TabsContent value="detail" className="flex-1 overflow-hidden flex flex-col px-6 mt-4 pb-6">
+                <TabsContent value="detail" className="flex-1 flex flex-col px-6 mt-4 pb-6 min-h-0">
                   <FilterBar
                     users={users}
                     selectedUser={selectedUser}
@@ -435,14 +476,14 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                     selectedDynasty={selectedDynasty}
                     onDynastyChange={setSelectedDynasty}
                   />
-                  <ScrollArea className="flex-1">
+                  <div className="flex-1 overflow-auto">
                     <DetailTable
                       data={paginatedDetails}
                       sort={detailSort}
                       onSort={toggleDetailSort}
                       renderSortIcon={renderSortIcon}
                     />
-                  </ScrollArea>
+                  </div>
                   <SimplePagination
                     currentPage={detailPage}
                     totalPages={detailTotalPages}
@@ -452,7 +493,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                 </TabsContent>
 
                 {/* 汇总表格 */}
-                <TabsContent value="summary" className="flex-1 overflow-hidden flex flex-col px-6 mt-4 pb-6">
+                <TabsContent value="summary" className="flex-1 flex flex-col px-6 mt-4 pb-6 min-h-0">
                   <FilterBar
                     users={users}
                     selectedUser={selectedUser}
@@ -462,14 +503,14 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                     selectedDynasty={selectedDynasty}
                     onDynastyChange={setSelectedDynasty}
                   />
-                  <ScrollArea className="flex-1">
+                  <div className="flex-1 overflow-auto">
                     <SummaryTable
                       data={paginatedSummaries}
                       sort={summarySort}
                       onSort={toggleSummarySort}
                       renderSortIcon={renderSortIcon}
                     />
-                  </ScrollArea>
+                  </div>
                   <SimplePagination
                     currentPage={summaryPage}
                     totalPages={summaryTotalPages}
