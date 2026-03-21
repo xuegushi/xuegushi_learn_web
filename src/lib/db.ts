@@ -14,34 +14,27 @@ async function migrateExistingData(db: IDBDatabase): Promise<void> {
     const tx = db.transaction([STORES.POEMS, STORES.PINYIN], 'readwrite');
     const now = new Date().toISOString();
 
-    tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
 
     // Migrate poems data
-    try {
-      const poemStore = tx.objectStore(STORES.POEMS);
-      const poemRequest = poemStore.getAll();
+    const poemStore = tx.objectStore(STORES.POEMS);
+    const poemRequest = poemStore.getAll();
 
-      poemRequest.onsuccess = () => {
-        const poems = poemRequest.result || [];
-        poems.forEach((poem: any) => {
-          // Only update if timestamp fields don't exist
-          if (!('createdAt' in poem) || !('updatedAt' in poem)) {
-            const updatedPoem = {
-              ...poem,
-              updatedAt: now,
-              ...(!('createdAt' in poem) && { createdAt: now })
-            };
-            poemStore.put(updatedPoem);
-          }
-        });
-      };
-    } catch (e) {
-      console.warn('Failed to migrate poems data:', e);
-    }
+    poemRequest.onsuccess = () => {
+      const poems = poemRequest.result || [];
+      poems.forEach((poem: any) => {
+        // Only update if timestamp fields don't exist
+        if (!('createdAt' in poem) || !('updatedAt' in poem)) {
+          const updatedPoem = {
+            ...poem,
+            updatedAt: now,
+            ...(!('createdAt' in poem) && { createdAt: now })
+          };
+          poemStore.put(updatedPoem);
+        }
+      });
 
-    // Migrate pinyin data
-    try {
+      // Migrate pinyin data after poems migration completes
       const pinyinStore = tx.objectStore(STORES.PINYIN);
       const pinyinRequest = pinyinStore.getAll();
 
@@ -58,10 +51,15 @@ async function migrateExistingData(db: IDBDatabase): Promise<void> {
             pinyinStore.put(updatedItem);
           }
         });
+
+        // Resolve after both migrations complete
+        resolve();
       };
-    } catch (e) {
-      console.warn('Failed to migrate pinyin data:', e);
-    }
+
+      pinyinRequest.onerror = () => reject(pinyinRequest.error);
+    };
+
+    poemRequest.onerror = () => reject(poemRequest.error);
   });
 }
 
