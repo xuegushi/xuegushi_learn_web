@@ -138,10 +138,10 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
               )}
 
               {/* 译文 */}
-              {poemDetail.poem?.intro && (
+              {poemDetail.detail?.yi?.content && (
                 <Section
                   title="译文"
-                  content={[poemDetail.poem.intro]}
+                  content={poemDetail.detail.yi.content}
                 />
               )}
 
