@@ -57,6 +57,8 @@ interface CacheItem {
   id: number;
   poem?: PoemCache["poem"];
   detail?: PoemCache["detail"];
+  createdAt?: string;
+  updatedAt?: string;
   pinyin?: PinyinCache;
   hasPinyin: boolean;
 }
@@ -95,6 +97,8 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
       id: poem.id,
       poem: poem.poem,
       detail: poem.detail,
+      createdAt: poem.createdAt,
+      updatedAt: poem.updatedAt,
       pinyin: pinyinMap.get(poem.poem?.id || poem.id),
       hasPinyin: pinyinMap.has(poem.poem?.id || poem.id),
     }));
