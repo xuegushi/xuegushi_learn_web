@@ -78,7 +78,7 @@ export function ReciteCard({
   }
 
   return (
-      <div className="flex items-center justify-center h-full px-6 md:px-2 py-4">
+      <div className="flex items-center justify-center h-full px-6 md:px-6 py-4">
         <div className="relative w-full min-w-80 max-w-4xl">
         {/* 序号标记 */}
         <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg z-10">
