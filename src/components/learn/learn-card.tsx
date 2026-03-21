@@ -4,7 +4,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail, PinyinData } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCheck } from "lucide-react";
 import { CreateUserDialog } from "@/components/create-user-dialog";
 import { CheckInSuccessDialog } from "@/components/check-in-success-dialog";
@@ -23,6 +23,29 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showCheckInSuccess, setShowCheckInSuccess] = useState(false);
   const [checkInCount, setCheckInCount] = useState(1);
+  const [checkedInToday, setCheckedInToday] = useState(false);
+
+  // 检查是否已打卡
+  const checkIfCheckedInToday = async () => {
+    const user = getUser();
+    const poemId = poemDetail?.poem?.id;
+    if (!user || !poemId) {
+      setCheckedInToday(false);
+      return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const allRecords = await getAllFromDB<{ user_id: number; poem_id: number; check_in_time: string }>(STORES.POEM_STUDY);
+    const hasCheckedInToday = allRecords.some(
+      (r) => r.user_id === user.user_id && r.poem_id === poemId && r.check_in_time.startsWith(today)
+    );
+    setCheckedInToday(hasCheckedInToday);
+  };
+
+  // 诗词变化时检查打卡状态
+  useEffect(() => {
+    checkIfCheckedInToday();
+  }, [poemDetail?.poem?.id]);
 
   // 获取用户信息
   const getUser = () => {
@@ -109,6 +132,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
 
     // 打卡成功弹窗
     setCheckInCount(finalCount);
+    setCheckedInToday(true);
     setShowCheckInSuccess(true);
   };
 
@@ -283,9 +307,14 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
               </button>
               <button
                 onClick={handleCheckInClick}
-                className="flex items-center gap-1 py-2 px-4 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-pointer">
+                disabled={checkedInToday}
+                className={`flex items-center gap-1 py-2 px-4 rounded transition-colors ${
+                  checkedInToday
+                    ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                    : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer"
+                }`}>
                 <CheckCheck className="h-4 w-4" />
-                打卡
+                {checkedInToday ? "已打卡" : "打卡"}
               </button>
             </div>
           </CardContent>
