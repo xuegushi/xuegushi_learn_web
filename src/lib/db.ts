@@ -1,9 +1,11 @@
 const DB_NAME = 'poem_learn_db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 export const STORES = {
   POEMS: 'poems',
   PINYIN: 'pinyin',
+  POEM_STUDY: 'poem_study',
+  POEM_STUDY_SUMMARY: 'poem_study_summary',
 } as const;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -103,6 +105,24 @@ function openDB(): Promise<IDBDatabase> {
         // Note: If store already exists, we can't modify its structure in onupgradeneeded
         // The migration function will handle adding missing fields to existing data
       }
+
+      // Version 2 to 3 migration: add study and summary stores
+      if (oldVersion < 3) {
+        // 诗词学习打卡明细表
+        if (!db.objectStoreNames.contains(STORES.POEM_STUDY)) {
+          const studyStore = db.createObjectStore(STORES.POEM_STUDY, { keyPath: 'id', autoIncrement: true });
+          studyStore.createIndex('userId', 'user_id', { unique: false });
+          studyStore.createIndex('poemId', 'poem_id', { unique: false });
+          studyStore.createIndex('checkInTime', 'check_in_time', { unique: false });
+        }
+
+        // 诗词学习打卡汇总表
+        if (!db.objectStoreNames.contains(STORES.POEM_STUDY_SUMMARY)) {
+          const summaryStore = db.createObjectStore(STORES.POEM_STUDY_SUMMARY, { keyPath: 'id', autoIncrement: true });
+          summaryStore.createIndex('userId', 'user_id', { unique: false });
+          summaryStore.createIndex('poemId', 'poem_id', { unique: false });
+        }
+      }
     };
   });
 
@@ -196,9 +216,16 @@ export async function clearDB(): Promise<void> {
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([STORES.POEMS, STORES.PINYIN], 'readwrite');
+      const tx = db.transaction([
+        STORES.POEMS,
+        STORES.PINYIN,
+        STORES.POEM_STUDY,
+        STORES.POEM_STUDY_SUMMARY,
+      ], 'readwrite');
       tx.objectStore(STORES.POEMS).clear();
       tx.objectStore(STORES.PINYIN).clear();
+      tx.objectStore(STORES.POEM_STUDY).clear();
+      tx.objectStore(STORES.POEM_STUDY_SUMMARY).clear();
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -216,7 +243,7 @@ export async function getDBSize(): Promise<{ bytes: number; mb: string }> {
     let totalBytes = 0;
 
     // 获取所有数据并计算大小
-    const stores = [STORES.POEMS, STORES.PINYIN];
+    const stores = [STORES.POEMS, STORES.PINYIN, STORES.POEM_STUDY, STORES.POEM_STUDY_SUMMARY];
     for (const storeName of stores) {
       const data = await getAllFromDB(storeName);
       const jsonString = JSON.stringify(data);

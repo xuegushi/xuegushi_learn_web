@@ -55,8 +55,7 @@ export default function LearnPage() {
       title: poem.title,
       author: poem.author,
       dynasty: poem.dynasty,
-      grade: fascData.fascicule_name,
-      semester: "",
+      grade: fascData.fascicule_name
     }));
   }, [catalogDetail, selectedFascicule]);
 

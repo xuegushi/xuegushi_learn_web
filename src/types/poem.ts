@@ -75,7 +75,6 @@ export interface Poem {
   author: string;
   dynasty: string;
   grade: string;
-  semester: string;
 }
 
 export interface PinyinData {

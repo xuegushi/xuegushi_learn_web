@@ -91,7 +91,7 @@ export function StatusBar({
             </span>
             <NavButton onClick={onNext} direction="next" />
             <span className="text-sm text-muted-foreground ml-auto">
-              {poems[currentIndex]?.grade} · {poems[currentIndex]?.semester}
+              {poems[currentIndex]?.grade}
             </span>
           </>
         )}
@@ -135,7 +135,7 @@ export function StatusBar({
               </span>
               <NavButton onClick={onNext} direction="next" />
               <span className="text-sm text-muted-foreground ml-auto">
-                {poems[currentIndex]?.grade} · {poems[currentIndex]?.semester}
+                {poems[currentIndex]?.grade}
               </span>
             </>
           )}
