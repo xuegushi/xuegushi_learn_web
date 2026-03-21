@@ -220,6 +220,8 @@ export default function LearnPage() {
   // 随机提示按钮
   const handleRandomHint = useCallback(() => {
     setShowRandomChar(true);
+    setShowFirstChar(false);
+    setShowLastChar(false);
     setRandomIndices(generateRandomIndices());
   }, [generateRandomIndices]);
 
