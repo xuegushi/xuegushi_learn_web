@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail, PinyinData } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { ReactFragment } from "react";
 
 interface LearnCardProps {
   poemDetail: PoemDetail | null;
@@ -93,7 +94,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                       const chars = line.split("");
                       const pinyinLine = pinyinData?.content?.[lineIdx] || [];
                       return (
-                        <>
+                        <React.Fragment key={`${lineIdx}-fragment`}>
                           <div
                             key={`${lineIdx}-original`}
                             className="flex justify-center gap-1 flex-wrap mb-1">
@@ -108,7 +109,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                                   {char}
                                 </span>
                               </div>
-                            ))}
+                            )}
                           </div>
                           {showTranslation &&
                             poemDetail.detail?.yi?.content?.[lineIdx] && (
@@ -120,7 +121,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                                 </div>
                               </div>
                             )}
-                        </>
+                        </React.Fragment>
                       );
                     })}
                   </div>
