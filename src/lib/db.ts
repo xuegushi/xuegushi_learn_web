@@ -10,60 +10,63 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 
 // Migrate existing data to add timestamp fields
 async function migrateExistingData(db: IDBDatabase): Promise<void> {
-  const tx = db.transaction([STORES.POEMS, STORES.PINYIN], 'readwrite');
-  const now = new Date().toISOString();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([STORES.POEMS, STORES.PINYIN], 'readwrite');
+    const now = new Date().toISOString();
 
-  // Migrate poems data
-  try {
-    const poemStore = tx.objectStore(STORES.POEMS);
-    const poemRequest = poemStore.getAll();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
 
-    poemRequest.onsuccess = () => {
-      const poems = poemRequest.result || [];
-      poems.forEach((poem: any) => {
-        // Only update if timestamp fields don't exist
-        if (!('createdAt' in poem) || !('updatedAt' in poem)) {
-          const updatedPoem = {
-            ...poem,
-            updatedAt: now,
-            ...(!('createdAt' in poem) && { createdAt: now })
-          };
-          poemStore.put(updatedPoem);
-        }
-      });
-    };
-  } catch (e) {
-    console.warn('Failed to migrate poems data:', e);
-  }
+    // Migrate poems data
+    try {
+      const poemStore = tx.objectStore(STORES.POEMS);
+      const poemRequest = poemStore.getAll();
 
-  // Migrate pinyin data
-  try {
-    const pinyinStore = tx.objectStore(STORES.PINYIN);
-    const pinyinRequest = pinyinStore.getAll();
+      poemRequest.onsuccess = () => {
+        const poems = poemRequest.result || [];
+        poems.forEach((poem: any) => {
+          // Only update if timestamp fields don't exist
+          if (!('createdAt' in poem) || !('updatedAt' in poem)) {
+            const updatedPoem = {
+              ...poem,
+              updatedAt: now,
+              ...(!('createdAt' in poem) && { createdAt: now })
+            };
+            poemStore.put(updatedPoem);
+          }
+        });
+      };
+    } catch (e) {
+      console.warn('Failed to migrate poems data:', e);
+    }
 
-    pinyinRequest.onsuccess = () => {
-      const pinyinData = pinyinRequest.result || [];
-      pinyinData.forEach((item: any) => {
-        // Only update if timestamp fields don't exist
-        if (!('createdAt' in item) || !('updatedAt' in item)) {
-          const updatedItem = {
-            ...item,
-            updatedAt: now,
-            ...(!('createdAt' in item) && { createdAt: now })
-          };
-          pinyinStore.put(updatedItem);
-        }
-      });
-    };
-  } catch (e) {
-    console.warn('Failed to migrate pinyin data:', e);
-  }
+    // Migrate pinyin data
+    try {
+      const pinyinStore = tx.objectStore(STORES.PINYIN);
+      const pinyinRequest = pinyinStore.getAll();
+
+      pinyinRequest.onsuccess = () => {
+        const pinyinData = pinyinRequest.result || [];
+        pinyinData.forEach((item: any) => {
+          // Only update if timestamp fields don't exist
+          if (!('createdAt' in item) || !('updatedAt' in item)) {
+            const updatedItem = {
+              ...item,
+              updatedAt: now,
+              ...(!('createdAt' in item) && { createdAt: now })
+            };
+            pinyinStore.put(updatedItem);
+          }
+        });
+      };
+    } catch (e) {
+      console.warn('Failed to migrate pinyin data:', e);
+    }
+  });
 }
 
 function openDB(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
-
-  let needsMigration = false;
 
   dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -72,12 +75,6 @@ function openDB(): Promise<IDBDatabase> {
 
     request.onsuccess = () => {
       const db = request.result;
-
-      // Run migration if needed (when DB version was just upgraded)
-      if (needsMigration) {
-        migrateExistingData(db).catch(console.error);
-      }
-
       resolve(db);
     };
 
@@ -88,7 +85,6 @@ function openDB(): Promise<IDBDatabase> {
 
       // Version 1 to 2 migration: add timestamp fields while preserving data
       if (oldVersion < 2) {
-        needsMigration = true;
         // Handle POEMS store
         if (!db.objectStoreNames.contains(STORES.POEMS)) {
           // Store doesn't exist, create new one
@@ -99,7 +95,7 @@ function openDB(): Promise<IDBDatabase> {
         // Note: If store already exists, we can't modify its structure in onupgradeneeded
         // The migration function will handle adding missing fields to existing data
 
-      // Handle PINYIN store
+        // Handle PINYIN store
         if (!db.objectStoreNames.contains(STORES.PINYIN)) {
           // Store doesn't exist, create new one
           const pinyinStore = db.createObjectStore(STORES.PINYIN, { keyPath: 'poem_id' });
@@ -110,6 +106,15 @@ function openDB(): Promise<IDBDatabase> {
         // The migration function will handle adding missing fields to existing data
       }
     };
+  });
+
+  // Always run migration to ensure existing data has timestamp fields
+  dbPromise.then(async (db) => {
+    try {
+      await migrateExistingData(db);
+    } catch (e) {
+      console.warn('Migration failed:', e);
+    }
   });
 
   return dbPromise;
