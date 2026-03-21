@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail, PinyinData } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { ReactFragment } from "react";
 
 interface LearnCardProps {
   poemDetail: PoemDetail | null;
@@ -109,7 +109,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                                   {char}
                                 </span>
                               </div>
-                            ))}
+                            )}
                           </div>
                           {showTranslation &&
                             poemDetail.detail?.yi?.content?.[lineIdx] && (

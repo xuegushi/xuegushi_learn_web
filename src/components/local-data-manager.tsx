@@ -76,7 +76,8 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
   const [keyword, setKeyword] = useState("");
   const [filterDynasty, setFilterDynasty] = useState("不限");
   // Sorting state
-  const [sortConfig, setSortConfig] = useState<{ key: keyof CacheItem; direction: 'asc' | 'desc' }>({
+  type SortKey = 'id' | 'createdAt' | 'updatedAt';
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({
     key: 'updatedAt',
     direction: 'desc'
   });
@@ -90,8 +91,8 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
 
     // Sort based on sortConfig
     const sortedPoemData = [...poemData].sort((a, b) => {
-      const valueA = a[sortConfig.key];
-      const valueB = b[sortConfig.key];
+      const valueA = a[sortConfig.key as keyof PoemCache];
+      const valueB = b[sortConfig.key as keyof PoemCache];
 
       // Handle undefined/null values
       if (valueA === undefined || valueA === null) return sortConfig.direction === 'asc' ? 1 : -1;
@@ -211,7 +212,7 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
     await loadData();
   };
 
-  const handleSortChange = (key: keyof CacheItem) => {
+  const handleSortChange = (key: SortKey) => {
     setSortConfig(prev => {
       // If clicking on the same column, toggle direction
       if (prev.key === key) {
