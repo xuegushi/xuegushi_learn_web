@@ -40,6 +40,12 @@
   - 移动端底部按钮 z-index 调整为 30
   - Footer z-index 调整为 30，避免覆盖弹窗
 
+- **代码优化**
+  - 打卡记录弹窗提取 FilterBar、Pagination、DetailTable、SummaryTable 组件
+  - 状态栏提取 ReciteStatusDots、CheckInBlocks、CheckInButton 组件
+  - 添加合理的类型定义和注释
+  - 删除未使用的 progress.tsx
+
 ---
 
 ## 2026-03-20 ✅ (已提交)

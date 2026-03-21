@@ -16,6 +16,7 @@ import { getAllFromDB, STORES } from "@/lib/db";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 
+/** 打卡明细数据类型 */
 interface CheckInDetail {
   id: number;
   user_id: number;
@@ -27,6 +28,7 @@ interface CheckInDetail {
   check_in_time: string;
 }
 
+/** 打卡汇总数据类型 */
 interface CheckInSummary {
   id: number;
   user_id: number;
@@ -40,31 +42,241 @@ interface CheckInSummary {
   updated_at: string;
 }
 
+/** 用户数据类型 */
 interface User {
   id: number;
   user_name: string;
 }
 
+/** 打卡记录弹窗属性 */
 interface CheckInRecordsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+/** 排序键类型 */
 type DetailSortKey = 'check_in_time';
 type SummarySortKey = 'created_at' | 'updated_at' | 'count';
 
+/** 筛选栏组件 */
+function FilterBar({
+  users,
+  selectedUser,
+  onUserChange,
+  searchKeyword,
+  onSearchChange,
+  selectedDynasty,
+  onDynastyChange,
+}: {
+  users: User[];
+  selectedUser: string;
+  onUserChange: (value: string) => void;
+  searchKeyword: string;
+  onSearchChange: (value: string) => void;
+  selectedDynasty: string;
+  onDynastyChange: (value: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-3 mb-4">
+      <Select value={selectedUser} onValueChange={(v) => v && onUserChange(v)}>
+        <SelectTrigger className="w-32">
+          <SelectValue>
+            {selectedUser === "all" ? "全部用户" : users.find(u => u.id.toString() === selectedUser)?.user_name}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">全部用户</SelectItem>
+          {users.map(u => (
+            <SelectItem key={u.id} value={u.id.toString()}>{u.user_name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <input
+        type="text"
+        placeholder="搜索诗词或诗人"
+        value={searchKeyword}
+        onChange={e => onSearchChange(e.target.value)}
+        className="px-3 py-1.5 border rounded-md text-sm bg-background w-40"
+      />
+
+      <Select value={selectedDynasty} onValueChange={(v) => v && onDynastyChange(v)}>
+        <SelectTrigger className="w-28">
+          <SelectValue>{selectedDynasty}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {DynastyArr.map(d => (
+            <SelectItem key={d} value={d}>{d}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+/** 分页组件 */
+function Pagination({
+  currentPage,
+  totalPages,
+  totalCount,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  onPageChange: (page: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between mt-4 px-1">
+      <span className="text-xs text-muted-foreground">
+        共 {totalCount} 条
+      </span>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <span className="text-xs">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** 打卡明细表格 */
+function DetailTable({
+  data,
+  sort,
+  onSort,
+  renderSortIcon,
+}: {
+  data: CheckInDetail[];
+  sort: { key: DetailSortKey; direction: 'asc' | 'desc' };
+  onSort: (key: DetailSortKey) => void;
+  renderSortIcon: (active: boolean, direction: 'asc' | 'desc') => React.ReactNode;
+}) {
+  return (
+    <table className="w-full text-xs">
+      <thead className="bg-muted/50 sticky top-0">
+        <tr>
+          <th className="px-2 py-2 text-left">ID</th>
+          <th className="px-2 py-2 text-left">用户</th>
+          <th className="px-2 py-2 text-left">诗词标题</th>
+          <th className="px-2 py-2 text-left">诗人</th>
+          <th className="px-2 py-2 text-left cursor-pointer" onClick={() => onSort('check_in_time')}>
+            <span className="flex items-center gap-1">
+              打卡时间
+              {renderSortIcon(sort.key === 'check_in_time', sort.direction)}
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.length === 0 ? (
+          <tr>
+            <td colSpan={5} className="text-center py-8 text-muted-foreground">暂无数据</td>
+          </tr>
+        ) : (
+          data.map(d => (
+            <tr key={d.id} className="border-b hover:bg-muted/30">
+              <td className="px-2 py-2">{d.id}</td>
+              <td className="px-2 py-2">{d.user_name}</td>
+              <td className="px-2 py-2">{d.poem_title}</td>
+              <td className="px-2 py-2">{d.author}「{d.dynasty}」</td>
+              <td className="px-2 py-2">{new Date(d.check_in_time).toLocaleString()}</td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  );
+}
+
+/** 打卡汇总表格 */
+function SummaryTable({
+  data,
+  sort,
+  onSort,
+  renderSortIcon,
+}: {
+  data: CheckInSummary[];
+  sort: { key: SummarySortKey; direction: 'asc' | 'desc' };
+  onSort: (key: SummarySortKey) => void;
+  renderSortIcon: (active: boolean, direction: 'asc' | 'desc') => React.ReactNode;
+}) {
+  return (
+    <table className="w-full text-xs">
+      <thead className="bg-muted/50 sticky top-0">
+        <tr>
+          <th className="px-2 py-2 text-left">ID</th>
+          <th className="px-2 py-2 text-left">用户</th>
+          <th className="px-2 py-2 text-left">诗词标题</th>
+          <th className="px-2 py-2 text-left cursor-pointer" onClick={() => onSort('count')}>
+            <span className="flex items-center gap-1">
+              打卡次数
+              {renderSortIcon(sort.key === 'count', sort.direction)}
+            </span>
+          </th>
+          <th className="px-2 py-2 text-left cursor-pointer" onClick={() => onSort('created_at')}>
+            <span className="flex items-center gap-1">
+              初次打卡
+              {renderSortIcon(sort.key === 'created_at', sort.direction)}
+            </span>
+          </th>
+          <th className="px-2 py-2 text-left cursor-pointer" onClick={() => onSort('updated_at')}>
+            <span className="flex items-center gap-1">
+              最后打卡
+              {renderSortIcon(sort.key === 'updated_at', sort.direction)}
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.length === 0 ? (
+          <tr>
+            <td colSpan={6} className="text-center py-8 text-muted-foreground">暂无数据</td>
+          </tr>
+        ) : (
+          data.map(s => (
+            <tr key={s.id} className="border-b hover:bg-muted/30">
+              <td className="px-2 py-2">{s.id}</td>
+              <td className="px-2 py-2">{s.user_name}</td>
+              <td className="px-2 py-2">{s.poem_title}</td>
+              <td className="px-2 py-2">{s.count}</td>
+              <td className="px-2 py-2">{new Date(s.created_at).toLocaleString()}</td>
+              <td className="px-2 py-2">{new Date(s.updated_at).toLocaleString()}</td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  );
+}
+
+/** 打卡记录弹窗主组件 */
 export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialogProps) {
   const [details, setDetails] = useState<CheckInDetail[]>([]);
   const [summaries, setSummaries] = useState<CheckInSummary[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Filter state
+  // 筛选状态
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedDynasty, setSelectedDynasty] = useState("不限");
 
-  // Sort state
+  // 排序状态
   const [detailSort, setDetailSort] = useState<{ key: DetailSortKey; direction: 'asc' | 'desc' }>({
     key: 'check_in_time',
     direction: 'desc'
@@ -74,11 +286,15 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     direction: 'desc'
   });
 
-  // Pagination state
+  // 分页状态
   const [detailPage, setDetailPage] = useState(1);
   const [summaryPage, setSummaryPage] = useState(1);
   const pageSize = 10;
 
+  // 日历选中日期
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+
+  // 加载数据
   const loadData = useCallback(async () => {
     setLoading(true);
     const [userList, detailList, summaryList] = await Promise.all([
@@ -87,13 +303,14 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
       getAllFromDB<CheckInSummary>(STORES.POEM_STUDY_SUMMARY),
     ]);
 
+    // 设置默认选中当前用户
     const currentUserStr = localStorage.getItem("user");
     const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
     if (currentUser) {
       setSelectedUser(currentUser.user_id.toString());
     }
 
-    // Enrich with user names
+    // 关联用户名称
     const userMap = new Map(userList.map(u => [u.id, u.user_name]));
     const enrichedDetails = detailList.map(d => ({
       ...d,
@@ -110,6 +327,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     setLoading(false);
   }, []);
 
+  // 计算每天打卡数量（用于日历显示）
   const dateCheckInCount = useMemo(() => {
     const countMap = new Map<string, number>();
     details.forEach(d => {
@@ -119,8 +337,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     return countMap;
   }, [details]);
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-
+  // 弹窗打开时加载数据
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -128,6 +345,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     }
   }, [open, loadData]);
 
+  // 筛选条件变化时重置分页
   useEffect(() => {
     setDetailPage(1);
   }, [selectedUser, searchKeyword, selectedDynasty, detailSort]);
@@ -136,7 +354,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     setSummaryPage(1);
   }, [selectedUser, searchKeyword, selectedDynasty, summarySort]);
 
-  // Filter details
+  // 筛选明细数据
   const filteredDetails = details.filter(d => {
     const matchUser = selectedUser === 'all' || d.user_id.toString() === selectedUser;
     const matchKeyword = !searchKeyword ||
@@ -146,7 +364,17 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     return matchUser && matchKeyword && matchDynasty;
   });
 
-  // Sort details
+  // 筛选汇总数据
+  const filteredSummaries = summaries.filter(s => {
+    const matchUser = selectedUser === 'all' || s.user_id.toString() === selectedUser;
+    const matchKeyword = !searchKeyword ||
+      s.poem_title?.includes(searchKeyword) ||
+      s.author?.includes(searchKeyword);
+    const matchDynasty = selectedDynasty === '不限' || s.dynasty === selectedDynasty;
+    return matchUser && matchKeyword && matchDynasty;
+  });
+
+  // 排序明细数据
   const sortedDetails = [...filteredDetails].sort((a, b) => {
     const valueA = a[detailSort.key];
     const valueB = b[detailSort.key];
@@ -157,17 +385,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
       : String(valueB).localeCompare(String(valueA));
   });
 
-  // Filter summaries
-  const filteredSummaries = summaries.filter(s => {
-    const matchUser = selectedUser === 'all' || s.user_id.toString() === selectedUser;
-    const matchKeyword = !searchKeyword ||
-      s.poem_title?.includes(searchKeyword) ||
-      s.author?.includes(searchKeyword);
-    const matchDynasty = selectedDynasty === '不限' || s.dynasty === selectedDynasty;
-    return matchUser && matchKeyword && matchDynasty;
-  });
-
-  // Sort summaries
+  // 排序汇总数据
   const sortedSummaries = [...filteredSummaries].sort((a, b) => {
     const valueA = a[summarySort.key];
     const valueB = b[summarySort.key];
@@ -181,12 +399,13 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
       : String(valueB).localeCompare(String(valueA));
   });
 
-  // Paginated data
+  // 分页数据
   const paginatedDetails = sortedDetails.slice((detailPage - 1) * pageSize, detailPage * pageSize);
   const paginatedSummaries = sortedSummaries.slice((summaryPage - 1) * pageSize, summaryPage * pageSize);
   const detailTotalPages = Math.ceil(sortedDetails.length / pageSize) || 1;
   const summaryTotalPages = Math.ceil(sortedSummaries.length / pageSize) || 1;
 
+  // 切换明细排序
   const toggleDetailSort = (key: DetailSortKey) => {
     setDetailSort(prev => ({
       key,
@@ -194,6 +413,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     }));
   };
 
+  // 切换汇总排序
   const toggleSummarySort = (key: SummarySortKey) => {
     setSummarySort(prev => ({
       key,
@@ -201,6 +421,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     }));
   };
 
+  // 渲染排序图标
   const renderSortIcon = (active: boolean, direction: 'asc' | 'desc') => {
     if (!active) return <ArrowUpDown className="h-3 w-3 opacity-50" />;
     return direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
@@ -217,6 +438,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
           <div className="flex items-center justify-center py-8">加载中...</div>
         ) : (
           <div className="flex flex-1 overflow-hidden">
+            {/* 左侧日历区域 */}
             <div className="w-80 flex-shrink-0 px-6 py-3 overflow-y-auto border-r">
               <h3 className="font-medium mb-4">打卡日历</h3>
               <Calendar
@@ -227,223 +449,74 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
               />
             </div>
 
+            {/* 右侧表格区域 */}
             <div className="flex-1 flex flex-col overflow-hidden">
-              <Tabs defaultValue="detail" className="flex-1 flex flex-col overflow-hidden" onValueChange={() => { setDetailPage(1); setSummaryPage(1); }}>
-            <div className="px-6 pt-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="detail">打卡明细</TabsTrigger>
-                <TabsTrigger value="summary">打卡汇总</TabsTrigger>
-              </TabsList>
-            </div>
-
-            <TabsContent value="detail" className="flex-1 overflow-hidden flex flex-col px-6 mt-4 pb-6">
-              <div className="flex flex-wrap gap-3 mb-4">
-                <Select value={selectedUser} onValueChange={(v) => v && setSelectedUser(v)}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue>
-                      {selectedUser === "all" ? "全部用户" : users.find(u => u.id.toString() === selectedUser)?.user_name}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部用户</SelectItem>
-                    {users.map(u => (
-                      <SelectItem key={u.id} value={u.id.toString()}>{u.user_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <input
-                  type="text"
-                  placeholder="搜索诗词或诗人"
-                  value={searchKeyword}
-                  onChange={e => setSearchKeyword(e.target.value)}
-                  className="px-3 py-1.5 border rounded-md text-sm bg-background w-40"
-                />
-
-                <Select value={selectedDynasty} onValueChange={(v) => v && setSelectedDynasty(v)}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue>{selectedDynasty}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DynastyArr.map(d => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <ScrollArea className="flex-1">
-                <table className="w-full text-xs">
-                  <thead className="bg-muted/50 sticky top-0">
-                    <tr>
-                      <th className="px-2 py-2 text-left">ID</th>
-                      <th className="px-2 py-2 text-left">用户</th>
-                      <th className="px-2 py-2 text-left">诗词标题</th>
-                      <th className="px-2 py-2 text-left">诗人</th>
-                      <th className="px-2 py-2 text-left cursor-pointer" onClick={() => toggleDetailSort('check_in_time')}>
-                        <span className="flex items-center gap-1">
-                          打卡时间
-                          {renderSortIcon(detailSort.key === 'check_in_time', detailSort.direction)}
-                        </span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedDetails.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="text-center py-8 text-muted-foreground">暂无数据</td>
-                      </tr>
-                    ) : (
-                      paginatedDetails.map(d => (
-                        <tr key={d.id} className="border-b hover:bg-muted/30">
-                          <td className="px-2 py-2">{d.id}</td>
-                          <td className="px-2 py-2">{d.user_name}</td>
-                          <td className="px-2 py-2">{d.poem_title}</td>
-                          <td className="px-2 py-2">{d.author}「{d.dynasty}」</td>
-                          <td className="px-2 py-2">{new Date(d.check_in_time).toLocaleString()}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </ScrollArea>
-
-              <div className="flex items-center justify-between mt-4 px-1">
-                <span className="text-xs text-muted-foreground">
-                  共 {sortedDetails.length} 条
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setDetailPage(p => Math.max(1, p - 1))}
-                    disabled={detailPage === 1}
-                    className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <span className="text-xs">
-                    {detailPage} / {detailTotalPages}
-                  </span>
-                  <button
-                    onClick={() => setDetailPage(p => Math.min(detailTotalPages, p + 1))}
-                    disabled={detailPage === detailTotalPages}
-                    className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
+              <Tabs
+                defaultValue="detail"
+                className="flex-1 flex flex-col overflow-hidden"
+                onValueChange={() => { setDetailPage(1); setSummaryPage(1); }}
+              >
+                <div className="px-6 pt-4">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="detail">打卡明细</TabsTrigger>
+                    <TabsTrigger value="summary">打卡汇总</TabsTrigger>
+                  </TabsList>
                 </div>
-              </div>
-            </TabsContent>
 
-            <TabsContent value="summary" className="flex-1 overflow-hidden flex flex-col px-6 mt-4 pb-6">
-              <div className="flex flex-wrap gap-3 mb-4">
-                <Select value={selectedUser} onValueChange={(v) => v && setSelectedUser(v)}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue>
-                      {selectedUser === "all" ? "全部用户" : users.find(u => u.id.toString() === selectedUser)?.user_name}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部用户</SelectItem>
-                    {users.map(u => (
-                      <SelectItem key={u.id} value={u.id.toString()}>{u.user_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {/* 明细表格 */}
+                <TabsContent value="detail" className="flex-1 overflow-hidden flex flex-col px-6 mt-4 pb-6">
+                  <FilterBar
+                    users={users}
+                    selectedUser={selectedUser}
+                    onUserChange={setSelectedUser}
+                    searchKeyword={searchKeyword}
+                    onSearchChange={setSearchKeyword}
+                    selectedDynasty={selectedDynasty}
+                    onDynastyChange={setSelectedDynasty}
+                  />
+                  <ScrollArea className="flex-1">
+                    <DetailTable
+                      data={paginatedDetails}
+                      sort={detailSort}
+                      onSort={toggleDetailSort}
+                      renderSortIcon={renderSortIcon}
+                    />
+                  </ScrollArea>
+                  <Pagination
+                    currentPage={detailPage}
+                    totalPages={detailTotalPages}
+                    totalCount={sortedDetails.length}
+                    onPageChange={setDetailPage}
+                  />
+                </TabsContent>
 
-                <input
-                  type="text"
-                  placeholder="搜索诗词或诗人"
-                  value={searchKeyword}
-                  onChange={e => setSearchKeyword(e.target.value)}
-                  className="px-3 py-1.5 border rounded-md text-sm bg-background w-40"
-                />
-
-                <Select value={selectedDynasty} onValueChange={(v) => v && setSelectedDynasty(v)}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue>{selectedDynasty}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DynastyArr.map(d => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <ScrollArea className="flex-1">
-                <table className="w-full text-xs">
-                  <thead className="bg-muted/50 sticky top-0">
-                    <tr>
-                      <th className="px-2 py-2 text-left">ID</th>
-                      <th className="px-2 py-2 text-left">用户</th>
-                      <th className="px-2 py-2 text-left">诗词标题</th>
-                      <th className="px-2 py-2 text-left cursor-pointer" onClick={() => toggleSummarySort('count')}>
-                        <span className="flex items-center gap-1">
-                          打卡次数
-                          {renderSortIcon(summarySort.key === 'count', summarySort.direction)}
-                        </span>
-                      </th>
-                      <th className="px-2 py-2 text-left cursor-pointer" onClick={() => toggleSummarySort('created_at')}>
-                        <span className="flex items-center gap-1">
-                          初次打卡
-                          {renderSortIcon(summarySort.key === 'created_at', summarySort.direction)}
-                        </span>
-                      </th>
-                      <th className="px-2 py-2 text-left cursor-pointer" onClick={() => toggleSummarySort('updated_at')}>
-                        <span className="flex items-center gap-1">
-                          最后打卡
-                          {renderSortIcon(summarySort.key === 'updated_at', summarySort.direction)}
-                        </span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedSummaries.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="text-center py-8 text-muted-foreground">暂无数据</td>
-                      </tr>
-                    ) : (
-                      paginatedSummaries.map(s => (
-                        <tr key={s.id} className="border-b hover:bg-muted/30">
-                          <td className="px-2 py-2">{s.id}</td>
-                          <td className="px-2 py-2">{s.user_name}</td>
-                          <td className="px-2 py-2">{s.poem_title}</td>
-                          <td className="px-2 py-2">{s.count}</td>
-                          <td className="px-2 py-2">{new Date(s.created_at).toLocaleString()}</td>
-                          <td className="px-2 py-2">{new Date(s.updated_at).toLocaleString()}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </ScrollArea>
-
-              <div className="flex items-center justify-between mt-4 px-1">
-                <span className="text-xs text-muted-foreground">
-                  共 {sortedSummaries.length} 条
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setSummaryPage(p => Math.max(1, p - 1))}
-                    disabled={summaryPage === 1}
-                    className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <span className="text-xs">
-                    {summaryPage} / {summaryTotalPages}
-                  </span>
-                  <button
-                    onClick={() => setSummaryPage(p => Math.min(summaryTotalPages, p + 1))}
-                    disabled={summaryPage === summaryTotalPages}
-                    className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </TabsContent>
-            </Tabs>
+                {/* 汇总表格 */}
+                <TabsContent value="summary" className="flex-1 overflow-hidden flex flex-col px-6 mt-4 pb-6">
+                  <FilterBar
+                    users={users}
+                    selectedUser={selectedUser}
+                    onUserChange={setSelectedUser}
+                    searchKeyword={searchKeyword}
+                    onSearchChange={setSearchKeyword}
+                    selectedDynasty={selectedDynasty}
+                    onDynastyChange={setSelectedDynasty}
+                  />
+                  <ScrollArea className="flex-1">
+                    <SummaryTable
+                      data={paginatedSummaries}
+                      sort={summarySort}
+                      onSort={toggleSummarySort}
+                      renderSortIcon={renderSortIcon}
+                    />
+                  </ScrollArea>
+                  <Pagination
+                    currentPage={summaryPage}
+                    totalPages={summaryTotalPages}
+                    totalCount={sortedSummaries.length}
+                    onPageChange={setSummaryPage}
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         )}
