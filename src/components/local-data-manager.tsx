@@ -295,10 +295,10 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                               )}
                             </td>
                             <td className="px-2 py-2 text-muted-foreground">
-                              {item.poem?.createdAt ? new Date(item.poem.createdAt).toLocaleString() : '-'}
+                              {item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}
                             </td>
                             <td className="px-2 py-2 text-muted-foreground">
-                              {item.poem?.updatedAt ? new Date(item.poem.updatedAt).toLocaleString() : '-'}
+                              {item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '-'}
                             </td>
                             <td className="px-2 py-2">
                               <Button
