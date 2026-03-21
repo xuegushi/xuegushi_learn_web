@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -22,36 +22,34 @@ export function UserMenu() {
   const [currentUser, setCurrentUser] = useState<{ user_id: number; user_name: string } | null>(null);
   const [otherUsers, setOtherUsers] = useState<User[]>([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
-
-  const loadOtherUsers = useCallback(async (currentUserId: number) => {
-    const users = await getAllFromDB<User>(STORES.USERS);
-    setOtherUsers(users.filter((u) => u.id !== currentUserId));
-  }, []);
-
-  const loadUserData = useCallback(async () => {
-    try {
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        setCurrentUser(user);
-        loadOtherUsers(user.user_id);
-      }
-    } catch {
-      // Silent fail
-    }
-  }, [loadOtherUsers]);
+  const loadedRef = useRef(false);
 
   useEffect(() => {
-    loadUserData();
-  }, [loadUserData]);
+    if (loadedRef.current) return;
+    loadedRef.current = true;
 
-  const switchUser = (user: User) => {
+    const loadUserData = async () => {
+      try {
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          setCurrentUser(user);
+          const users = await getAllFromDB<User>(STORES.USERS);
+          setOtherUsers(users.filter((u) => u.id !== user.user_id));
+        }
+      } catch {
+        // Silent fail
+      }
+    };
+    loadUserData();
+  }, []);
+
+  const switchUser = async (user: User) => {
     const userData = { user_id: user.id, user_name: user.user_name };
     localStorage.setItem("user", JSON.stringify(userData));
     setCurrentUser(userData);
-    if (currentUser) {
-      loadOtherUsers(user.id);
-    }
+    const users = await getAllFromDB<User>(STORES.USERS);
+    setOtherUsers(users.filter((u) => u.id !== user.id));
   };
 
   const handleCreateUser = async (userName: string) => {
@@ -64,7 +62,7 @@ export function UserMenu() {
 
     const users = await getAllFromDB<User>(STORES.USERS);
     const newUser = users[users.length - 1];
-    switchUser(newUser);
+    await switchUser(newUser);
   };
 
   if (!currentUser) return null;

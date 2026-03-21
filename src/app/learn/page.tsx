@@ -313,6 +313,7 @@ export default function LearnPage() {
       {/* 侧边栏 */}
       <Sidebar
         collapsed={sidebarCollapsed}
+        onCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         catalogList={catalogList}
         catalogDetail={catalogDetail}
         system={system}
