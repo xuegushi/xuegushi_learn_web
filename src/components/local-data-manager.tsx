@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { getAllFromDB, deleteFromDB, setToDB, STORES, getDBSize } from "@/lib/db";
 import { FilterSection } from "./local-data-manager/filter-section";
+import { Pagination } from "@/components/ui/pagination";
 
 interface PoemCache {
   id: number;
@@ -417,13 +418,12 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                       </tbody>
                     </table>
                     {totalPages > 1 && (
-                      <div className="flex items-center justify-center gap-2 py-3 border-t">
-                        <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={page === 1}>首页</Button>
-                        <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>上一页</Button>
-                        <span className="text-sm text-muted-foreground">第 {page} / {totalPages} 页</span>
-                        <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>下一页</Button>
-                        <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={page === totalPages}>尾页</Button>
-                      </div>
+                      <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        totalCount={filteredItems.length}
+                        onPageChange={setPage}
+                      />
                     )}
                   </>
                 )}

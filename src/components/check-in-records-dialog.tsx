@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import { DynastyArr } from "@/config/poem";
 import { getAllFromDB, STORES } from "@/lib/db";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
+import { SimplePagination } from "@/components/ui/pagination";
 
 /** 打卡明细数据类型 */
 interface CheckInDetail {
@@ -110,46 +111,6 @@ function FilterBar({
           ))}
         </SelectContent>
       </Select>
-    </div>
-  );
-}
-
-/** 分页组件 */
-function Pagination({
-  currentPage,
-  totalPages,
-  totalCount,
-  onPageChange,
-}: {
-  currentPage: number;
-  totalPages: number;
-  totalCount: number;
-  onPageChange: (page: number) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between mt-4 px-1">
-      <span className="text-xs text-muted-foreground">
-        共 {totalCount} 条
-      </span>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-          disabled={currentPage === 1}
-          className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <span className="text-xs">
-          {currentPage} / {totalPages}
-        </span>
-        <button
-          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-          disabled={currentPage === totalPages}
-          className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
     </div>
   );
 }
@@ -482,7 +443,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                       renderSortIcon={renderSortIcon}
                     />
                   </ScrollArea>
-                  <Pagination
+                  <SimplePagination
                     currentPage={detailPage}
                     totalPages={detailTotalPages}
                     totalCount={sortedDetails.length}
@@ -509,7 +470,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                       renderSortIcon={renderSortIcon}
                     />
                   </ScrollArea>
-                  <Pagination
+                  <SimplePagination
                     currentPage={summaryPage}
                     totalPages={summaryTotalPages}
                     totalCount={sortedSummaries.length}
