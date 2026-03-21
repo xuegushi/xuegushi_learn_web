@@ -33,6 +33,7 @@ export default function LearnPage() {
   // 模式
   const [mode, setMode] = useState<"recite" | "learn">("recite");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [localDataOpen, setLocalDataOpen] = useState(false);
 
   // 详情弹窗
