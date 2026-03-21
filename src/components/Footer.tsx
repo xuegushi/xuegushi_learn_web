@@ -30,7 +30,7 @@ export default function Footer() {
             alt="微信"
             width={20}
             height={20}
-            className="cursor-pointer hover:opacity-80 transition-opacity md:w-6 md:h-6"
+            className="cursor-pointer hover:opacity-80 transition-opacity md:w-6 md:h-6 dark:invert"
           />
           <div className="absolute w-48 h-48 p-2 bottom-full right-0 mb-2 hidden group-hover:block">
             <img
