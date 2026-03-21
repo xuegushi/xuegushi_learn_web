@@ -75,6 +75,11 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
   const [previewItem, setPreviewItem] = useState<CacheItem | null>(null);
   const [keyword, setKeyword] = useState("");
   const [filterDynasty, setFilterDynasty] = useState("不限");
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<{ key: keyof CacheItem; direction: 'asc' | 'desc' }>({
+    key: 'updatedAt',
+    direction: 'desc'
+  });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -83,11 +88,31 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
       getAllFromDB<PinyinCache>(STORES.PINYIN),
     ]);
 
-    // Sort by update time descending (most recent first)
+    // Sort based on sortConfig
     const sortedPoemData = [...poemData].sort((a, b) => {
-      const timeA = a.updatedAt || a.createdAt || '';
-      const timeB = b.updatedAt || b.createdAt || '';
-      return timeB.localeCompare(timeA); // Descending order
+      const valueA = a[sortConfig.key];
+      const valueB = b[sortConfig.key];
+
+      // Handle undefined/null values
+      if (valueA === undefined || valueA === null) return sortConfig.direction === 'asc' ? 1 : -1;
+      if (valueB === undefined || valueB === null) return sortConfig.direction === 'asc' ? -1 : 1;
+
+      // For string values (like dates), use localeCompare
+      if (typeof valueA === 'string' && typeof valueB === 'string') {
+        return sortConfig.direction === 'asc'
+          ? valueA.localeCompare(valueB)
+          : valueB.localeCompare(valueA);
+      }
+
+      // For numeric values (like ID)
+      if (typeof valueA === 'number' && typeof valueB === 'number') {
+        return sortConfig.direction === 'asc'
+          ? valueA - valueB
+          : valueB - valueA;
+      }
+
+      // Default fallback
+      return 0;
     });
 
     const pinyinMap = new Map<number, PinyinCache>();
@@ -186,6 +211,19 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
     await loadData();
   };
 
+  const handleSortChange = (key: keyof CacheItem) => {
+    setSortConfig(prev => {
+      // If clicking on the same column, toggle direction
+      if (prev.key === key) {
+        return { ...prev, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      // If clicking on a different column, set to ascending by default
+      return { key, direction: 'asc' };
+    });
+    // Reset to first page when sorting changes
+    setPage(1);
+  };
+
   // 筛选
   const filteredItems = items.filter((item) => {
     const matchKeyword = !keyword ||
@@ -264,13 +302,19 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                               onCheckedChange={toggleAll}
                             />
                           </th>
-                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">ID</th>
+                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:bg-muted/100" onClick={() => handleSortChange('id')}>
+                            ID{sortConfig.key === 'id' ? (sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : ''}
+                          </th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">标题</th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">朝代</th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">作者</th>
                           <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">拼音</th>
-                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">创建时间</th>
-                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">更新时间</th>
+                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:bg-muted/100" onClick={() => handleSortChange('createdAt')}>
+                            创建时间{sortConfig.key === 'createdAt' ? (sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : ''}
+                          </th>
+                          <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:bg-muted/100" onClick={() => handleSortChange('updatedAt')}>
+                            更新时间{sortConfig.key === 'updatedAt' ? (sortConfig.direction === 'asc' ? ' ↑' : ' ↓') : ''}
+                          </th>
                           <th className="w-16 px-2 py-2 text-left text-xs font-medium text-muted-foreground">操作</th>
                         </tr>
                       </thead>
