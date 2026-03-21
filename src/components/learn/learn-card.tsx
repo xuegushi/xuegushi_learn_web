@@ -24,6 +24,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
   const [showCheckInSuccess, setShowCheckInSuccess] = useState(false);
   const [checkInCount, setCheckInCount] = useState(1);
   const [checkedInToday, setCheckedInToday] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
 
   // 检查是否已打卡
   const checkIfCheckedInToday = async () => {
@@ -82,6 +83,8 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
 
   // 打卡
   const handleCheckIn = async (user?: { user_id: number; user_name: string }) => {
+    if (checkingIn || checkedInToday) return;
+
     const currentUser = user || getUser();
     if (!currentUser) {
       setShowCreateUser(true);
@@ -90,6 +93,8 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
 
     const poem = poemDetail?.poem;
     if (!poem?.id) return;
+
+    setCheckingIn(true);
 
     const now = new Date().toISOString();
 
@@ -134,6 +139,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
     setCheckInCount(finalCount);
     setCheckedInToday(true);
     setShowCheckInSuccess(true);
+    setCheckingIn(false);
   };
 
   // 打卡按钮点击
@@ -307,14 +313,16 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
               </button>
               <button
                 onClick={handleCheckInClick}
-                disabled={checkedInToday}
+                disabled={checkedInToday || checkingIn}
                 className={`flex items-center gap-1 py-2 px-4 rounded transition-colors ${
                   checkedInToday
                     ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                    : checkingIn
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 cursor-wait"
                     : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer"
                 }`}>
-                <CheckCheck className="h-4 w-4" />
-                {checkedInToday ? "已打卡" : "打卡"}
+                <CheckCheck className={`h-4 w-4 ${checkingIn ? "animate-pulse" : ""}`} />
+                {checkedInToday ? "已打卡" : checkingIn ? "打卡中..." : "打卡"}
               </button>
             </div>
           </CardContent>
