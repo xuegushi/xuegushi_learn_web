@@ -63,9 +63,10 @@ export function Sidebar({
       )}
 
       <aside
-        className={`fixed md:relative inset-y-0 left-0 z-50 md:z-auto border-r bg-gray-50 dark:bg-gray-800 overflow-y-auto transition-all duration-300 h-full
+        className={`fixed md:relative inset-y-0 left-0 z-50 md:z-auto border-r bg-gray-50 dark:bg-gray-800 overflow-y-auto h-full
           ${sidebarOpen ? "translate-x-0 w-72" : "-translate-x-full w-0 md:w-72 md:translate-x-0"}
-          ${collapsed ? "md:w-0 md:overflow-hidden" : ""}`}
+          ${collapsed ? "md:w-0 md:overflow-hidden" : "md:w-72"}
+          transition-[width,transform] duration-300 ease-in-out`}
       >
         <div className="flex h-full flex-col p-4 md:p-6">
           <div className="flex-1 overflow-y-auto space-y-4">

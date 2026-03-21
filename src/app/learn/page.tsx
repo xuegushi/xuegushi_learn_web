@@ -309,7 +309,7 @@ export default function LearnPage() {
     masteredPoems.size + notMasteredPoems.size === poems.length;
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-56px-40px)] md:h-[calc(100vh-64px-48px)]">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-56px-40px)] md:h-[calc(100vh-64px-48px)] transition-all duration-300">
       {/* 侧边栏 */}
       <Sidebar
         collapsed={sidebarCollapsed}
