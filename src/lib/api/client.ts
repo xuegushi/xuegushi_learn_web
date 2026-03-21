@@ -1,5 +1,7 @@
 import { API_CONFIG } from "./config";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * 请求拦截器：修改请求参数
  */
@@ -18,7 +20,7 @@ function applyRequestInterceptors(endpoint: string, params: Record<string, any> 
 
   // 查询字符串
   const queryString = Object.entries(enhancedParams)
-    .filter(([_, value]) => value !== undefined && value !== null)
+    .filter(([, value]) => value !== undefined && value !== null)
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
     .join("&");
 

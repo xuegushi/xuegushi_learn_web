@@ -7,7 +7,7 @@ export async function GET() {
     const data = await api.get(API_ENDPOINTS.POEMS_LIST);
 
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json([]);
   }
 }

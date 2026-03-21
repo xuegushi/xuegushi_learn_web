@@ -6,7 +6,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 function Pagination({
   currentPage,
   totalPages,
-  totalCount,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  totalCount: _totalCount,
   onPageChange,
   showFirstLast = true,
 }: {

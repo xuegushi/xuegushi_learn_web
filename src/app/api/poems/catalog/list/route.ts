@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const data = await api.get(API_ENDPOINTS.POEMS_CATALOG_LIST, { page, size });
 
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ list: [], total: 0, page: 1, size: 12 });
   }
 }

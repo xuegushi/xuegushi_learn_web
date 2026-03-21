@@ -27,6 +27,16 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
   const [checkedInToday, setCheckedInToday] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
 
+  // 获取用户信息
+  const getUser = () => {
+    try {
+      const userStr = localStorage.getItem("user");
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  };
+
   // 检查是否已打卡
   const checkIfCheckedInToday = async () => {
     const user = getUser();
@@ -47,17 +57,8 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
   // 诗词变化时检查打卡状态
   useEffect(() => {
     checkIfCheckedInToday();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [poemDetail?.poem?.id]);
-
-  // 获取用户信息
-  const getUser = () => {
-    try {
-      const userStr = localStorage.getItem("user");
-      return userStr ? JSON.parse(userStr) : null;
-    } catch {
-      return null;
-    }
-  };
 
   // 保存用户信息
   const saveUser = (user: { user_id: number; user_name: string }) => {

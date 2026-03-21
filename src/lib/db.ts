@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const DB_NAME = 'poem_learn_db';
 const DB_VERSION = 5;
 
@@ -82,6 +84,7 @@ function openDB(): Promise<IDBDatabase> {
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
       const oldVersion = event.oldVersion;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const newVersion = event.newVersion;
 
       // Version 1 to 2 migration: add timestamp fields while preserving data
@@ -254,7 +257,7 @@ export async function clearDB(): Promise<void> {
  */
 export async function getDBSize(): Promise<{ bytes: number; mb: string }> {
   try {
-    const db = await openDB();
+    await openDB();
     let totalBytes = 0;
 
     // 获取所有数据并计算大小

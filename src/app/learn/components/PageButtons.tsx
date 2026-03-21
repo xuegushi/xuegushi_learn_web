@@ -66,6 +66,7 @@ export function PcButtons({
   onEarlyEnd,
   mode,
   showEarlyEnd,
+  showReset = true,
 }: {
   allCompleted: boolean;
   onReset: () => void;
@@ -73,15 +74,18 @@ export function PcButtons({
   onEarlyEnd: () => void;
   mode: string;
   showEarlyEnd: boolean;
+  showReset?: boolean;
 }) {
   return (
     <div className="hidden md:flex absolute bottom-8 right-8 gap-2 z-10">
-      <button
-        onClick={onReset}
-        className="px-4 py-2 bg-gray-500/90 text-white rounded-lg shadow-lg text-sm hover:bg-gray-600 transition-colors cursor-pointer"
-      >
-        重新开始
-      </button>
+      {showReset && (
+        <button
+          onClick={onReset}
+          className="px-4 py-2 bg-gray-500/90 text-white rounded-lg shadow-lg text-sm hover:bg-gray-600 transition-colors cursor-pointer"
+        >
+          重新开始
+        </button>
+      )}
       {showEarlyEnd && (
         <button
           onClick={onEarlyEnd}

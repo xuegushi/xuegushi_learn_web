@@ -68,10 +68,6 @@ export default function LearnPage() {
   const [todayCheckedPoemIds, setTodayCheckedPoemIds] = useState<Set<number>>(new Set());
 
   const loadTodayCheckInData = useCallback(async () => {
-    const currentUserStr = localStorage.getItem("user");
-    if (!currentUserStr) return;
-    const currentUser = JSON.parse(currentUserStr);
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -144,6 +140,7 @@ export default function LearnPage() {
 
   // 加载当天打卡数据
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadTodayCheckInData();
   }, [loadTodayCheckInData, selectedFascicule]);
 
@@ -474,6 +471,7 @@ export default function LearnPage() {
             onEarlyEnd={handleEarlyEnd}
             mode={mode}
             showEarlyEnd={mode === "recite" && !allCompleted}
+            showReset={mode !== "learn"}
           />
         </div>
       </div>

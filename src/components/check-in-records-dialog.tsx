@@ -10,13 +10,19 @@ import {
 } from "@/components/ui/dialog";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DynastyArr } from "@/config/poem";
 import { getAllFromDB, STORES } from "@/lib/db";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { SimplePagination } from "@/components/ui/pagination";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 /** 日历面板组件 */
 function CalendarPanel({
@@ -79,8 +85,8 @@ interface CheckInRecordsDialogProps {
 }
 
 /** 排序键类型 */
-type DetailSortKey = 'check_in_time';
-type SummarySortKey = 'created_at' | 'updated_at' | 'count';
+type DetailSortKey = "check_in_time";
+type SummarySortKey = "created_at" | "updated_at" | "count";
 
 /** 筛选栏组件 */
 function FilterBar({
@@ -105,13 +111,17 @@ function FilterBar({
       <Select value={selectedUser} onValueChange={(v) => v && onUserChange(v)}>
         <SelectTrigger className="w-32">
           <SelectValue>
-            {selectedUser === "all" ? "全部用户" : users.find(u => u.id.toString() === selectedUser)?.user_name}
+            {selectedUser === "all"
+              ? "全部用户"
+              : users.find((u) => u.id.toString() === selectedUser)?.user_name}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">全部用户</SelectItem>
-          {users.map(u => (
-            <SelectItem key={u.id} value={u.id.toString()}>{u.user_name}</SelectItem>
+          {users.map((u) => (
+            <SelectItem key={u.id} value={u.id.toString()}>
+              {u.user_name}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -120,17 +130,21 @@ function FilterBar({
         type="text"
         placeholder="搜索诗词或诗人"
         value={searchKeyword}
-        onChange={e => onSearchChange(e.target.value)}
+        onChange={(e) => onSearchChange(e.target.value)}
         className="px-3 py-1.5 border rounded-md text-sm bg-background w-40"
       />
 
-      <Select value={selectedDynasty} onValueChange={(v) => v && onDynastyChange(v)}>
+      <Select
+        value={selectedDynasty}
+        onValueChange={(v) => v && onDynastyChange(v)}>
         <SelectTrigger className="w-28">
           <SelectValue>{selectedDynasty}</SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {DynastyArr.map(d => (
-            <SelectItem key={d} value={d}>{d}</SelectItem>
+          {DynastyArr.map((d) => (
+            <SelectItem key={d} value={d}>
+              {d}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -146,9 +160,12 @@ function DetailTable({
   renderSortIcon,
 }: {
   data: CheckInDetail[];
-  sort: { key: DetailSortKey; direction: 'asc' | 'desc' };
+  sort: { key: DetailSortKey; direction: "asc" | "desc" };
   onSort: (key: DetailSortKey) => void;
-  renderSortIcon: (active: boolean, direction: 'asc' | 'desc') => React.ReactNode;
+  renderSortIcon: (
+    active: boolean,
+    direction: "asc" | "desc",
+  ) => React.ReactNode;
 }) {
   return (
     <table className="w-full text-xs">
@@ -156,12 +173,14 @@ function DetailTable({
         <tr>
           <th className="px-2 py-2 text-left">ID</th>
           <th className="px-2 py-2 text-left">用户</th>
-          <th className="px-2 py-2 text-left">诗词标题</th>
+          <th className="px-2 py-2 text-left">标题</th>
           <th className="px-2 py-2 text-left">诗人</th>
-          <th className="px-2 py-2 text-left cursor-pointer" onClick={() => onSort('check_in_time')}>
+          <th
+            className="px-2 py-2 text-left cursor-pointer"
+            onClick={() => onSort("check_in_time")}>
             <span className="flex items-center gap-1">
               打卡时间
-              {renderSortIcon(sort.key === 'check_in_time', sort.direction)}
+              {renderSortIcon(sort.key === "check_in_time", sort.direction)}
             </span>
           </th>
         </tr>
@@ -169,16 +188,22 @@ function DetailTable({
       <tbody>
         {data.length === 0 ? (
           <tr>
-            <td colSpan={5} className="text-center py-8 text-muted-foreground">暂无数据</td>
+            <td colSpan={5} className="text-center py-8 text-muted-foreground">
+              暂无数据
+            </td>
           </tr>
         ) : (
-          data.map(d => (
+          data.map((d) => (
             <tr key={d.id} className="border-b hover:bg-muted/30">
               <td className="px-2 py-2">{d.id}</td>
               <td className="px-2 py-2">{d.user_name}</td>
               <td className="px-2 py-2">{d.poem_title}</td>
-              <td className="px-2 py-2">{d.author}「{d.dynasty}」</td>
-              <td className="px-2 py-2">{new Date(d.check_in_time).toLocaleString()}</td>
+              <td className="px-2 py-2">
+                {d.author}·{d.dynasty}
+              </td>
+              <td className="px-2 py-2">
+                {new Date(d.check_in_time).toLocaleString()}
+              </td>
             </tr>
           ))
         )}
@@ -195,9 +220,12 @@ function SummaryTable({
   renderSortIcon,
 }: {
   data: CheckInSummary[];
-  sort: { key: SummarySortKey; direction: 'asc' | 'desc' };
+  sort: { key: SummarySortKey; direction: "asc" | "desc" };
   onSort: (key: SummarySortKey) => void;
-  renderSortIcon: (active: boolean, direction: 'asc' | 'desc') => React.ReactNode;
+  renderSortIcon: (
+    active: boolean,
+    direction: "asc" | "desc",
+  ) => React.ReactNode;
 }) {
   return (
     <table className="w-full text-xs">
@@ -205,23 +233,29 @@ function SummaryTable({
         <tr>
           <th className="px-2 py-2 text-left">ID</th>
           <th className="px-2 py-2 text-left">用户</th>
-          <th className="px-2 py-2 text-left">诗词标题</th>
-          <th className="px-2 py-2 text-left cursor-pointer" onClick={() => onSort('count')}>
+          <th className="px-2 py-2 text-left">诗词</th>
+          <th
+            className="px-2 py-2 text-left cursor-pointer"
+            onClick={() => onSort("count")}>
             <span className="flex items-center gap-1">
               打卡次数
-              {renderSortIcon(sort.key === 'count', sort.direction)}
+              {renderSortIcon(sort.key === "count", sort.direction)}
             </span>
           </th>
-          <th className="px-2 py-2 text-left cursor-pointer" onClick={() => onSort('created_at')}>
+          <th
+            className="px-2 py-2 text-left cursor-pointer"
+            onClick={() => onSort("created_at")}>
             <span className="flex items-center gap-1">
               初次打卡
-              {renderSortIcon(sort.key === 'created_at', sort.direction)}
+              {renderSortIcon(sort.key === "created_at", sort.direction)}
             </span>
           </th>
-          <th className="px-2 py-2 text-left cursor-pointer" onClick={() => onSort('updated_at')}>
+          <th
+            className="px-2 py-2 text-left cursor-pointer"
+            onClick={() => onSort("updated_at")}>
             <span className="flex items-center gap-1">
               最后打卡
-              {renderSortIcon(sort.key === 'updated_at', sort.direction)}
+              {renderSortIcon(sort.key === "updated_at", sort.direction)}
             </span>
           </th>
         </tr>
@@ -229,17 +263,23 @@ function SummaryTable({
       <tbody>
         {data.length === 0 ? (
           <tr>
-            <td colSpan={6} className="text-center py-8 text-muted-foreground">暂无数据</td>
+            <td colSpan={6} className="text-center py-8 text-muted-foreground">
+              暂无数据
+            </td>
           </tr>
         ) : (
-          data.map(s => (
+          data.map((s) => (
             <tr key={s.id} className="border-b hover:bg-muted/30">
               <td className="px-2 py-2">{s.id}</td>
               <td className="px-2 py-2">{s.user_name}</td>
               <td className="px-2 py-2">{s.poem_title}</td>
               <td className="px-2 py-2">{s.count}</td>
-              <td className="px-2 py-2">{new Date(s.created_at).toLocaleString()}</td>
-              <td className="px-2 py-2">{new Date(s.updated_at).toLocaleString()}</td>
+              <td className="px-2 py-2">
+                {new Date(s.created_at).toLocaleString()}
+              </td>
+              <td className="px-2 py-2">
+                {new Date(s.updated_at).toLocaleString()}
+              </td>
             </tr>
           ))
         )}
@@ -249,7 +289,10 @@ function SummaryTable({
 }
 
 /** 打卡记录弹窗主组件 */
-export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialogProps) {
+export function CheckInRecordsDialog({
+  open,
+  onOpenChange,
+}: CheckInRecordsDialogProps) {
   const [details, setDetails] = useState<CheckInDetail[]>([]);
   const [summaries, setSummaries] = useState<CheckInSummary[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -261,13 +304,19 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
   const [selectedDynasty, setSelectedDynasty] = useState("不限");
 
   // 排序状态
-  const [detailSort, setDetailSort] = useState<{ key: DetailSortKey; direction: 'asc' | 'desc' }>({
-    key: 'check_in_time',
-    direction: 'desc'
+  const [detailSort, setDetailSort] = useState<{
+    key: DetailSortKey;
+    direction: "asc" | "desc";
+  }>({
+    key: "check_in_time",
+    direction: "desc",
   });
-  const [summarySort, setSummarySort] = useState<{ key: SummarySortKey; direction: 'asc' | 'desc' }>({
-    key: 'updated_at',
-    direction: 'desc'
+  const [summarySort, setSummarySort] = useState<{
+    key: SummarySortKey;
+    direction: "asc" | "desc";
+  }>({
+    key: "updated_at",
+    direction: "desc",
   });
 
   // 分页状态
@@ -295,14 +344,14 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     }
 
     // 关联用户名称
-    const userMap = new Map(userList.map(u => [u.id, u.user_name]));
-    const enrichedDetails = detailList.map(d => ({
+    const userMap = new Map(userList.map((u) => [u.id, u.user_name]));
+    const enrichedDetails = detailList.map((d) => ({
       ...d,
-      user_name: userMap.get(d.user_id) || ''
+      user_name: userMap.get(d.user_id) || "",
     }));
-    const enrichedSummaries = summaryList.map(s => ({
+    const enrichedSummaries = summaryList.map((s) => ({
       ...s,
-      user_name: userMap.get(s.user_id) || ''
+      user_name: userMap.get(s.user_id) || "",
     }));
 
     setUsers(userList);
@@ -314,8 +363,8 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
   // 计算每天打卡数量（用于日历显示）
   const dateCheckInCount = useMemo(() => {
     const countMap = new Map<string, number>();
-    details.forEach(d => {
-      const date = d.check_in_time.split('T')[0];
+    details.forEach((d) => {
+      const date = d.check_in_time.split("T")[0];
       countMap.set(date, (countMap.get(date) || 0) + 1);
     });
     return countMap;
@@ -331,30 +380,38 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
 
   // 筛选条件变化时重置分页
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDetailPage(1);
   }, [selectedUser, searchKeyword, selectedDynasty, detailSort]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSummaryPage(1);
   }, [selectedUser, searchKeyword, selectedDynasty, summarySort]);
 
   // 筛选明细数据
-  const filteredDetails = details.filter(d => {
-    const matchUser = selectedUser === 'all' || d.user_id.toString() === selectedUser;
-    const matchKeyword = !searchKeyword ||
+  const filteredDetails = details.filter((d) => {
+    const matchUser =
+      selectedUser === "all" || d.user_id.toString() === selectedUser;
+    const matchKeyword =
+      !searchKeyword ||
       d.poem_title?.includes(searchKeyword) ||
       d.author?.includes(searchKeyword);
-    const matchDynasty = selectedDynasty === '不限' || d.dynasty === selectedDynasty;
+    const matchDynasty =
+      selectedDynasty === "不限" || d.dynasty === selectedDynasty;
     return matchUser && matchKeyword && matchDynasty;
   });
 
   // 筛选汇总数据
-  const filteredSummaries = summaries.filter(s => {
-    const matchUser = selectedUser === 'all' || s.user_id.toString() === selectedUser;
-    const matchKeyword = !searchKeyword ||
+  const filteredSummaries = summaries.filter((s) => {
+    const matchUser =
+      selectedUser === "all" || s.user_id.toString() === selectedUser;
+    const matchKeyword =
+      !searchKeyword ||
       s.poem_title?.includes(searchKeyword) ||
       s.author?.includes(searchKeyword);
-    const matchDynasty = selectedDynasty === '不限' || s.dynasty === selectedDynasty;
+    const matchDynasty =
+      selectedDynasty === "不限" || s.dynasty === selectedDynasty;
     return matchUser && matchKeyword && matchDynasty;
   });
 
@@ -364,7 +421,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     const valueB = b[detailSort.key];
     if (!valueA) return 1;
     if (!valueB) return -1;
-    return detailSort.direction === 'asc'
+    return detailSort.direction === "asc"
       ? String(valueA).localeCompare(String(valueB))
       : String(valueB).localeCompare(String(valueA));
   });
@@ -375,45 +432,57 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
     const valueB = b[summarySort.key];
     if (valueA === undefined || valueA === null) return 1;
     if (valueB === undefined || valueB === null) return -1;
-    if (typeof valueA === 'number' && typeof valueB === 'number') {
-      return summarySort.direction === 'asc' ? valueA - valueB : valueB - valueA;
+    if (typeof valueA === "number" && typeof valueB === "number") {
+      return summarySort.direction === "asc"
+        ? valueA - valueB
+        : valueB - valueA;
     }
-    return summarySort.direction === 'asc'
+    return summarySort.direction === "asc"
       ? String(valueA).localeCompare(String(valueB))
       : String(valueB).localeCompare(String(valueA));
   });
 
   // 分页数据
-  const paginatedDetails = sortedDetails.slice((detailPage - 1) * pageSize, detailPage * pageSize);
-  const paginatedSummaries = sortedSummaries.slice((summaryPage - 1) * pageSize, summaryPage * pageSize);
+  const paginatedDetails = sortedDetails.slice(
+    (detailPage - 1) * pageSize,
+    detailPage * pageSize,
+  );
+  const paginatedSummaries = sortedSummaries.slice(
+    (summaryPage - 1) * pageSize,
+    summaryPage * pageSize,
+  );
   const detailTotalPages = Math.ceil(sortedDetails.length / pageSize) || 1;
   const summaryTotalPages = Math.ceil(sortedSummaries.length / pageSize) || 1;
 
   // 切换明细排序
   const toggleDetailSort = (key: DetailSortKey) => {
-    setDetailSort(prev => ({
+    setDetailSort((prev) => ({
       key,
-      direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+      direction: prev.key === key && prev.direction === "desc" ? "asc" : "desc",
     }));
   };
 
   // 切换汇总排序
   const toggleSummarySort = (key: SummarySortKey) => {
-    setSummarySort(prev => ({
+    setSummarySort((prev) => ({
       key,
-      direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+      direction: prev.key === key && prev.direction === "desc" ? "asc" : "desc",
     }));
   };
 
   // 渲染排序图标
-  const renderSortIcon = (active: boolean, direction: 'asc' | 'desc') => {
+  const renderSortIcon = (active: boolean, direction: "asc" | "desc") => {
     if (!active) return <ArrowUpDown className="h-3 w-3 opacity-50" />;
-    return direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
+    return direction === "asc" ? (
+      <ArrowUp className="h-3 w-3" />
+    ) : (
+      <ArrowDown className="h-3 w-3" />
+    );
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] md:w-[90vw] lg:w-[85vw] max-w-[1400px] max-h-[90dvh] flex flex-col p-0 !gap-0 sm:max-w-[1400px] overflow-hidden">
+      <DialogContent className="w-[95vw] md:w-[90vw] lg:w-[85vw] max-w-350 max-h-[90dvh] flex flex-col p-0 gap-0! sm:max-w-350 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>打卡记录</DialogTitle>
         </DialogHeader>
@@ -421,43 +490,106 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
         {loading ? (
           <div className="flex items-center justify-center py-8">加载中...</div>
         ) : (
-          <div className="flex flex-col md:flex-row flex-auto overflow-y-auto min-h-0">
-            {/* 移动端日历区域 - Accordion 折叠 */}
-            <div className="md:hidden border-b">
-              <Accordion type="single" collapsible defaultValue="calendar">
-                <AccordionItem value="calendar">
-                  <AccordionTrigger className="px-4 py-3 font-medium">
-                    打卡日历
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <CalendarPanel
-                      dateCheckInCount={dateCheckInCount}
-                      selectedDate={selectedDate}
-                      onSelect={setSelectedDate}
+          <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
+            {/* 移动端内容区域 - ScrollArea 滚动 */}
+            <ScrollArea className="md:hidden h-[75vh] max-h-[calc(100%-50px)]">
+              {/* 移动端日历区域 - Accordion 折叠 */}
+
+              <CalendarPanel
+                dateCheckInCount={dateCheckInCount}
+                selectedDate={selectedDate}
+                onSelect={setSelectedDate}
+              />
+
+              <div className="px-4 py-4">
+                <Tabs
+                  defaultValue="detail"
+                  className="flex flex-col"
+                  onValueChange={() => {
+                    setDetailPage(1);
+                    setSummaryPage(1);
+                  }}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="detail">打卡明细</TabsTrigger>
+                    <TabsTrigger value="summary">打卡汇总</TabsTrigger>
+                  </TabsList>
+
+                  {/* 明细表格 */}
+                  <TabsContent value="detail" className="flex flex-col mt-4">
+                    <FilterBar
+                      users={users}
+                      selectedUser={selectedUser}
+                      onUserChange={setSelectedUser}
+                      searchKeyword={searchKeyword}
+                      onSearchChange={setSearchKeyword}
+                      selectedDynasty={selectedDynasty}
+                      onDynastyChange={setSelectedDynasty}
                     />
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
+                    <div className="overflow-auto">
+                      <DetailTable
+                        data={paginatedDetails}
+                        sort={detailSort}
+                        onSort={toggleDetailSort}
+                        renderSortIcon={renderSortIcon}
+                      />
+                    </div>
+                    <SimplePagination
+                      currentPage={detailPage}
+                      totalPages={detailTotalPages}
+                      totalCount={sortedDetails.length}
+                      onPageChange={setDetailPage}
+                    />
+                  </TabsContent>
+
+                  {/* 汇总表格 */}
+                  <TabsContent value="summary" className="flex flex-col mt-4">
+                    <FilterBar
+                      users={users}
+                      selectedUser={selectedUser}
+                      onUserChange={setSelectedUser}
+                      searchKeyword={searchKeyword}
+                      onSearchChange={setSearchKeyword}
+                      selectedDynasty={selectedDynasty}
+                      onDynastyChange={setSelectedDynasty}
+                    />
+                    <div className="overflow-auto">
+                      <SummaryTable
+                        data={paginatedSummaries}
+                        sort={summarySort}
+                        onSort={toggleSummarySort}
+                        renderSortIcon={renderSortIcon}
+                      />
+                    </div>
+                    <SimplePagination
+                      currentPage={summaryPage}
+                      totalPages={summaryTotalPages}
+                      totalCount={sortedSummaries.length}
+                      onPageChange={setSummaryPage}
+                    />
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </ScrollArea>
 
             {/* PC端左侧日历区域 */}
             <div className="hidden md:block w-80 flex-shrink-0 px-6 py-3 overflow-y-auto border-r">
-              <h3 className="font-medium mb-4">打卡日历</h3>
               <Calendar
                 dateData={dateCheckInCount}
                 selectedDate={selectedDate}
                 onSelect={setSelectedDate}
-                className="border rounded-lg p-4"
+                className="border rounded-lg p-4 h-full"
               />
             </div>
 
-            {/* 右侧表格区域 */}
-            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+            {/* PC端右侧表格区域 */}
+            <div className="hidden md:flex flex-1 flex-col min-h-0 overflow-y-auto">
               <Tabs
                 defaultValue="detail"
                 className="flex-1 flex flex-col overflow-hidden"
-                onValueChange={() => { setDetailPage(1); setSummaryPage(1); }}
-              >
+                onValueChange={() => {
+                  setDetailPage(1);
+                  setSummaryPage(1);
+                }}>
                 <div className="px-6 pt-4">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="detail">打卡明细</TabsTrigger>
@@ -466,7 +598,9 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                 </div>
 
                 {/* 明细表格 */}
-                <TabsContent value="detail" className="flex-1 flex flex-col px-6 mt-4 pb-6 min-h-0">
+                <TabsContent
+                  value="detail"
+                  className="flex-1 flex flex-col px-6 mt-4 pb-6 min-h-0">
                   <FilterBar
                     users={users}
                     selectedUser={selectedUser}
@@ -476,7 +610,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                     selectedDynasty={selectedDynasty}
                     onDynastyChange={setSelectedDynasty}
                   />
-                  <div className="flex-1 overflow-auto">
+                  <div className="flex-1 overflow-auto sm:min-h-90">
                     <DetailTable
                       data={paginatedDetails}
                       sort={detailSort}
@@ -493,7 +627,9 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                 </TabsContent>
 
                 {/* 汇总表格 */}
-                <TabsContent value="summary" className="flex-1 flex flex-col px-6 mt-4 pb-6 min-h-0">
+                <TabsContent
+                  value="summary"
+                  className="flex-1 flex flex-col px-6 mt-4 pb-6 min-h-0">
                   <FilterBar
                     users={users}
                     selectedUser={selectedUser}
@@ -503,7 +639,7 @@ export function CheckInRecordsDialog({ open, onOpenChange }: CheckInRecordsDialo
                     selectedDynasty={selectedDynasty}
                     onDynastyChange={setSelectedDynasty}
                   />
-                  <div className="flex-1 overflow-auto">
+                  <div className="flex-1 overflow-auto sm:min-h-90">
                     <SummaryTable
                       data={paginatedSummaries}
                       sort={summarySort}

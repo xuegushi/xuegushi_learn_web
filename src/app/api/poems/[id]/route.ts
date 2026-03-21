@@ -15,7 +15,7 @@ export async function GET(
     const data = await api.get(`/api/poems/${id}`);
 
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch poem" }, { status: 500 });
   }
 }

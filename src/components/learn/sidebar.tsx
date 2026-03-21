@@ -51,6 +51,7 @@ export function Sidebar({
   mode,
   onModeChange,
   collapsed,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onCollapse,
 }: SidebarProps) {
   return (

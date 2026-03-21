@@ -2,6 +2,8 @@ import { useCallback } from "react";
 import { useApiErrorStore } from "./error-store";
 import { API_CONFIG } from "./config";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * 客户端 API 钩子 - 支持错误弹窗提示
  */

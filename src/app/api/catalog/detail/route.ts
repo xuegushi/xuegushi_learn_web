@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const data = await api.get(API_ENDPOINTS.CATALOG_DETAIL, { catalog_id: catalogId });
 
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch catalog" }, { status: 500 });
   }
 }

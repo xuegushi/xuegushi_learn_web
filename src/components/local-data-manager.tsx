@@ -141,7 +141,7 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
     setDbSize(mb);
 
     setLoading(false);
-  }, []);
+  }, [sortConfig]);
 
   useEffect(() => {
     if (open) {

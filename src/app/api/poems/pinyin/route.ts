@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const data = await api.get(API_ENDPOINTS.POEMS_PINYIN, { poem_id: poemIdStr });
 
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch pinyin" }, { status: 500 });
   }
 }

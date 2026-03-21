@@ -182,6 +182,9 @@ export function StatusBar({
               {currentIndex + 1} / {poems.length}
             </span>
             <NavButton onClick={onNext} direction="next" />
+            <span className="text-sm text-muted-foreground">
+              {poems[currentIndex]?.grade}
+            </span>
             <ReciteStatusDots
               poems={poems}
               currentIndex={currentIndex}
@@ -245,6 +248,9 @@ export function StatusBar({
                 {currentIndex + 1} / {poems.length}
               </span>
               <NavButton onClick={onNext} direction="next" />
+              <span className="text-sm text-muted-foreground">
+                {poems[currentIndex]?.grade}
+              </span>
               <div className="flex gap-2 text-xs ml-auto">
                 <span className="text-red-500">错误：{errorCount}</span>
                 <span className="text-green-500">正确：{correctCount}</span>
@@ -264,6 +270,7 @@ export function StatusBar({
               <span className="text-sm text-muted-foreground">
                 {poems[currentIndex]?.grade}
               </span>
+              <div className="flex-1" />
               <CheckInButton
                 count={todayCheckInCount}
                 onClick={onCheckInRecordsClick}
