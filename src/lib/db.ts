@@ -63,6 +63,8 @@ async function migrateExistingData(db: IDBDatabase): Promise<void> {
 function openDB(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
 
+  let needsMigration = false;
+
   dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -71,8 +73,8 @@ function openDB(): Promise<IDBDatabase> {
     request.onsuccess = () => {
       const db = request.result;
 
-      // Run migration if needed (when DB version is upgraded)
-      if (db.version < DB_VERSION) {
+      // Run migration if needed (when DB version was just upgraded)
+      if (needsMigration) {
         migrateExistingData(db).catch(console.error);
       }
 
@@ -86,18 +88,16 @@ function openDB(): Promise<IDBDatabase> {
 
       // Version 1 to 2 migration: add timestamp fields while preserving data
       if (oldVersion < 2) {
+        needsMigration = true;
         // Handle POEMS store
         if (!db.objectStoreNames.contains(STORES.POEMS)) {
           // Store doesn't exist, create new one
           const poemStore = db.createObjectStore(STORES.POEMS, { keyPath: 'id' });
           poemStore.createIndex('updatedAt', 'updatedAt', { unique: false });
           poemStore.createIndex('createdAt', 'createdAt', { unique: false });
-        } else {
-          // Store exists, add indexes if needed
-          // In onupgradeneeded, we can't directly access objectStore, so we need to check if indexes exist differently
-          // For now, we'll skip index addition in upgrade and rely on the migration function
-          // The migration function will handle adding missing fields to existing data
         }
+        // Note: If store already exists, we can't modify its structure in onupgradeneeded
+        // The migration function will handle adding missing fields to existing data
 
       // Handle PINYIN store
         if (!db.objectStoreNames.contains(STORES.PINYIN)) {
@@ -105,10 +105,9 @@ function openDB(): Promise<IDBDatabase> {
           const pinyinStore = db.createObjectStore(STORES.PINYIN, { keyPath: 'poem_id' });
           pinyinStore.createIndex('updatedAt', 'updatedAt', { unique: false });
           pinyinStore.createIndex('createdAt', 'createdAt', { unique: false });
-        } else {
-          // Store exists, add indexes if needed
-          // Same as above - skip index addition in upgrade, rely on migration
         }
+        // Note: If store already exists, we can't modify its structure in onupgradeneeded
+        // The migration function will handle adding missing fields to existing data
       }
     };
   });
