@@ -3,13 +3,17 @@ export function MobileButtons({
   allCompleted,
   onReset,
   onContinue,
+  onEarlyEnd,
   mode,
+  showEarlyEnd,
   onSidebarToggle,
 }: {
   allCompleted: boolean;
   onReset: () => void;
   onContinue: () => void;
+  onEarlyEnd: () => void;
   mode: string;
+  showEarlyEnd: boolean;
   onSidebarToggle: () => void;
 }) {
   return (
@@ -33,6 +37,14 @@ export function MobileButtons({
         >
           重新开始
         </button>
+        {showEarlyEnd && (
+          <button
+            onClick={onEarlyEnd}
+            className="p-2 bg-orange-500/80 text-white rounded-full shadow-lg text-sm"
+          >
+            提前结束
+          </button>
+        )}
         {allCompleted && (
           <button
             onClick={onContinue}
@@ -51,12 +63,16 @@ export function PcButtons({
   allCompleted,
   onReset,
   onContinue,
+  onEarlyEnd,
   mode,
+  showEarlyEnd,
 }: {
   allCompleted: boolean;
   onReset: () => void;
   onContinue: () => void;
+  onEarlyEnd: () => void;
   mode: string;
+  showEarlyEnd: boolean;
 }) {
   return (
     <div className="hidden md:flex absolute bottom-8 right-8 gap-2 z-10">
@@ -66,6 +82,14 @@ export function PcButtons({
       >
         重新开始
       </button>
+      {showEarlyEnd && (
+        <button
+          onClick={onEarlyEnd}
+          className="px-4 py-2 bg-orange-500/90 text-white rounded-lg shadow-lg text-sm hover:bg-orange-600 transition-colors cursor-pointer"
+        >
+          提前结束
+        </button>
+      )}
       {allCompleted && (
         <button
           onClick={onContinue}

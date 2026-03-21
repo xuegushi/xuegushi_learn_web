@@ -144,10 +144,13 @@ export default function LearnPage() {
   }, [currentIndex, poems]);
 
   // ==================== 事件处理 ====================
+  const [skippedCount, setSkippedCount] = useState(0);
+
   const resetProgress = useCallback(() => {
     setCurrentIndex(0);
     setErrorCount(0);
     setCorrectCount(0);
+    setSkippedCount(0);
     setMasteredPoems(new Set());
     setNotMasteredPoems(new Set());
     setShowResult(false);
@@ -207,6 +210,12 @@ export default function LearnPage() {
       setTimeout(() => nextPoem(), 100);
     }
   }, [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem]);
+
+  // 提前结束
+  const handleEarlyEnd = useCallback(() => {
+    setSkippedCount(poems.length - masteredPoems.size - notMasteredPoems.size);
+    setShowResult(true);
+  }, [poems.length, masteredPoems.size, notMasteredPoems.size]);
 
   // 生成随机索引
   const generateRandomIndices = useCallback(() => {
@@ -333,7 +342,9 @@ export default function LearnPage() {
             allCompleted={allCompleted}
             onReset={resetProgress}
             onContinue={handleContinueLearning}
+            onEarlyEnd={handleEarlyEnd}
             mode={mode}
+            showEarlyEnd={mode === "recite" && !allCompleted}
             onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
           />
 
@@ -342,7 +353,9 @@ export default function LearnPage() {
             allCompleted={allCompleted}
             onReset={resetProgress}
             onContinue={handleContinueLearning}
+            onEarlyEnd={handleEarlyEnd}
             mode={mode}
+            showEarlyEnd={mode === "recite" && !allCompleted}
           />
         </div>
       </div>
@@ -363,12 +376,14 @@ export default function LearnPage() {
         correctCount={correctCount}
         errorCount={errorCount}
         totalCount={poems.length}
+        skippedCount={skippedCount}
         onRestart={() => {
           setShowResult(false);
           setMasteredPoems(new Set());
           setNotMasteredPoems(new Set());
           setCorrectCount(0);
           setErrorCount(0);
+          setSkippedCount(0);
           setCurrentIndex(0);
         }}
         onContinue={handleContinueLearning}

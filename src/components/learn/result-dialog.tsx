@@ -14,6 +14,7 @@ interface ResultDialogProps {
   correctCount: number;
   errorCount: number;
   totalCount: number;
+  skippedCount?: number;
   onRestart: () => void;
   onContinue: () => void;
   mode: "recite" | "learn";
@@ -30,6 +31,7 @@ export function ResultDialog({
   correctCount,
   errorCount,
   totalCount,
+  skippedCount = 0,
   onRestart,
   onContinue,
   mode,
@@ -39,7 +41,7 @@ export function ResultDialog({
       <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-center py-4">
-            学习完成
+            {mode === "recite" ? "背诵完成" : "学习完成"}
           </DialogTitle>
         </DialogHeader>
 
@@ -48,9 +50,12 @@ export function ResultDialog({
           <div className="text-2xl">正确率：{accuracy}%</div>
 
           {/* 正确/错误数量 */}
-          <div className="flex justify-center gap-8">
-            <div className="text-green-600">正确：{correctCount}</div>
-            <div className="text-red-600">错误：{errorCount}</div>
+          <div className="flex justify-center gap-6">
+            <div className="text-green-600">已掌握：{correctCount}</div>
+            <div className="text-red-600">未掌握：{errorCount}</div>
+            {skippedCount > 0 && (
+              <div className="text-gray-500">跳过：{skippedCount}</div>
+            )}
           </div>
 
           {/* 总数 */}
