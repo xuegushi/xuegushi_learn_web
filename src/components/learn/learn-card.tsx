@@ -20,7 +20,8 @@ interface LearnCardProps {
 }
 
 export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext, onCheckInSuccess }: LearnCardProps) {
-  const [showTranslation, setShowTranslation] = useState(false);
+  const [showPinyin, setShowPinyin] = useState(true);
+  const [showTranslation, setShowTranslation] = useState(true);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showCheckInSuccess, setShowCheckInSuccess] = useState(false);
   const [checkInCount, setCheckInCount] = useState(1);
@@ -193,9 +194,16 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
         {/* 译文按钮 */}
         <button
           onClick={() => setShowTranslation(!showTranslation)}
-          className={`absolute top-7 right-12 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showTranslation ? "bg-primary text-primary-foreground" : "text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showTranslation ? "primary/50" : "primary/20"}`}
+          className={`absolute top-7 right-20 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showTranslation ? "bg-primary text-primary-foreground" : "text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showTranslation ? "primary/50" : "primary/20"}`}
           title="显示/隐藏译文">
           译
+        </button>
+        {/* 拼音按钮 */}
+        <button
+          onClick={() => setShowPinyin(!showPinyin)}
+          className={`absolute top-7 right-12 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showPinyin ? "bg-primary text-primary-foreground" : "text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showPinyin ? "primary/50" : "primary/20"}`}
+          title="显示/隐藏拼音">
+          拼
         </button>
         <Card className="shadow-lg w-full max-h-[70vh] flex flex-col">
           <CardContent className="p-4 md:p-6 py-3 md:py-2 flex flex-col flex-1 overflow-hidden">
@@ -206,9 +214,11 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                 <div className="flex justify-center gap-1 flex-wrap">
                   {poemDetail.poem?.title?.split("").map((char, idx) => (
                     <div key={idx} className="flex flex-col items-center">
-                      <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
-                        {pinyinData?.title?.[idx] || ""}
-                      </span>
+                      {showPinyin && (
+                        <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
+                          {pinyinData?.title?.[idx] || ""}
+                        </span>
+                      )}
                       <span className="text-2xl font-bold">{char}</span>
                     </div>
                   ))}
@@ -240,9 +250,11 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                               <div
                                 key={charIdx}
                                 className="flex flex-col items-center">
-                                <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
-                                  {pinyinLine[charIdx] || ""}
-                                </span>
+                                {showPinyin && (
+                                  <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
+                                    {pinyinLine[charIdx] || ""}
+                                  </span>
+                                )}
                                 <span className="text-base md:text-lg">
                                   {char}
                                 </span>
@@ -298,6 +310,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                   title="赏析"
                   content={poemDetail.detail.shangxi.content}
                   isHtml
+                  className="mb-8"
                 />
               )}
             </div>
@@ -348,22 +361,22 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
 }
 
 /** 通用章节组件 */
-function Section({ title, content, isHtml }: { title: string; content: string[]; isHtml?: boolean }) {
+function Section({ title, content, isHtml, className }: { title: string; content: string[]; isHtml?: boolean; className?: string }) {
   return (
-    <div className="mt-4">
+    <div className={`mt-4 ${className || ""}`}>
       <div className="flex items-center gap-4 mb-2">
         <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
-        <h3 className="font-semibold">{title}</h3>
+        <h3 className="text-lg font-semibold">{title}</h3>
         <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
       </div>
       {isHtml ? (
         <div
-          className="text-muted-foreground text-sm leading-relaxed"
+          className="text-muted-foreground text-base leading-relaxed"
           dangerouslySetInnerHTML={{ __html: content.join("") }}
         />
       ) : (
         content.map((text, idx) => (
-          <p key={idx} className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
+          <p key={idx} className="text-muted-foreground text-base leading-relaxed whitespace-pre-wrap">
             {text}
           </p>
         ))

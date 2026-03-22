@@ -116,14 +116,14 @@ export function Calendar({ className, selectedDate, onSelect, dateData }: Calend
               )}
             >
               <span className="text-sm">{day}</span>
-              {count > 0 && (
-                <span className={cn(
-                  "text-[10px] font-medium mt-0.5",
-                  isSelected(day) ? "text-primary-foreground/80" : "text-blue-500"
-                )}>
-                  {count}
-                </span>
-              )}
+              <span className={cn(
+                "text-[10px] font-medium mt-0.5",
+                count > 0 
+                  ? (isSelected(day) ? "text-primary-foreground/80" : "text-blue-500")
+                  : (isSelected(day) ? "text-primary-foreground/50" : "text-muted-foreground/50")
+              )}>
+                {count}
+              </span>
             </button>
           );
         })}

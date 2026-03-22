@@ -1,5 +1,55 @@
 # 更新日志
 
+## 2026-03-22 ✅ (已提交)
+
+### 项目文档
+
+- **AGENTS.md 文件创建**
+  - 新增项目指南文件，包含构建、测试命令
+  - 代码风格指南（导入规范、类型、命名、格式化、错误处理）
+  - 项目结构和关键依赖说明
+
+### 诗词卡片 Section 字号调整
+
+- **Section 组件优化**
+  - 标题字号：`text-base` → `text-lg`
+  - 内容字号：`text-sm` → `text-base`
+  - Section 组件支持 className 属性
+  - 赏析部分添加 `mb-8` 底部间距
+
+### 左侧配置区域功能调整
+
+- **ChoiceCard 组件**
+  - 新增 `src/components/learn/choice-card.tsx` - 卡片式单选按钮组件
+  - 使用 RadioGroup + RadioGroupItem
+  - 标题和描述单行展示，超出隐藏截断（truncate）
+  - 选中状态高亮（蓝色边框 + 背景）
+
+- **选集和分册选择优化**
+  - 从 Select 下拉改为 RadioGroup + ChoiceCard
+  - 选集：title 使用 catalog_name
+  - 分册：title 使用 fascicule_name，不展示 description
+
+- **ScrollArea 滚动区域**
+  - 选集和分册分别用 ScrollArea 包裹
+  - 高度设置为 h-32，纵向可滚动
+
+- **Accordion 折叠面板**
+  - 选集和分册分别使用 Accordion 组件包裹
+  - 默认展开，支持折叠
+
+- **样式调整**
+  - ChoiceCard padding：`p-3` → `p-1.5`
+  - ChoiceCard title 字号：`text-sm` → `text-xs`
+  - 宽度溢出修复（overflow-hidden、whitespace-nowrap）
+
+### Bug 修复
+
+- **check-in-records-dialog.tsx 类型错误**
+  - 修复 onCountSortChange 函数签名，接受 `string | null` 类型
+
+---
+
 ## 2026-03-21 ✅ (已提交)
 
 ### 打卡记录功能增强

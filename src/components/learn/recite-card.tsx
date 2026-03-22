@@ -151,7 +151,7 @@ export function ReciteCard({
                 />
               )}
 
-              {/* 都不显示 */}
+              {/* 隐藏文字 */}
               {!showFirstChar && !showLastChar && !showRandomChar && poemDetail.poem?.content?.content && (
                 <ContentDisplay
                   lines={poemDetail.poem.content.content}

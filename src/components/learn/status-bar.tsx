@@ -60,7 +60,7 @@ function ReciteStatusDots({
   onJumpTo: (index: number) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1 flex-1 justify-center">
+    <div className="flex flex-wrap items-center gap-1.5 flex-1 justify-cente px-3">
       {poems.map((poem, idx) => {
         const key = poem.targetId?.toString();
         const isMastered = masteredPoems.has(key);
@@ -70,7 +70,7 @@ function ReciteStatusDots({
         return (
           <div
             key={idx}
-            className={`w-3 h-3 rounded cursor-pointer ${color} transition-colors ${isCurrent ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-primary"}`}
+            className={`w-4 h-4 rounded cursor-pointer ${color} transition-colors ${isCurrent ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-primary"}`}
             onClick={() => onJumpTo(idx)}
             title={`${poem.title} (${idx + 1}/${poems.length})`}
           />
@@ -93,14 +93,14 @@ function CheckInBlocks({
   onJumpTo: (index: number) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1 flex-1 justify-center">
+    <div className="flex flex-wrap items-center gap-1.5 flex-1 ml-3">
       {poems.map((poem, idx) => {
         const isChecked = checkedPoemIds.has(poem.targetId);
         const isCurrent = idx === currentIndex;
         return (
           <div
             key={idx}
-            className={`w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-colors ${
+            className={`w-4 h-4 rounded flex items-center justify-center cursor-pointer transition-colors ${
               isChecked
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
@@ -132,7 +132,7 @@ function CheckInButton({
       <CheckCheck className="h-3.5 w-3.5" />
       打卡记录
       {count > 0 && (
-        <span className="absolute -top-2 -left-2 w-4 h-4 bg-green-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
+        <span className="absolute -top-2 -left-2 min-w-4.5 h-4.5 bg-red-500 text-white text-[12px] font-medium rounded-full flex items-center justify-center">
           {count > 99 ? '99+' : count}
         </span>
       )}
@@ -248,9 +248,6 @@ export function StatusBar({
                 {currentIndex + 1} / {poems.length}
               </span>
               <NavButton onClick={onNext} direction="next" />
-              <span className="text-sm text-muted-foreground">
-                {poems[currentIndex]?.grade}
-              </span>
               <div className="flex gap-2 text-xs ml-auto">
                 <span className="text-red-500">错误：{errorCount}</span>
                 <span className="text-green-500">正确：{correctCount}</span>
@@ -267,9 +264,6 @@ export function StatusBar({
                 {currentIndex + 1} / {poems.length}
               </span>
               <NavButton onClick={onNext} direction="next" />
-              <span className="text-sm text-muted-foreground">
-                {poems[currentIndex]?.grade}
-              </span>
               <div className="flex-1" />
               <CheckInButton
                 count={todayCheckInCount}
@@ -285,42 +279,52 @@ export function StatusBar({
 
         {/* 移动端方块组单独一行 */}
         {mode === "learn" && poems.length > 0 && (
-          <div className="flex flex-wrap items-center justify-center gap-1 mt-2 pb-2">
-            {poems.map((poem, idx) => {
-              const isChecked = checkedPoemIds.has(poem.targetId);
-              const isCurrent = idx === currentIndex;
-              return (
-                <div
-                  key={idx}
-                  className={`w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-colors ${
-                    isChecked
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-                  } ${isCurrent ? "ring-2 ring-primary" : ""}`}
-                  onClick={() => onJumpTo(idx)}
-                />
-              );
-            })}
+          <div className="flex items-center gap-2 mt-2 pb-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {poems[currentIndex]?.grade}
+            </span>
+            <div className="flex flex-wrap items-center gap-1 flex-1 justify-center">
+              {poems.map((poem, idx) => {
+                const isChecked = checkedPoemIds.has(poem.targetId);
+                const isCurrent = idx === currentIndex;
+                return (
+                  <div
+                    key={idx}
+                    className={`w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-colors ${
+                      isChecked
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                    } ${isCurrent ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => onJumpTo(idx)}
+                  />
+                );
+              })}
+            </div>
           </div>
         )}
 
         {/* 移动端背诵模式状态点 */}
         {mode === "recite" && poems.length > 0 && (
-          <div className="flex flex-wrap items-center justify-center gap-1 mt-2">
-            {poems.map((poem, idx) => {
-              const key = poem.targetId?.toString();
-              const isMastered = masteredPoems.has(key);
-              const isNotMastered = notMasteredPoems.has(key);
-              const color = isMastered ? "bg-green-500" : isNotMastered ? "bg-red-500" : "bg-gray-300";
-              const isCurrent = idx === currentIndex;
-              return (
-                <div
-                  key={idx}
-                  className={`w-4 h-4 rounded cursor-pointer ${color} transition-colors ${isCurrent ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-primary"}`}
-                  onClick={() => onJumpTo(idx)}
-                />
-              );
-            })}
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {poems[currentIndex]?.grade}
+            </span>
+            <div className="flex flex-wrap items-center gap-1 flex-1 justify-center">
+              {poems.map((poem, idx) => {
+                const key = poem.targetId?.toString();
+                const isMastered = masteredPoems.has(key);
+                const isNotMastered = notMasteredPoems.has(key);
+                const color = isMastered ? "bg-green-500" : isNotMastered ? "bg-red-500" : "bg-gray-300";
+                const isCurrent = idx === currentIndex;
+                return (
+                  <div
+                    key={idx}
+                    className={`w-4 h-4 rounded cursor-pointer ${color} transition-colors ${isCurrent ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-primary"}`}
+                    onClick={() => onJumpTo(idx)}
+                  />
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

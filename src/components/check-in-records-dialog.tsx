@@ -19,9 +19,9 @@ import {
 } from "@/components/ui/select";
 import { DynastyArr } from "@/config/poem";
 import { getAllFromDB, STORES } from "@/lib/db";
-import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { SquareUser, Clock, CheckCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { SimplePagination } from "@/components/ui/pagination";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 /** 日历面板组件 */
@@ -84,9 +84,12 @@ interface CheckInRecordsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** 排序键类型 */
-type DetailSortKey = "check_in_time";
-type SummarySortKey = "created_at" | "updated_at" | "count";
+/** 格式化日期时间 */
+function formatDateTime(dateStr: string): string {
+  if (!dateStr) return "-";
+  const date = new Date(dateStr);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
 
 /** 筛选栏组件 */
 function FilterBar({
@@ -152,139 +155,170 @@ function FilterBar({
   );
 }
 
-/** 打卡明细表格 */
-function DetailTable({
-  data,
-  sort,
-  onSort,
-  renderSortIcon,
+/** 汇总筛选栏组件（含打卡次数排序） */
+function SummaryFilterBar({
+  users,
+  selectedUser,
+  onUserChange,
+  searchKeyword,
+  onSearchChange,
+  selectedDynasty,
+  onDynastyChange,
+  countSort,
+  onCountSortChange,
 }: {
-  data: CheckInDetail[];
-  sort: { key: DetailSortKey; direction: "asc" | "desc" };
-  onSort: (key: DetailSortKey) => void;
-  renderSortIcon: (
-    active: boolean,
-    direction: "asc" | "desc",
-  ) => React.ReactNode;
+  users: User[];
+  selectedUser: string;
+  onUserChange: (value: string) => void;
+  searchKeyword: string;
+  onSearchChange: (value: string) => void;
+  selectedDynasty: string;
+  onDynastyChange: (value: string) => void;
+  countSort: string;
+  onCountSortChange: (value: string | null) => void;
 }) {
   return (
-    <table className="w-full text-xs">
-      <thead className="bg-muted/50 sticky top-0">
-        <tr>
-          <th className="px-2 py-2 text-left">ID</th>
-          <th className="px-2 py-2 text-left">用户</th>
-          <th className="px-2 py-2 text-left">标题</th>
-          <th className="px-2 py-2 text-left">诗人</th>
-          <th
-            className="px-2 py-2 text-left cursor-pointer"
-            onClick={() => onSort("check_in_time")}>
-            <span className="flex items-center gap-1">
-              打卡时间
-              {renderSortIcon(sort.key === "check_in_time", sort.direction)}
-            </span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.length === 0 ? (
-          <tr>
-            <td colSpan={5} className="text-center py-8 text-muted-foreground">
-              暂无数据
-            </td>
-          </tr>
-        ) : (
-          data.map((d) => (
-            <tr key={d.id} className="border-b hover:bg-muted/30">
-              <td className="px-2 py-2">{d.id}</td>
-              <td className="px-2 py-2">{d.user_name}</td>
-              <td className="px-2 py-2">{d.poem_title}</td>
-              <td className="px-2 py-2">
-                {d.author}·{d.dynasty}
-              </td>
-              <td className="px-2 py-2">
-                {new Date(d.check_in_time).toLocaleString()}
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
+    <div className="flex flex-wrap gap-3 mb-4">
+      <Select value={selectedUser} onValueChange={(v) => v && onUserChange(v)}>
+        <SelectTrigger className="w-32">
+          <SelectValue>
+            {selectedUser === "all"
+              ? "全部用户"
+              : users.find((u) => u.id.toString() === selectedUser)?.user_name}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">全部用户</SelectItem>
+          {users.map((u) => (
+            <SelectItem key={u.id} value={u.id.toString()}>
+              {u.user_name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <input
+        type="text"
+        placeholder="搜索诗词或诗人"
+        value={searchKeyword}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className="px-3 py-1.5 border rounded-md text-sm bg-background w-40"
+      />
+
+      <Select
+        value={selectedDynasty}
+        onValueChange={(v) => v && onDynastyChange(v)}>
+        <SelectTrigger className="w-28">
+          <SelectValue>{selectedDynasty}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {DynastyArr.map((d) => (
+            <SelectItem key={d} value={d}>
+              {d}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={countSort} onValueChange={onCountSortChange}>
+        <SelectTrigger className="w-32">
+          <SelectValue>
+            {countSort === "default" ? "默认排序" : countSort === "asc" ? "打卡次数升序" : "打卡次数降序"}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="default">默认排序</SelectItem>
+          <SelectItem value="asc">打卡次数升序</SelectItem>
+          <SelectItem value="desc">打卡次数降序</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
-/** 打卡汇总表格 */
-function SummaryTable({
-  data,
-  sort,
-  onSort,
-  renderSortIcon,
-}: {
-  data: CheckInSummary[];
-  sort: { key: SummarySortKey; direction: "asc" | "desc" };
-  onSort: (key: SummarySortKey) => void;
-  renderSortIcon: (
-    active: boolean,
-    direction: "asc" | "desc",
-  ) => React.ReactNode;
-}) {
+/** 打卡明细卡片 */
+function DetailCard({ data }: { data: CheckInDetail[] }) {
+  if (data.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        暂无数据
+      </div>
+    );
+  }
+
   return (
-    <table className="w-full text-xs">
-      <thead className="bg-muted/50 sticky top-0">
-        <tr>
-          <th className="px-2 py-2 text-left">ID</th>
-          <th className="px-2 py-2 text-left">用户</th>
-          <th className="px-2 py-2 text-left">诗词</th>
-          <th
-            className="px-2 py-2 text-left cursor-pointer"
-            onClick={() => onSort("count")}>
-            <span className="flex items-center gap-1">
-              打卡次数
-              {renderSortIcon(sort.key === "count", sort.direction)}
-            </span>
-          </th>
-          <th
-            className="px-2 py-2 text-left cursor-pointer"
-            onClick={() => onSort("created_at")}>
-            <span className="flex items-center gap-1">
-              初次打卡
-              {renderSortIcon(sort.key === "created_at", sort.direction)}
-            </span>
-          </th>
-          <th
-            className="px-2 py-2 text-left cursor-pointer"
-            onClick={() => onSort("updated_at")}>
-            <span className="flex items-center gap-1">
-              最后打卡
-              {renderSortIcon(sort.key === "updated_at", sort.direction)}
-            </span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.length === 0 ? (
-          <tr>
-            <td colSpan={6} className="text-center py-8 text-muted-foreground">
-              暂无数据
-            </td>
-          </tr>
-        ) : (
-          data.map((s) => (
-            <tr key={s.id} className="border-b hover:bg-muted/30">
-              <td className="px-2 py-2">{s.id}</td>
-              <td className="px-2 py-2">{s.user_name}</td>
-              <td className="px-2 py-2">{s.poem_title}</td>
-              <td className="px-2 py-2">{s.count}</td>
-              <td className="px-2 py-2">
-                {new Date(s.created_at).toLocaleString()}
-              </td>
-              <td className="px-2 py-2">
-                {new Date(s.updated_at).toLocaleString()}
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {data.map((d) => (
+        <div
+          key={d.id}
+          className="border rounded-lg p-3 bg-card hover:bg-accent/50 transition-colors relative"
+        >
+          <CheckCheck className="absolute top-2 right-2 h-5 w-5 text-blue-500" />
+          <h4 className="font-medium text-sm mb-1 truncate pr-6" title={d.poem_title}>
+            {d.poem_title}
+          </h4>
+          <p className="text-xs text-muted-foreground mb-3">
+            {d.dynasty}·{d.author}
+          </p>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <SquareUser className="h-3.5 w-3.5" />
+              <span>{d.user_name}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              <span>{formatDateTime(d.check_in_time)}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** 打卡汇总卡片 */
+function SummaryCard({ data }: { data: CheckInSummary[] }) {
+  if (data.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        暂无数据
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {data.map((s) => (
+        <div
+          key={s.id}
+          className="border rounded-lg p-3 bg-card hover:bg-accent/50 transition-colors relative"
+        >
+          <div className="flex items-start justify-between mb-2">
+            <h4 className="font-medium text-base truncate flex-1 mr-2" title={s.poem_title}>
+              {s.poem_title}
+            </h4>
+            <Badge className="flex-shrink-0 bg-blue-500 hover:bg-blue-600 font-bold text-lg">
+              {s.count}
+            </Badge>
+          </div>
+          <div className="space-y-1.5 text-xs relative pr-6">
+            <CheckCheck className="absolute bottom-0 right-0 h-5 w-5 text-blue-500" />
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <SquareUser className="h-3.5 w-3.5" />
+              <span>{s.user_name}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              <span>初次：{formatDateTime(s.created_at)}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-primary font-medium">
+              <Clock className="h-3.5 w-3.5" />
+              <span>最近：{formatDateTime(s.updated_at)}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -302,30 +336,28 @@ export function CheckInRecordsDialog({
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedDynasty, setSelectedDynasty] = useState("不限");
+  const [countSort, setCountSort] = useState("default");
 
-  // 排序状态
-  const [detailSort, setDetailSort] = useState<{
-    key: DetailSortKey;
-    direction: "asc" | "desc";
-  }>({
-    key: "check_in_time",
-    direction: "desc",
-  });
-  const [summarySort, setSummarySort] = useState<{
-    key: SummarySortKey;
-    direction: "asc" | "desc";
-  }>({
-    key: "updated_at",
-    direction: "desc",
-  });
+  // 显示数量状态（用于"查看更多"功能）
+  const [detailMoreCount, setDetailMoreCount] = useState(0);
+  const [summaryMoreCount, setSummaryMoreCount] = useState(0);
 
-  // 分页状态
-  const [detailPage, setDetailPage] = useState(1);
-  const [summaryPage, setSummaryPage] = useState(1);
-  const pageSize = 10;
+  // 每次加载数量
+  const detailPageSize = 9;
+  const summaryPageSize = 12;
 
   // 日历选中日期
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+
+  // 获取当前用户ID
+  const currentUserId = useMemo(() => {
+    const currentUserStr = localStorage.getItem("user");
+    if (currentUserStr) {
+      const currentUser = JSON.parse(currentUserStr);
+      return currentUser.user_id;
+    }
+    return null;
+  }, []);
 
   // 加载数据
   const loadData = useCallback(async () => {
@@ -364,7 +396,9 @@ export function CheckInRecordsDialog({
   const dateCheckInCount = useMemo(() => {
     const countMap = new Map<string, number>();
     details.forEach((d) => {
-      const date = d.check_in_time.split("T")[0];
+      if (!d.check_in_time) return;
+      const dateObj = new Date(d.check_in_time);
+      const date = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
       countMap.set(date, (countMap.get(date) || 0) + 1);
     });
     return countMap;
@@ -375,110 +409,110 @@ export function CheckInRecordsDialog({
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       loadData();
+      setDetailMoreCount(0);
+      setSummaryMoreCount(0);
     }
   }, [open, loadData]);
 
-  // 筛选条件变化时重置分页
+  // 筛选条件变化时重置显示数量
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDetailPage(1);
-  }, [selectedUser, searchKeyword, selectedDynasty, detailSort]);
+    setDetailMoreCount(0);
+  }, [selectedUser, searchKeyword, selectedDynasty]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSummaryPage(1);
-  }, [selectedUser, searchKeyword, selectedDynasty, summarySort]);
+    setSummaryMoreCount(0);
+  }, [selectedUser, searchKeyword, selectedDynasty, countSort]);
 
-  // 筛选明细数据
-  const filteredDetails = details.filter((d) => {
-    const matchUser =
-      selectedUser === "all" || d.user_id.toString() === selectedUser;
-    const matchKeyword =
-      !searchKeyword ||
-      d.poem_title?.includes(searchKeyword) ||
-      d.author?.includes(searchKeyword);
-    const matchDynasty =
-      selectedDynasty === "不限" || d.dynasty === selectedDynasty;
-    return matchUser && matchKeyword && matchDynasty;
-  });
+  // 今日打卡数据（当前用户）
+  const todayCheckIns = useMemo(() => {
+    if (!currentUserId) return [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-  // 筛选汇总数据
-  const filteredSummaries = summaries.filter((s) => {
-    const matchUser =
-      selectedUser === "all" || s.user_id.toString() === selectedUser;
-    const matchKeyword =
-      !searchKeyword ||
-      s.poem_title?.includes(searchKeyword) ||
-      s.author?.includes(searchKeyword);
-    const matchDynasty =
-      selectedDynasty === "不限" || s.dynasty === selectedDynasty;
-    return matchUser && matchKeyword && matchDynasty;
-  });
+    return details.filter((d) => {
+      if (d.user_id !== currentUserId) return false;
+      const checkDate = new Date(d.check_in_time);
+      checkDate.setHours(0, 0, 0, 0);
+      return checkDate.getTime() >= today.getTime() && checkDate.getTime() < tomorrow.getTime();
+    });
+  }, [details, currentUserId]);
 
-  // 排序明细数据
+  // 筛选明细数据（排除今日）
+  const filteredDetails = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return details.filter((d) => {
+      const checkDate = new Date(d.check_in_time);
+      checkDate.setHours(0, 0, 0, 0);
+      const isToday = checkDate.getTime() === today.getTime();
+      if (isToday) return false;
+
+      const matchUser =
+        selectedUser === "all" || d.user_id.toString() === selectedUser;
+      const matchKeyword =
+        !searchKeyword ||
+        d.poem_title?.includes(searchKeyword) ||
+        d.author?.includes(searchKeyword);
+      const matchDynasty =
+        selectedDynasty === "不限" || d.dynasty === selectedDynasty;
+      return matchUser && matchKeyword && matchDynasty;
+    });
+  }, [details, selectedUser, searchKeyword, selectedDynasty]);
+
+  // 筛选汇总数据（整合今日和历史）
+  const filteredSummaries = useMemo(() => {
+    return summaries.filter((s) => {
+      const matchUser =
+        selectedUser === "all" || s.user_id.toString() === selectedUser;
+      const matchKeyword =
+        !searchKeyword ||
+        s.poem_title?.includes(searchKeyword) ||
+        s.author?.includes(searchKeyword);
+      const matchDynasty =
+        selectedDynasty === "不限" || s.dynasty === selectedDynasty;
+      return matchUser && matchKeyword && matchDynasty;
+    });
+  }, [summaries, selectedUser, searchKeyword, selectedDynasty]);
+
+  // 排序明细数据（按时间倒序）
   const sortedDetails = [...filteredDetails].sort((a, b) => {
-    const valueA = a[detailSort.key];
-    const valueB = b[detailSort.key];
+    const valueA = a.check_in_time;
+    const valueB = b.check_in_time;
     if (!valueA) return 1;
     if (!valueB) return -1;
-    return detailSort.direction === "asc"
-      ? String(valueA).localeCompare(String(valueB))
-      : String(valueB).localeCompare(String(valueA));
+    return String(valueB).localeCompare(String(valueA));
   });
 
   // 排序汇总数据
   const sortedSummaries = [...filteredSummaries].sort((a, b) => {
-    const valueA = a[summarySort.key];
-    const valueB = b[summarySort.key];
-    if (valueA === undefined || valueA === null) return 1;
-    if (valueB === undefined || valueB === null) return -1;
-    if (typeof valueA === "number" && typeof valueB === "number") {
-      return summarySort.direction === "asc"
-        ? valueA - valueB
-        : valueB - valueA;
+    // 优先按打卡次数排序
+    if (countSort === "asc") {
+      return a.count - b.count;
+    } else if (countSort === "desc") {
+      return b.count - a.count;
     }
-    return summarySort.direction === "asc"
-      ? String(valueA).localeCompare(String(valueB))
-      : String(valueB).localeCompare(String(valueA));
+    // 默认按最近打卡时间倒序
+    const valueA = a.updated_at;
+    const valueB = b.updated_at;
+    if (!valueA) return 1;
+    if (!valueB) return -1;
+    return String(valueB).localeCompare(String(valueA));
   });
 
-  // 分页数据
-  const paginatedDetails = sortedDetails.slice(
-    (detailPage - 1) * pageSize,
-    detailPage * pageSize,
-  );
-  const paginatedSummaries = sortedSummaries.slice(
-    (summaryPage - 1) * pageSize,
-    summaryPage * pageSize,
-  );
-  const detailTotalPages = Math.ceil(sortedDetails.length / pageSize) || 1;
-  const summaryTotalPages = Math.ceil(sortedSummaries.length / pageSize) || 1;
+  // 分页数据 - 更多打卡（排除今日，显示更多数量）
+  const visibleDetailCount = detailPageSize + detailMoreCount * detailPageSize;
+  const paginatedDetails = sortedDetails.slice(0, visibleDetailCount);
+  const hasMoreDetails = sortedDetails.length > visibleDetailCount;
 
-  // 切换明细排序
-  const toggleDetailSort = (key: DetailSortKey) => {
-    setDetailSort((prev) => ({
-      key,
-      direction: prev.key === key && prev.direction === "desc" ? "asc" : "desc",
-    }));
-  };
-
-  // 切换汇总排序
-  const toggleSummarySort = (key: SummarySortKey) => {
-    setSummarySort((prev) => ({
-      key,
-      direction: prev.key === key && prev.direction === "desc" ? "asc" : "desc",
-    }));
-  };
-
-  // 渲染排序图标
-  const renderSortIcon = (active: boolean, direction: "asc" | "desc") => {
-    if (!active) return <ArrowUpDown className="h-3 w-3 opacity-50" />;
-    return direction === "asc" ? (
-      <ArrowUp className="h-3 w-3" />
-    ) : (
-      <ArrowDown className="h-3 w-3" />
-    );
-  };
+  // 分页数据 - 汇总（整合，显示更多数量）
+  const visibleSummaryCount = summaryPageSize + summaryMoreCount * summaryPageSize;
+  const paginatedSummaries = sortedSummaries.slice(0, visibleSummaryCount);
+  const hasMoreSummaries = sortedSummaries.length > visibleSummaryCount;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -491,10 +525,8 @@ export function CheckInRecordsDialog({
           <div className="flex items-center justify-center py-8">加载中...</div>
         ) : (
           <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
-            {/* 移动端内容区域 - ScrollArea 滚动 */}
+            {/* 移动端内容区域 */}
             <ScrollArea className="md:hidden h-[75vh] max-h-[calc(100%-50px)]">
-              {/* 移动端日历区域 - Accordion 折叠 */}
-
               <CalendarPanel
                 dateCheckInCount={dateCheckInCount}
                 selectedDate={selectedDate}
@@ -502,19 +534,13 @@ export function CheckInRecordsDialog({
               />
 
               <div className="px-4 py-4">
-                <Tabs
-                  defaultValue="detail"
-                  className="flex flex-col"
-                  onValueChange={() => {
-                    setDetailPage(1);
-                    setSummaryPage(1);
-                  }}>
+                <Tabs defaultValue="detail" className="flex flex-col">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="detail">打卡明细</TabsTrigger>
                     <TabsTrigger value="summary">打卡汇总</TabsTrigger>
                   </TabsList>
 
-                  {/* 明细表格 */}
+                  {/* 明细 */}
                   <TabsContent value="detail" className="flex flex-col mt-4">
                     <FilterBar
                       users={users}
@@ -525,25 +551,47 @@ export function CheckInRecordsDialog({
                       selectedDynasty={selectedDynasty}
                       onDynastyChange={setSelectedDynasty}
                     />
-                    <div className="overflow-auto">
-                      <DetailTable
-                        data={paginatedDetails}
-                        sort={detailSort}
-                        onSort={toggleDetailSort}
-                        renderSortIcon={renderSortIcon}
-                      />
+
+                    {/* 今日打卡 - 不分页，全部展示 */}
+                    <div className="mb-4">
+                      <h3 className="text-sm font-medium mb-2 text-primary">今日打卡</h3>
+                      {todayCheckIns.length > 0 ? (
+                        <DetailCard data={todayCheckIns} />
+                      ) : (
+                        <div className="text-center py-6 text-muted-foreground text-sm">
+                          今天还没有打卡哦！「及时当勉励，岁月不待人」
+                        </div>
+                      )}
                     </div>
-                    <SimplePagination
-                      currentPage={detailPage}
-                      totalPages={detailTotalPages}
-                      totalCount={sortedDetails.length}
-                      onPageChange={setDetailPage}
-                    />
+
+                    {/* 更多打卡 - 分页展示 */}
+                    <div>
+                      <h3 className="text-sm font-medium mb-2">更多打卡</h3>
+                      {paginatedDetails.length > 0 ? (
+                        <>
+                          <DetailCard data={paginatedDetails} />
+                          {hasMoreDetails && (
+                            <div className="mt-4 text-center">
+                              <button
+                                onClick={() => setDetailMoreCount((prev) => prev + 1)}
+                                className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer"
+                              >
+                                查看更多
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          暂无数据
+                        </div>
+                      )}
+                    </div>
                   </TabsContent>
 
-                  {/* 汇总表格 */}
+                  {/* 汇总 - 整合展示，不分今日和更多 */}
                   <TabsContent value="summary" className="flex flex-col mt-4">
-                    <FilterBar
+                    <SummaryFilterBar
                       users={users}
                       selectedUser={selectedUser}
                       onUserChange={setSelectedUser}
@@ -551,21 +599,29 @@ export function CheckInRecordsDialog({
                       onSearchChange={setSearchKeyword}
                       selectedDynasty={selectedDynasty}
                       onDynastyChange={setSelectedDynasty}
+                       countSort={countSort}
+                      onCountSortChange={(value) => setCountSort(value ?? "default")}
                     />
-                    <div className="overflow-auto">
-                      <SummaryTable
-                        data={paginatedSummaries}
-                        sort={summarySort}
-                        onSort={toggleSummarySort}
-                        renderSortIcon={renderSortIcon}
-                      />
-                    </div>
-                    <SimplePagination
-                      currentPage={summaryPage}
-                      totalPages={summaryTotalPages}
-                      totalCount={sortedSummaries.length}
-                      onPageChange={setSummaryPage}
-                    />
+
+                    {paginatedSummaries.length > 0 ? (
+                      <>
+                        <SummaryCard data={paginatedSummaries} />
+                        {hasMoreSummaries && (
+                          <div className="mt-4 text-center">
+                            <button
+                              onClick={() => setSummaryMoreCount((prev) => prev + 1)}
+                              className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer"
+                            >
+                              查看更多
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        暂无数据
+                      </div>
+                    )}
                   </TabsContent>
                 </Tabs>
               </div>
@@ -581,15 +637,9 @@ export function CheckInRecordsDialog({
               />
             </div>
 
-            {/* PC端右侧表格区域 */}
+            {/* PC端右侧卡片区域 */}
             <div className="hidden md:flex flex-1 flex-col min-h-0 overflow-y-auto">
-              <Tabs
-                defaultValue="detail"
-                className="flex-1 flex flex-col overflow-hidden"
-                onValueChange={() => {
-                  setDetailPage(1);
-                  setSummaryPage(1);
-                }}>
+              <Tabs defaultValue="detail" className="flex-1 flex flex-col overflow-hidden">
                 <div className="px-6 pt-4">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="detail">打卡明细</TabsTrigger>
@@ -597,7 +647,7 @@ export function CheckInRecordsDialog({
                   </TabsList>
                 </div>
 
-                {/* 明细表格 */}
+                {/* 明细 */}
                 <TabsContent
                   value="detail"
                   className="flex-1 flex flex-col px-6 mt-4 pb-6 min-h-0">
@@ -610,27 +660,50 @@ export function CheckInRecordsDialog({
                     selectedDynasty={selectedDynasty}
                     onDynastyChange={setSelectedDynasty}
                   />
-                  <div className="flex-1 overflow-auto sm:min-h-90">
-                    <DetailTable
-                      data={paginatedDetails}
-                      sort={detailSort}
-                      onSort={toggleDetailSort}
-                      renderSortIcon={renderSortIcon}
-                    />
+                  <div className="flex-1 overflow-auto">
+                    {/* 今日打卡 - 不分页，全部展示 */}
+                    <div className="mb-4">
+                      <h3 className="text-sm font-medium mb-2 text-primary">今日打卡</h3>
+                      {todayCheckIns.length > 0 ? (
+                        <DetailCard data={todayCheckIns} />
+                      ) : (
+                        <div className="text-center py-6 text-muted-foreground text-sm">
+                          今天还没有打卡哦！「及时当勉励，岁月不待人」
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 更多打卡 - 分页展示 */}
+                    <div>
+                      <h3 className="text-sm font-medium mb-2">更多打卡</h3>
+                      {paginatedDetails.length > 0 ? (
+                        <>
+                          <DetailCard data={paginatedDetails} />
+                          {hasMoreDetails && (
+                            <div className="mt-4 text-center">
+                              <button
+                                onClick={() => setDetailMoreCount((prev) => prev + 1)}
+                                className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer"
+                              >
+                                查看更多
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          暂无数据
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <SimplePagination
-                    currentPage={detailPage}
-                    totalPages={detailTotalPages}
-                    totalCount={sortedDetails.length}
-                    onPageChange={setDetailPage}
-                  />
                 </TabsContent>
 
-                {/* 汇总表格 */}
+                {/* 汇总 - 整合展示，不分今日和更多 */}
                 <TabsContent
                   value="summary"
                   className="flex-1 flex flex-col px-6 mt-4 pb-6 min-h-0">
-                  <FilterBar
+                  <SummaryFilterBar
                     users={users}
                     selectedUser={selectedUser}
                     onUserChange={setSelectedUser}
@@ -638,21 +711,30 @@ export function CheckInRecordsDialog({
                     onSearchChange={setSearchKeyword}
                     selectedDynasty={selectedDynasty}
                     onDynastyChange={setSelectedDynasty}
+                    countSort={countSort}
+                    onCountSortChange={(value) => setCountSort(value ?? "default")}
                   />
-                  <div className="flex-1 overflow-auto sm:min-h-90">
-                    <SummaryTable
-                      data={paginatedSummaries}
-                      sort={summarySort}
-                      onSort={toggleSummarySort}
-                      renderSortIcon={renderSortIcon}
-                    />
+                  <div className="flex-1 overflow-auto">
+                    {paginatedSummaries.length > 0 ? (
+                      <>
+                        <SummaryCard data={paginatedSummaries} />
+                        {hasMoreSummaries && (
+                          <div className="mt-4 text-center">
+                            <button
+                              onClick={() => setSummaryMoreCount((prev) => prev + 1)}
+                              className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer"
+                            >
+                              查看更多
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        暂无数据
+                      </div>
+                    )}
                   </div>
-                  <SimplePagination
-                    currentPage={summaryPage}
-                    totalPages={summaryTotalPages}
-                    totalCount={sortedSummaries.length}
-                    onPageChange={setSummaryPage}
-                  />
                 </TabsContent>
               </Tabs>
             </div>
