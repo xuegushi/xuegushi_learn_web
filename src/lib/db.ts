@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const DB_NAME = 'poem_learn_db';
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 
 export const STORES = {
   POEMS: 'poems',
@@ -9,6 +9,8 @@ export const STORES = {
   POEM_STUDY: 'poem_study',
   POEM_STUDY_SUMMARY: 'poem_study_summary',
   USERS: 'users',
+  RECITE_DETAIL: 'recite_detail',
+  RECITE_SUMMARY: 'recite_summary',
 } as const;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -139,6 +141,24 @@ function openDB(): Promise<IDBDatabase> {
 
       // Version 4 to 5: poem_study_summary 新增 count 字段（打卡次数）
       // IndexedDB 为 schema-less，无需修改表结构，插入数据时包含 count 字段即可
+
+      // Version 5 to 6: 新增背诵明细和汇总表
+      if (oldVersion < 6) {
+        // 背诵明细表
+        if (!db.objectStoreNames.contains(STORES.RECITE_DETAIL)) {
+          const detailStore = db.createObjectStore(STORES.RECITE_DETAIL, { keyPath: 'id', autoIncrement: true });
+          detailStore.createIndex('userId', 'user_id', { unique: false });
+          detailStore.createIndex('poemId', 'poem_id', { unique: false });
+          detailStore.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+
+        // 背诵汇总表
+        if (!db.objectStoreNames.contains(STORES.RECITE_SUMMARY)) {
+          const summaryStore = db.createObjectStore(STORES.RECITE_SUMMARY, { keyPath: 'id', autoIncrement: true });
+          summaryStore.createIndex('userId', 'user_id', { unique: false });
+          summaryStore.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+      }
     };
   });
 
@@ -238,12 +258,16 @@ export async function clearDB(): Promise<void> {
         STORES.POEM_STUDY,
         STORES.POEM_STUDY_SUMMARY,
         STORES.USERS,
+        STORES.RECITE_DETAIL,
+        STORES.RECITE_SUMMARY,
       ], 'readwrite');
       tx.objectStore(STORES.POEMS).clear();
       tx.objectStore(STORES.PINYIN).clear();
       tx.objectStore(STORES.POEM_STUDY).clear();
       tx.objectStore(STORES.POEM_STUDY_SUMMARY).clear();
       tx.objectStore(STORES.USERS).clear();
+      tx.objectStore(STORES.RECITE_DETAIL).clear();
+      tx.objectStore(STORES.RECITE_SUMMARY).clear();
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -261,7 +285,7 @@ export async function getDBSize(): Promise<{ bytes: number; mb: string }> {
     let totalBytes = 0;
 
     // 获取所有数据并计算大小
-    const stores = [STORES.POEMS, STORES.PINYIN, STORES.POEM_STUDY, STORES.POEM_STUDY_SUMMARY, STORES.USERS];
+    const stores = [STORES.POEMS, STORES.PINYIN, STORES.POEM_STUDY, STORES.POEM_STUDY_SUMMARY, STORES.USERS, STORES.RECITE_DETAIL, STORES.RECITE_SUMMARY];
     for (const storeName of stores) {
       const data = await getAllFromDB(storeName);
       const jsonString = JSON.stringify(data);

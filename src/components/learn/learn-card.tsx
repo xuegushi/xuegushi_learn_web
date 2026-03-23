@@ -186,8 +186,8 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
   }
 
   return (
-    <div className="flex items-center justify-center h-full px-6 md:px-6 py-4">
-      <div className="relative w-full min-w-80 max-w-4xl">
+    <div className="flex items-center justify-center h-full px-6 md:px-6 py-6">
+      <div className="relative w-full h-full min-w-80">
         {/* 序号标记 */}
         <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg z-10">
           {currentIndex + 1}
@@ -195,21 +195,21 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
         {/* 译文按钮 */}
         <button
           onClick={() => setShowTranslation(!showTranslation)}
-          className={`absolute top-7 right-20 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showTranslation ? "bg-primary text-primary-foreground" : "text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showTranslation ? "primary/50" : "primary/20"}`}
+          className={`absolute top-7 right-20 z-9 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showTranslation ? "bg-primary text-primary-foreground" : "bg-primary-foreground text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showTranslation ? "primary/50" : "primary/20"}`}
           title="显示/隐藏译文">
           译
         </button>
         {/* 拼音按钮 */}
         <button
           onClick={() => setShowPinyin(!showPinyin)}
-          className={`absolute top-7 right-12 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showPinyin ? "bg-primary text-primary-foreground" : "text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showPinyin ? "primary/50" : "primary/20"}`}
+          className={`absolute top-7 right-12 z-9 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showPinyin ? "bg-primary text-primary-foreground " : "bg-primary-foreground text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showPinyin ? "primary/50" : "primary/20"}`}
           title="显示/隐藏拼音">
           拼
         </button>
-        <Card className="shadow-lg w-full max-h-[70vh] flex flex-col">
-          <CardContent className="p-4 md:p-6 py-3 md:py-2 flex flex-col flex-1 overflow-hidden">
+        <Card className="py-4 shadow-lg w-full h-full flex flex-col">
+          <CardContent className="flex flex-col flex-1 overflow-hidden">
             {/* 内容区域 */}
-            <ScrollArea className="flex-1 max-h-[calc(70vh-120px)]">
+            <ScrollArea className="p-4 py-3 flex-1 h-full max-h-[calc(100%-56px)]">
               {/* 标题+拼音 */}
               <div className="text-center space-y-1 mb-4">
                 <div className="flex justify-center gap-1 flex-wrap">
@@ -290,10 +290,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
 
               {/* 译文 */}
               {poemDetail.detail?.yi?.content && (
-                <Section
-                  title="译文"
-                  content={poemDetail.detail.yi.content}
-                />
+                <Section title="译文" content={poemDetail.detail.yi.content} />
               )}
 
               {/* 背景 - HTML渲染 */}
@@ -344,10 +341,12 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                   checkedInToday
                     ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
                     : checkingIn
-                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 cursor-wait"
-                    : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer"
+                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 cursor-wait"
+                      : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer"
                 }`}>
-                <CheckCheck className={`h-4 w-4 ${checkingIn ? "animate-pulse" : ""}`} />
+                <CheckCheck
+                  className={`h-4 w-4 ${checkingIn ? "animate-pulse" : ""}`}
+                />
                 {checkedInToday ? "已打卡" : checkingIn ? "打卡中..." : "打卡"}
               </button>
             </div>
