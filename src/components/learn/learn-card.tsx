@@ -304,6 +304,15 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                 />
               )}
 
+              {/* 诗人介绍 - HTML渲染 */}
+              {poemDetail.author?.profile && (
+                <Section
+                  title="诗人介绍"
+                  content={[poemDetail.author.profile]}
+                  isHtml
+                />
+              )}
+
               {/* 赏析 - HTML渲染 */}
               {poemDetail.detail?.shangxi?.content && (
                 <Section
