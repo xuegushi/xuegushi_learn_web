@@ -9,6 +9,7 @@ import { CheckCheck } from "lucide-react";
 import { CreateUserDialog } from "@/components/create-user-dialog";
 import { CheckInSuccessDialog } from "@/components/check-in-success-dialog";
 import { setToDB, getAllFromDB, STORES } from "@/lib/db";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface LearnCardProps {
   poemDetail: PoemDetail | null;
@@ -208,7 +209,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
         <Card className="shadow-lg w-full max-h-[70vh] flex flex-col">
           <CardContent className="p-4 md:p-6 py-3 md:py-2 flex flex-col flex-1 overflow-hidden">
             {/* 内容区域 */}
-            <div className="overflow-y-auto max-h-[calc(70vh-120px)]">
+            <ScrollArea className="flex-1 max-h-[calc(70vh-120px)]">
               {/* 标题+拼音 */}
               <div className="text-center space-y-1 mb-4">
                 <div className="flex justify-center gap-1 flex-wrap">
@@ -322,7 +323,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                   className="mb-8"
                 />
               )}
-            </div>
+            </ScrollArea>
 
             {/* 底部导航 */}
             <div className="flex items-center gap-4 pt-4 border-t flex-shrink-0">

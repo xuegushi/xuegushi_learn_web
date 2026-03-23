@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Shuffle, CircleX, CheckCircle2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ReciteCardProps {
   poemDetail: PoemDetail | null;
@@ -118,7 +119,7 @@ export function ReciteCard({
           </div>
 
           {/* 诗词内容 */}
-          <div className="overflow-y-auto max-h-[calc(70vh-220px)] min-h-40">
+          <ScrollArea className="flex-1 max-h-[calc(70vh-220px)] min-h-40">
             <div className="text-center py-4">
               {poemDetail.poem?.xu && (
                 <div className="text-muted-foreground text-sm mb-2 italic">
@@ -159,7 +160,7 @@ export function ReciteCard({
                 />
               )}
             </div>
-          </div>
+          </ScrollArea>
 
           {/* 底部按钮 */}
           <div className="mt-auto pt-2 flex-shrink-0">
