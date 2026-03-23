@@ -76,6 +76,15 @@ export function PoemDetailDialog({
               />
             )}
 
+            {/* 诗人介绍 */}
+            {poemDetail.author?.profile && (
+              <DetailSection
+                title="诗人介绍"
+                content={[poemDetail.author.profile]}
+                isHtml
+              />
+            )}
+
             {/* 赏析 */}
             {poemDetail.detail?.shangxi?.content && (
               <DetailSection title="赏析" content={poemDetail.detail.shangxi.content} isHtml />
