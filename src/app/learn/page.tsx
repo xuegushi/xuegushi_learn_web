@@ -423,12 +423,12 @@ export default function LearnPage() {
           {poems.length > 0 && (
             <div className="w-40 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
               <ScrollArea className="h-full">
-                <div className="p-2 space-y-1">
+                <div className="p-2 space-y-1.5">
                   {poems.map((poem, idx) => (
                     <div
                       key={poem.targetId}
                       onClick={() => setCurrentIndex(idx)}
-                      className={`p-2 rounded-lg cursor-pointer transition-colors ${
+                      className={`p-1.5 rounded-lg cursor-pointer transition-colors ${
                         idx === currentIndex
                           ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
                           : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
