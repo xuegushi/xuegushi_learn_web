@@ -20,8 +20,8 @@ interface LearnCardProps {
 }
 
 export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext, onCheckInSuccess }: LearnCardProps) {
-  const [showPinyin, setShowPinyin] = useState(true);
-  const [showTranslation, setShowTranslation] = useState(true);
+  const [showPinyin, setShowPinyin] = useState(false);
+  const [showTranslation, setShowTranslation] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showCheckInSuccess, setShowCheckInSuccess] = useState(false);
   const [checkInCount, setCheckInCount] = useState(1);

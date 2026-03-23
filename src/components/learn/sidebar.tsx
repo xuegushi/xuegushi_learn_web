@@ -66,7 +66,7 @@ export function Sidebar({
       )}
 
       <aside
-        className={`fixed md:relative inset-y-0 left-0 z-50 md:z-auto border-r bg-gray-50 dark:bg-gray-800 h-full transition-all duration-300
+        className={`fixed md:relative inset-y-0 left-0 z-50 overflow-y-hidden md:z-auto border-r bg-gray-50 dark:bg-gray-800 h-full transition-all duration-300
           ${sidebarOpen ? "w-72 translate-x-0" : "w-0 -translate-x-full"}
           ${collapsed ? "md:w-0 md:-translate-x-full" : "md:w-72 md:translate-x-0"}`}>
         <ScrollArea className="h-[calc(100vh-56px-40px)] md:h-[calc(100vh-66px-48px)] p-4 pb-16">
@@ -243,7 +243,8 @@ export function Sidebar({
         </ScrollArea>
 
         {/* 本地数据管理 - 固定到底部 */}
-        <div className="absolute bottom-0 left-0 right-0  bg-gray-50 dark:bg-gray-800 p-2 border-t border-gray-200 dark:border-gray-600">
+        <div
+          className={`absolute bottom-0 left-0 right-0  bg-gray-50 dark:bg-gray-800 p-2 border-t border-gray-200 dark:border-gray-600`}>
           <button
             onClick={onLocalDataClick}
             className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center justify-center gap-2">

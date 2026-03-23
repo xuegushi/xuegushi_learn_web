@@ -13,6 +13,7 @@ import {
   PoemDetailDialog,
   ResultDialog,
 } from "@/components/learn";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   CatalogItem,
   CatalogDetail,
@@ -417,62 +418,93 @@ export default function LearnPage() {
         />
 
         {/* 内容区 */}
-        <div className="flex-1 overflow-hidden min-h-0 relative">
-          {poems.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-muted-foreground">请选择分册</div>
+        <div className="flex-1 overflow-hidden min-h-0 relative flex">
+          {/* 左侧诗词列表 */}
+          {poems.length > 0 && (
+            <div className="w-40 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
+              <ScrollArea className="h-full">
+                <div className="p-3 space-y-2">
+                  {poems.map((poem, idx) => (
+                    <div
+                      key={poem.targetId}
+                      onClick={() => setCurrentIndex(idx)}
+                      className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                        idx === currentIndex
+                          ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
+                          : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      <div className="font-medium text-sm truncate">
+                        {poem.title}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 truncate">
+                        {poem.author} [{poem.dynasty}]
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
-          ) : mode === "learn" ? (
-            <LearnCard
-              poemDetail={currentPoemDetail}
-              pinyinData={pinyinData}
-              currentIndex={currentIndex}
-              onPrev={prevPoem}
-              onNext={nextPoem}
-              onCheckInSuccess={loadTodayCheckInData}
-            />
-          ) : (
-            <ReciteCard
-              poemDetail={currentPoemDetail}
-              currentIndex={currentIndex}
-              showFirstChar={showFirstChar}
-              showLastChar={showLastChar}
-              showRandomChar={showRandomChar}
-              randomIndices={randomIndices}
-              masteredPoems={masteredPoems}
-              notMasteredPoems={notMasteredPoems}
-              onMastered={handleMastered}
-              onNotMastered={handleNotMastered}
-              onSkip={nextPoem}
-              onViewDetail={() =>
-                setSelectedPoem(currentPoemDetail as unknown as PoemDetail)
-              }
-              onRandomHint={handleRandomHint}
-              targetId={poems[currentIndex]?.targetId || 0}
-            />
           )}
 
-          {/* 移动端按钮 */}
-          <MobileButtons
-            allCompleted={allCompleted}
-            onReset={resetProgress}
-            onContinue={handleContinueLearning}
-            onEarlyEnd={handleEarlyEnd}
-            mode={mode}
-            showEarlyEnd={mode === "recite" && !allCompleted}
-            onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-          />
+          {/* 右侧主内容 */}
+          <div className="flex-1 overflow-hidden min-h-0 relative">
+            {poems.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-muted-foreground">请选择分册</div>
+              </div>
+            ) : mode === "learn" ? (
+              <LearnCard
+                poemDetail={currentPoemDetail}
+                pinyinData={pinyinData}
+                currentIndex={currentIndex}
+                onPrev={prevPoem}
+                onNext={nextPoem}
+                onCheckInSuccess={loadTodayCheckInData}
+              />
+            ) : (
+              <ReciteCard
+                poemDetail={currentPoemDetail}
+                currentIndex={currentIndex}
+                showFirstChar={showFirstChar}
+                showLastChar={showLastChar}
+                showRandomChar={showRandomChar}
+                randomIndices={randomIndices}
+                masteredPoems={masteredPoems}
+                notMasteredPoems={notMasteredPoems}
+                onMastered={handleMastered}
+                onNotMastered={handleNotMastered}
+                onSkip={nextPoem}
+                onViewDetail={() =>
+                  setSelectedPoem(currentPoemDetail as unknown as PoemDetail)
+                }
+                onRandomHint={handleRandomHint}
+                targetId={poems[currentIndex]?.targetId || 0}
+              />
+            )}
 
-          {/* PC端按钮 */}
-          <PcButtons
-            allCompleted={allCompleted}
-            onReset={resetProgress}
-            onContinue={handleContinueLearning}
-            onEarlyEnd={handleEarlyEnd}
-            mode={mode}
-            showEarlyEnd={mode === "recite" && !allCompleted}
-            showReset={mode !== "learn"}
-          />
+            {/* 移动端按钮 */}
+            <MobileButtons
+              allCompleted={allCompleted}
+              onReset={resetProgress}
+              onContinue={handleContinueLearning}
+              onEarlyEnd={handleEarlyEnd}
+              mode={mode}
+              showEarlyEnd={mode === "recite" && !allCompleted}
+              onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+            />
+
+            {/* PC端按钮 */}
+            <PcButtons
+              allCompleted={allCompleted}
+              onReset={resetProgress}
+              onContinue={handleContinueLearning}
+              onEarlyEnd={handleEarlyEnd}
+              mode={mode}
+              showEarlyEnd={mode === "recite" && !allCompleted}
+              showReset={mode !== "learn"}
+            />
+          </div>
         </div>
       </div>
 
