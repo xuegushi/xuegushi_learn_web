@@ -58,6 +58,8 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   const [todayPage, setTodayPage] = useState<number>(5);
   const [historyPage, setHistoryPage] = useState<number>(5);
   const [summaryPage, setSummaryPage] = useState<number>(5);
+  const [detailSort, setDetailSort] = useState<string>("newest");
+  const [summarySort, setSummarySort] = useState<string>("newest");
 
   function DetailCard({ item }: { item: ReciteDetail }) {
     const date = new Date(item.createdAt);
@@ -171,8 +173,15 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
           if (dateTo) data = data.filter((d) => d.createdAt <= dateTo + 'T23:59:59.999Z');
           const now = new Date();
           const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-          const today = data.filter((d) => d.createdAt.startsWith(todayKey));
-          const hist = data.filter((d) => !d.createdAt.startsWith(todayKey));
+          let today = data.filter((d) => d.createdAt.startsWith(todayKey));
+          let hist = data.filter((d) => !d.createdAt.startsWith(todayKey));
+          if (detailSort === 'newest') {
+            today.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+            hist.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+          } else if (detailSort === 'oldest') {
+            today.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+            hist.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+          }
           setTodayDetails(today);
           setHistoryDetails(hist);
           const sums = await getAllFromDB<ReciteSummary>(STORES.RECITE_SUMMARY);
@@ -186,6 +195,19 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
           }
           if (dateFrom) filteredSums = filteredSums.filter((s) => s.createdAt >= dateFrom);
           if (dateTo) filteredSums = filteredSums.filter((s) => s.createdAt <= dateTo + 'T23:59:59.999Z');
+          if (summarySort === 'newest') {
+            filteredSums.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+          } else if (summarySort === 'oldest') {
+            filteredSums.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+          } else if (summarySort === 'pass-rate') {
+            filteredSums.sort((a, b) => {
+              const aTotal = a.pass_count + a.unpass_count;
+              const bTotal = b.pass_count + b.unpass_count;
+              const aRate = aTotal > 0 ? a.pass_count / aTotal : 0;
+              const bRate = bTotal > 0 ? b.pass_count / bTotal : 0;
+              return bRate - aRate;
+            });
+          }
           setSummaries(filteredSums);
         } catch {
           // ignore
@@ -194,7 +216,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
         }
       })();
     }
-  }, [open, selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo]);
+  }, [open, selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort, summarySort]);
 
   // Compute statistics
   const stats = useMemo(() => {
@@ -295,12 +317,37 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 className="px-2 py-1.5 border rounded-md text-sm bg-background"
               />
             </div>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground">明细</span>
+              <Select value={detailSort} onValueChange={(v) => v && setDetailSort(v)}>
+                <SelectTrigger className="w-24 text-xs py-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">最新优先</SelectItem>
+                  <SelectItem value="oldest">最早优先</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground ml-2">汇总</span>
+              <Select value={summarySort} onValueChange={(v) => v && setSummarySort(v)}>
+                <SelectTrigger className="w-24 text-xs py-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">最新优先</SelectItem>
+                  <SelectItem value="oldest">最早优先</SelectItem>
+                  <SelectItem value="pass-rate">掌握率</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <button className="ml-auto text-sm text-gray-600 hover:underline" onClick={() => {
               setSelectedUser('all');
               setSearchKeyword('');
               setSelectedDynasty('all');
               setDateFrom('');
               setDateTo('');
+              setDetailSort('newest');
+              setSummarySort('newest');
             }}>重置筛选</button>
             <button className="ml-2 text-sm text-green-600 hover:underline" data-testid="recite-records-export" onClick={async () => {
               await exportReciteRecordsJson();
