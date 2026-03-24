@@ -172,10 +172,43 @@ src/
 - 使用 `dangerouslySetInnerHTML` 渲染 HTML 内容时确保内容安全
 
 ## 背诵记录文档
-- 背诵记录功能包含：ReciteRecordsDialog、DynastySelect、DetailCard、SummaryCard、数据表 recite_detail/recite_summary。
-- 数据流与接口：数据来自 IndexedDB，recite_detail 为明细，recite_summary 为汇总，前端通过 todayDetails/historyDetails/summaries 渲染，分页变量 todayPage/historyPage/summaryPage 控制“查看更多”。
-- 测试策略：基础 UI 渲染测试、筛选、分页行为的测试、以及端到端的浏览体验测试。依赖环境安装后执行测试命令。
-- PR 规范：统一使用 Patch 4D/4E/4F/4G 的风格，提供清晰的变更点、为什么改动、测试步骤。
+
+### 功能概述
+背诵记录功能记录用户在背诵模式下的学习数据，包括：
+- recite_detail（背诵明细）：每次标记诗词为"掌握"或"未掌握"时写入
+- recite_summary（背诵汇总）：完成全部诗词或点击"提前结束"时写入
+
+### 关键文件
+| 文件 | 职责 |
+|------|------|
+| src/components/recite-records-dialog.tsx | 弹窗 UI（tabs、筛选、卡片列表） |
+| src/hooks/use-recite-records.ts | 数据加载、筛选、排序、分页、统计 hook |
+| src/components/learn/learning-progress-card.tsx | 学习进度卡片（掌握程度百分比） |
+| src/lib/db.ts | IndexedDB 读写：addReciteDetail、addReciteSummary、clearReciteRecords、exportReciteRecordsJson、updateLearningProgress |
+
+### 数据结构
+```typescript
+// recite_detail
+{ id, user_id, poem_id, title, author, dynasty, status, createdAt }
+// recite_summary
+{ id, user_id, poem_ids: [{poem_id, title, status}], pass_count, unpass_count, skip_count, createdAt }
+// learning_progress
+{ id, user_id, poem_id, learn_count, correct_count, wrong_count, mastery_level, last_learned_at, createdAt, updatedAt }
+```
+
+### UI 功能清单
+- 统计概览栏（总数、掌握数、未掌握数、掌握率）
+- Tabs 切换（背诵明细/背诵汇总）
+- 筛选：用户、朝代、关键词搜索、日期范围
+- 排序：明细（最新/最早）、汇总（最新/最早/掌握率）
+- 分页加载（查看更多）
+- 汇总卡片展开诗词列表
+- 导出 JSON、清空记录
+
+### 测试策略
+- 基础 UI 渲染测试、筛选/排序/分页行为测试
+- 依赖：Vitest + @testing-library/react（需安装）
+- 运行：npx vitest --config vitest.config.ts
 
 ### PR Body 模板
 ```

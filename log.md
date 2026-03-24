@@ -1,5 +1,52 @@
 # 更新日志
 
+## 2026-03-24 ✅ (已提交)
+
+### Patch 4H - 背诵记录完整实现
+
+- **DB 层**
+  - 新增 recite_detail、recite_summary 存储表
+  - 新增 addReciteDetail、addReciteSummary 写入函数
+  - 新增 clearReciteRecords（清空）、exportReciteRecordsJson（导出 JSON）工具函数
+  - 新增 LEARNING_PROGRESS 存储表及 getLearningProgress、updateLearningProgress 等追踪函数
+
+- **UI 层**
+  - PC 端按钮组新增"背诵记录"按钮（蓝色，仅背诵模式显示）
+  - 移动端按钮组新增"背诵记录"按钮
+  - ReciteRecordsDialog 完整实现：Tabs（背诵明细/背诵汇总）、筛选栏、统计概览、分页加载
+  - 统计概览栏：展示总数、掌握数、未掌握数、掌握率（颜色区分）
+  - 背诵明细卡片：标题、朝代·作者、用户名、时间、状态图标（CircleCheck/CircleX）
+  - 背诵汇总卡片：掌握/未掌握/跳过数量、用户名、时间、可展开查看诗词列表
+  - 筛选功能：用户筛选、朝代筛选、关键词搜索（诗词/诗人）、日期范围筛选
+  - 排序功能：明细（最新/最早优先）、汇总（最新/最早/掌握率）
+  - 空状态提示、加载中状态
+  - 导出 JSON、清空记录按钮（附确认）
+
+- **数据绑定**
+  - 点击"掌握"→写入 recite_detail（status=true）→更新汇总
+  - 点击"未掌握"→写入 recite_detail（status=false）→更新汇总
+  - 完成全部诗词或点击"提前结束"→写入 recite_summary
+
+### Patch 4J - 学习进度追踪
+
+- 新增 LEARNING_PROGRESS 存储表（DB v7）
+- 新增 updateLearningProgress（掌握/未掌握时自动更新）
+- 新增 LearningProgressCard 组件（显示掌握程度百分比、学习次数、正确/错误次数）
+- 在 learn page 的 handleMastered/handleNotMastered 中调用更新
+
+### Patch 4I - 代码重构与文档
+
+- 抽取 useReciteRecords hook（数据加载、筛选、排序、分页、统计）
+- ReciteRecordsDialog 从 ~421 行精简至 ~280 行
+- 更新 AGENTS.md 背诵记录章节（实现路径、数据结构、接口、测试思路）
+- 更新 PR 模板
+
+### Patch 4K - 背诵记录按钮与弹窗
+
+- PcButtons/MobileButtons 新增 onReciteRecordsClick
+- 仅在背诵模式下显示"背诵记录"按钮
+- LearnPage 渲染 ReciteRecordsDialog 弹窗
+
 ## 2026-03-22 ✅ (已提交)
 
 ### Patch 4G - Documentation Update
