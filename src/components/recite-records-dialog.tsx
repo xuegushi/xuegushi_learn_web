@@ -1,12 +1,12 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DynastySelect } from "@/components/ui/dynasty-select";
-import { UserSquare, Clock, CircleCheck, CircleX } from "lucide-react";
+import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3 } from "lucide-react";
 import { getAllFromDB, STORES, exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 
 export interface DBUser {
@@ -154,12 +154,61 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     }
   }, [open, selectedUser, searchKeyword, selectedDynasty]);
 
+  // Compute statistics
+  const stats = useMemo(() => {
+    const allDetails = [...todayDetails, ...historyDetails];
+    const totalCount = allDetails.length;
+    const passCount = allDetails.filter(d => d.status).length;
+    const unpassCount = totalCount - passCount;
+    const passRate = totalCount > 0 ? Math.round((passCount / totalCount) * 100) : 0;
+    const summaryCount = summaries.length;
+    const totalSummaryPoems = summaries.reduce((acc, s) => acc + s.poem_ids.length, 0);
+    return { totalCount, passCount, unpassCount, passRate, summaryCount, totalSummaryPoems };
+  }, [todayDetails, historyDetails, summaries]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-4xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-slate-700 dark:text-slate-100" data-testid="recite-records-header">背诵记录</DialogTitle>
         </DialogHeader>
+        {/* Statistics overview */}
+        {!loading && (stats.totalCount > 0 || stats.summaryCount > 0) && (
+          <div className="flex flex-wrap gap-4 px-4 py-3 bg-muted/30 rounded-lg mb-2">
+            <div className="flex items-center gap-1.5 text-sm">
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">背诵明细</span>
+              <span className="font-semibold">{stats.totalCount}</span>
+              <span className="text-muted-foreground">首</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-sm">
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">背诵汇总</span>
+              <span className="font-semibold">{stats.summaryCount}</span>
+              <span className="text-muted-foreground">次</span>
+            </div>
+            {stats.totalCount > 0 && (
+              <>
+                <div className="flex items-center gap-1.5 text-sm">
+                  <CircleCheck className="h-4 w-4 text-green-500" />
+                  <span className="font-semibold text-green-600">{stats.passCount}</span>
+                  <span className="text-muted-foreground">掌握</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-sm">
+                  <CircleX className="h-4 w-4 text-red-500" />
+                  <span className="font-semibold text-red-600">{stats.unpassCount}</span>
+                  <span className="text-muted-foreground">未掌握</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-sm ml-auto">
+                  <span className="text-muted-foreground">掌握率</span>
+                  <span className={`font-semibold ${stats.passRate >= 70 ? 'text-green-600' : stats.passRate >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    {stats.passRate}%
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+        )}
         <Tabs defaultValue="detail" className="flex-1 flex flex-col min-h-0" data-testid="recite-records-tabs">
           <TabsList className="grid w-full grid-cols-2" data-testid="recite-records-tablist">
             <TabsTrigger value="detail" data-testid="recite-records-detail-tab">背诵明细</TabsTrigger>
