@@ -598,7 +598,7 @@ export default function LearnPage() {
               mode={mode}
               showEarlyEnd={mode === "recite" && !allCompleted}
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-              onReciteRecordsClick={() => setReciteRecordsOpen(true)}
+              onReciteRecordsClick={mode === "recite" ? () => setReciteRecordsOpen(true) : undefined}
             />
 
             {/* PC端按钮 */}
@@ -610,7 +610,7 @@ export default function LearnPage() {
               mode={mode}
               showEarlyEnd={mode === "recite" && !allCompleted}
               showReset={mode !== "learn"}
-              onReciteRecordsClick={() => setReciteRecordsOpen(true)}
+              onReciteRecordsClick={mode === "recite" ? () => setReciteRecordsOpen(true) : undefined}
             />
           </div>
         </div>
