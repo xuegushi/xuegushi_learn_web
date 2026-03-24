@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { PanelLeftOpen } from "lucide-react";
 import { getAllFromDB, getFromDB, setToDB, STORES, updateLearningProgress, addReciteDetail, addReciteSummary } from "@/lib/db";
 import { LocalDataManager } from "@/components/local-data-manager";
@@ -51,6 +51,7 @@ export default function LearnPage() {
 
   // 模式
   const [mode, setMode] = useState<"recite" | "learn">("learn");
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [localDataOpen, setLocalDataOpen] = useState(false);
@@ -68,7 +69,9 @@ export default function LearnPage() {
   const [randomIndices, setRandomIndices] = useState<number[]>([]);
 
   // 当天打卡记录
-  const [todayCheckedPoemIds, setTodayCheckedPoemIds] = useState<Set<number>>(new Set());
+  const [todayCheckedPoemIds, setTodayCheckedPoemIds] = useState<Set<number>>(
+    new Set(),
+  );
 
   const loadTodayCheckInData = useCallback(async () => {
     const today = new Date();
@@ -76,13 +79,20 @@ export default function LearnPage() {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const allRecords = await getAllFromDB<{ poem_id: number; check_in_time: string }>(STORES.POEM_STUDY);
+    const allRecords = await getAllFromDB<{
+      poem_id: number;
+      check_in_time: string;
+    }>(STORES.POEM_STUDY);
     const todayChecked = new Set<number>();
 
-    allRecords.forEach(record => {
+    allRecords.forEach((record) => {
       const checkDate = new Date(record.check_in_time);
       checkDate.setHours(0, 0, 0, 0);
-      if (checkDate.getTime() >= today.getTime() && checkDate.getTime() < tomorrow.getTime() && record.poem_id) {
+      if (
+        checkDate.getTime() >= today.getTime() &&
+        checkDate.getTime() < tomorrow.getTime() &&
+        record.poem_id
+      ) {
         todayChecked.add(record.poem_id);
       }
     });
@@ -204,6 +214,24 @@ export default function LearnPage() {
 
     loadPoemDetail();
   }, [currentIndex, poems]);
+  
+  // 初始化：仅在首次渲染时尝试应用 URL 中的 mode，后续由用户控制
+  const urlModeSynced = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || urlModeSynced.current) return;
+    try {
+      const url = new URL(window.location.href);
+      const param = url.searchParams.get("mode");
+      if ((param === "recite" || param === "learn")) {
+        // 仅在首次同步时应用
+        setMode(param);
+      }
+    } catch {
+      // ignore
+    } finally {
+      urlModeSynced.current = true;
+    }
+  }, []);
 
   // ==================== 事件处理 ====================
   const [skippedCount, setSkippedCount] = useState(0);
@@ -320,7 +348,14 @@ export default function LearnPage() {
         setTimeout(() => nextPoem(), 100);
       }
     },
-    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem, currentIndex, poems],
+    [
+      masteredPoems.size,
+      notMasteredPoems.size,
+      poems.length,
+      nextPoem,
+      currentIndex,
+      poems,
+    ],
   );
 
   const handleMastered = useCallback(
@@ -353,9 +388,11 @@ export default function LearnPage() {
           const poemIds = poems.map((p) => ({
             poem_id: p.targetId.toString(),
             title: p.title,
-            status: masteredPoems.has(p.targetId.toString()) || notMasteredPoems.has(p.targetId.toString())
-              ? masteredPoems.has(p.targetId.toString())
-              : false,
+            status:
+              masteredPoems.has(p.targetId.toString()) ||
+              notMasteredPoems.has(p.targetId.toString())
+                ? masteredPoems.has(p.targetId.toString())
+                : false,
           }));
           addReciteSummary({
             user_id: user.user_id,
@@ -372,7 +409,14 @@ export default function LearnPage() {
         setTimeout(() => nextPoem(), 100);
       }
     },
-    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem, currentIndex, poems],
+    [
+      masteredPoems.size,
+      notMasteredPoems.size,
+      poems.length,
+      nextPoem,
+      currentIndex,
+      poems,
+    ],
   );
 
   // 提前结束
@@ -384,9 +428,11 @@ export default function LearnPage() {
       const poemIds = poems.map((p) => ({
         poem_id: p.targetId.toString(),
         title: p.title,
-        status: masteredPoems.has(p.targetId.toString()) || notMasteredPoems.has(p.targetId.toString()) 
-          ? masteredPoems.has(p.targetId.toString())
-          : false,
+        status:
+          masteredPoems.has(p.targetId.toString()) ||
+          notMasteredPoems.has(p.targetId.toString())
+            ? masteredPoems.has(p.targetId.toString())
+            : false,
       }));
       addReciteSummary({
         user_id: user.user_id,
@@ -475,8 +521,7 @@ export default function LearnPage() {
         <button
           onClick={() => setSidebarCollapsed(false)}
           className="hidden md:flex fixed left-0 top-1/2 z-40 p-2 bg-primary/80 text-primary-foreground rounded-r-lg shadow-lg cursor-pointer"
-          title="展开侧边栏"
-        >
+          title="展开侧边栏">
           <PanelLeftOpen className="h-5 w-5" />
         </button>
       )}
@@ -485,14 +530,14 @@ export default function LearnPage() {
       <LocalDataManager open={localDataOpen} onOpenChange={setLocalDataOpen} />
 
       {/* 打卡记录弹窗 */}
-      <CheckInRecordsDialog 
-        open={checkInRecordsOpen} 
+      <CheckInRecordsDialog
+        open={checkInRecordsOpen}
         onOpenChange={(open) => {
           setCheckInRecordsOpen(open);
           if (open === false) {
             loadTodayCheckInData();
           }
-        }} 
+        }}
       />
 
       {/* 背诵记录弹窗 */}
@@ -543,8 +588,7 @@ export default function LearnPage() {
                         idx === currentIndex
                           ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
                           : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      }`}
-                    >
+                      }`}>
                       <div className="font-medium text-xs truncate">
                         {poem.title}
                       </div>
@@ -603,7 +647,9 @@ export default function LearnPage() {
               mode={mode}
               showEarlyEnd={mode === "recite" && !allCompleted}
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-              onReciteRecordsClick={mode === "recite" ? () => setReciteRecordsOpen(true) : undefined}
+              onReciteRecordsClick={
+                mode === "recite" ? () => setReciteRecordsOpen(true) : undefined
+              }
             />
 
             {/* PC端按钮 */}
@@ -615,7 +661,9 @@ export default function LearnPage() {
               mode={mode}
               showEarlyEnd={mode === "recite" && !allCompleted}
               showReset={mode !== "learn"}
-              onReciteRecordsClick={mode === "recite" ? () => setReciteRecordsOpen(true) : undefined}
+              onReciteRecordsClick={
+                mode === "recite" ? () => setReciteRecordsOpen(true) : undefined
+              }
             />
           </div>
         </div>

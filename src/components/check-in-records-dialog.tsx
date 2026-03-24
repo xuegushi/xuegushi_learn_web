@@ -21,7 +21,7 @@ import { DynastyArr } from "@/config/poem";
 import { getAllFromDB, STORES } from "@/lib/db";
 import { SquareUser, Clock, CheckCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 /** 日历面板组件 */
@@ -35,13 +35,38 @@ function CalendarPanel({
   onSelect: (date: Date) => void;
 }) {
   return (
-    <div className="px-4 py-3">
+    <div className="px-3 py-3 sm:h-full">
       <Calendar
         mode="single"
         selected={selectedDate}
+        locale={{ code: "zh-CN" }}
         onSelect={(d) => d && onSelect(d)}
-        className="border rounded-lg p-4 mx-auto"
+        className="border rounded-lg mx-auto w-full sm:h-full [--cell-size:--spacing(10)] md:[--cell-size:--spacing(12)]"
+        components={{
+          DayButton: ({ children, modifiers, day, ...props }) => {
+            // derive date key as YYYY-MM-DD from day.date
+            let dateKey = "";
+            try {
+              const d = day.date;
+              dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+            } catch {
+              dateKey = "";
+            }
+            const count = dateKey ? (dateCheckInCount?.get(dateKey) ?? 0) : 0;
+            return (
+              <CalendarDayButton day={day} modifiers={modifiers} {...props}>
+                {children}
+                {!modifiers.outside && (
+                  <span className="block text-xs text-muted-foreground mb-1">
+                    {count}
+                  </span>
+                )}
+              </CalendarDayButton>
+            );
+          },
+        }}
       />
+      {/* 日期打卡次数摘要：在日历下方展示每一天的打卡次数（若有数据） */}
     </div>
   );
 }
@@ -354,7 +379,7 @@ export function CheckInRecordsDialog({
     const currentUserStr = localStorage.getItem("user");
     if (currentUserStr) {
       const currentUser = JSON.parse(currentUserStr);
-      return currentUser.user_id;
+      return parseInt(currentUser.user_id);
     }
     return null;
   }, []);
@@ -554,7 +579,9 @@ export function CheckInRecordsDialog({
 
                     {/* 今日打卡 - 不分页，全部展示 */}
                     <div className="mb-4">
-                      <h3 className="text-sm font-medium mb-2 text-primary">今日打卡</h3>
+                      <h3 className="text-sm font-medium mb-2 text-primary">
+                        今日打卡
+                      </h3>
                       {todayCheckIns.length > 0 ? (
                         <DetailCard data={todayCheckIns} />
                       ) : (
@@ -573,9 +600,10 @@ export function CheckInRecordsDialog({
                           {hasMoreDetails && (
                             <div className="mt-4 text-center">
                               <button
-                                onClick={() => setDetailMoreCount((prev) => prev + 1)}
-                                className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer"
-                              >
+                                onClick={() =>
+                                  setDetailMoreCount((prev) => prev + 1)
+                                }
+                                className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer">
                                 查看更多
                               </button>
                             </div>
@@ -599,8 +627,10 @@ export function CheckInRecordsDialog({
                       onSearchChange={setSearchKeyword}
                       selectedDynasty={selectedDynasty}
                       onDynastyChange={setSelectedDynasty}
-                       countSort={countSort}
-                      onCountSortChange={(value) => setCountSort(value ?? "default")}
+                      countSort={countSort}
+                      onCountSortChange={(value) =>
+                        setCountSort(value ?? "default")
+                      }
                     />
 
                     {paginatedSummaries.length > 0 ? (
@@ -609,9 +639,10 @@ export function CheckInRecordsDialog({
                         {hasMoreSummaries && (
                           <div className="mt-4 text-center">
                             <button
-                              onClick={() => setSummaryMoreCount((prev) => prev + 1)}
-                              className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer"
-                            >
+                              onClick={() =>
+                                setSummaryMoreCount((prev) => prev + 1)
+                              }
+                              className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer">
                               查看更多
                             </button>
                           </div>
@@ -628,18 +659,19 @@ export function CheckInRecordsDialog({
             </ScrollArea>
 
             {/* PC端左侧日历区域 */}
-            <div className="hidden md:block w-80 flex-shrink-0 px-6 py-3 overflow-y-auto border-r">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(d) => d && setSelectedDate(d)}
-                className="border rounded-lg p-4 h-full"
+            <div className="hidden md:block flex-shrink-0 py-3 overflow-y-auto border-r">
+              <CalendarPanel
+                dateCheckInCount={dateCheckInCount}
+                selectedDate={selectedDate}
+                onSelect={setSelectedDate}
               />
             </div>
 
             {/* PC端右侧卡片区域 */}
             <div className="hidden md:flex flex-1 flex-col min-h-0 overflow-y-auto">
-              <Tabs defaultValue="detail" className="flex-1 flex flex-col overflow-hidden">
+              <Tabs
+                defaultValue="detail"
+                className="flex-1 flex flex-col overflow-hidden">
                 <div className="px-6 pt-4">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="detail">打卡明细</TabsTrigger>
@@ -663,7 +695,9 @@ export function CheckInRecordsDialog({
                   <div className="flex-1 overflow-auto">
                     {/* 今日打卡 - 不分页，全部展示 */}
                     <div className="mb-4">
-                      <h3 className="text-sm font-medium mb-2 text-primary">今日打卡</h3>
+                      <h3 className="text-sm font-medium mb-2 text-primary">
+                        今日打卡
+                      </h3>
                       {todayCheckIns.length > 0 ? (
                         <DetailCard data={todayCheckIns} />
                       ) : (
@@ -682,9 +716,10 @@ export function CheckInRecordsDialog({
                           {hasMoreDetails && (
                             <div className="mt-4 text-center">
                               <button
-                                onClick={() => setDetailMoreCount((prev) => prev + 1)}
-                                className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer"
-                              >
+                                onClick={() =>
+                                  setDetailMoreCount((prev) => prev + 1)
+                                }
+                                className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer">
                                 查看更多
                               </button>
                             </div>
@@ -712,7 +747,9 @@ export function CheckInRecordsDialog({
                     selectedDynasty={selectedDynasty}
                     onDynastyChange={setSelectedDynasty}
                     countSort={countSort}
-                    onCountSortChange={(value) => setCountSort(value ?? "default")}
+                    onCountSortChange={(value) =>
+                      setCountSort(value ?? "default")
+                    }
                   />
                   <div className="flex-1 overflow-auto">
                     {paginatedSummaries.length > 0 ? (
@@ -721,9 +758,10 @@ export function CheckInRecordsDialog({
                         {hasMoreSummaries && (
                           <div className="mt-4 text-center">
                             <button
-                              onClick={() => setSummaryMoreCount((prev) => prev + 1)}
-                              className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer"
-                            >
+                              onClick={() =>
+                                setSummaryMoreCount((prev) => prev + 1)
+                              }
+                              className="px-6 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/10 transition-colors cursor-pointer">
                               查看更多
                             </button>
                           </div>

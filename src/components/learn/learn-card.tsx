@@ -206,7 +206,7 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
           title="显示/隐藏拼音">
           拼
         </button>
-        <Card className="py-4 shadow-lg w-full h-full flex flex-col">
+        <Card className="py-4 shadow-lg w-full  h-[calc(100%-60px)] sm:h-full flex flex-col">
           <CardContent className="flex flex-col flex-1 overflow-hidden">
             {/* 内容区域 */}
             <ScrollArea className="p-4 py-3 flex-1 h-full max-h-[calc(100%-56px)]">

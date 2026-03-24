@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { CreateUserDialog } from "@/components/create-user-dialog";
 import { getAllFromDB, setToDB, STORES } from "@/lib/db";
@@ -82,18 +83,17 @@ export function UserMenu() {
                 <DropdownMenuItem
                   key={user.id}
                   onClick={() => switchUser(user)}
-                  className="cursor-pointer"
-                >
+                  className="cursor-pointer">
                   {user.user_name}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuGroup>
           )}
+          <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem
               onClick={() => setShowCreateUser(true)}
-              className="cursor-pointer"
-            >
+              className="cursor-pointer">
               新增用户
             </DropdownMenuItem>
           </DropdownMenuGroup>
