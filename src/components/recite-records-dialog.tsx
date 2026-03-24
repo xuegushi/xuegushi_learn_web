@@ -10,7 +10,7 @@ import { UserSquare, Clock, CircleCheck, CircleX } from "lucide-react";
 import { getAllFromDB, STORES, exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 
 export interface DBUser {
-  id: string;
+  id: number;
   user_name: string;
 }
 
@@ -59,6 +59,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   function DetailCard({ item }: { item: ReciteDetail }) {
     const date = new Date(item.createdAt);
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    const userName = users.find(u => u.id.toString() === item.user_id)?.user_name || item.user_id;
     return (
       <div className="p-3 border rounded-lg bg-white relative">
         <div className="flex items-center justify-between mb-1 pr-8">
@@ -67,7 +68,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
         </div>
         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
           <UserSquare className="h-3 w-3" />
-          {item.user_id}
+          {userName}
           <Clock className="h-3 w-3 ml-2" />
           {dateStr}
         </div>
@@ -85,6 +86,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   function SummaryCard({ item }: { item: ReciteSummary }) {
     const date = new Date(item.createdAt);
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    const userName = users.find(u => u.id.toString() === item.user_id)?.user_name || item.user_id;
     return (
       <div className="p-3 border rounded-lg bg-white">
         <div className="text-xs text-muted-foreground">
@@ -92,7 +94,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
         </div>
         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
           <UserSquare className="h-3 w-3" />
-          {item.user_id}
+          {userName}
           <Clock className="h-3 w-3 ml-2" />
           {dateStr}
         </div>
@@ -170,7 +172,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               <DynastySelect value={selectedDynasty} onValueChange={setSelectedDynasty} />
               <Select value={selectedUser} onValueChange={(v) => v !== null && setSelectedUser(v)}>
                 <SelectTrigger className="w-40 md:w-48 ml-2">
-                  <SelectValue>{selectedUser === 'all' ? '全部用户' : users.find(u => u.id === selectedUser)?.user_name || selectedUser}</SelectValue>
+                  <SelectValue>{selectedUser === 'all' ? '全部用户' : users.find(u => u.id.toString() === selectedUser)?.user_name || selectedUser}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部用户</SelectItem>
