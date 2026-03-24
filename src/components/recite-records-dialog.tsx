@@ -138,7 +138,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
             <TabsTrigger value="summary" data-testid="recite-records-summary-tab">背诵汇总</TabsTrigger>
           </TabsList>
           {/* Filter area moved below Tabs header (Patch 4A) */}
-          <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95" data-testid="recite-records-filter-bar">
+          <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95" data-testid="recite-records-filter-bar">
             <div className="flex-1 flex items-center gap-2">
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">筛选</span>
               <DynastySelect value={selectedDynasty} onValueChange={setSelectedDynasty} />
@@ -153,7 +153,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               </Select>
               <input
                 type="text"
-                placeholder="搜索诗词/诗人..."
+                aria-label="搜索诗词/诗人"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="ml-2 px-3 py-1.5 border rounded-md text-sm bg-background"
