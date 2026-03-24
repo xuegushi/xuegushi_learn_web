@@ -319,7 +319,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 onDateFromChange={setDateFrom}
                 onDateToChange={setDateTo}
               />
-              <Button variant="link" size="sm" className="flex-1 text-gray-600" onClick={resetFilters}>
+              <Button variant="default" size="sm" className="flex-1 cursor-pointer" onClick={resetFilters}>
                 <RotateCcw className="h-3 w-3 mr-1" />
                 重置
               </Button>
@@ -337,11 +337,11 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   </SelectContent>
                 </Select>
                 <div className="ml-auto flex gap-2">
-                  <Button variant="link" size="sm" className="text-green-600" data-testid="recite-records-export" onClick={() => exportReciteRecordsJson()}>
+                  <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50 cursor-pointer" data-testid="recite-records-export" onClick={() => exportReciteRecordsJson()}>
                     <Download className="h-3 w-3 mr-1" />
                     导出
                   </Button>
-                  <Button variant="link" size="sm" className="text-red-600" data-testid="recite-records-clear" onClick={async () => {
+                  <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 cursor-pointer" data-testid="recite-records-clear" onClick={async () => {
                     if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
                       await clearReciteRecords();
                       onOpenChange(false);
@@ -399,11 +399,11 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   </SelectContent>
                 </Select>
                 <div className="ml-auto flex gap-2">
-                  <Button variant="link" size="sm" className="text-green-600" onClick={() => exportReciteRecordsJson()}>
+                  <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50 cursor-pointer" onClick={() => exportReciteRecordsJson()}>
                     <Download className="h-3 w-3 mr-1" />
                     导出
                   </Button>
-                  <Button variant="link" size="sm" className="text-red-600" onClick={async () => {
+                  <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 cursor-pointer" onClick={async () => {
                     if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
                       await clearReciteRecords();
                       onOpenChange(false);
