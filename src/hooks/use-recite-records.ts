@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { getAllFromDB, STORES } from "@/lib/db";
+import { getAllFromDB, clearReciteRecords, STORES } from "@/lib/db";
 import { DBUser, ReciteDetail, ReciteSummary } from "@/components/recite-records-dialog";
 
 export interface ReciteRecordsState {
@@ -123,6 +123,17 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => { if (open) resetPagination(); }, [open, resetPagination]);
+
+  const clearOldData = useCallback(async () => {
+    await clearReciteRecords();
+  }, []);
+
+  useEffect(() => {
+    const CLEARED_KEY = "recite_records_cleared_v1";
+    if (open && !sessionStorage.getItem(CLEARED_KEY)) {
+      clearOldData().then(() => sessionStorage.setItem(CLEARED_KEY, "true"));
+    }
+  }, [open, clearOldData]);
 
   const stats = useMemo(() => {
     const allDetails = [...todayDetails, ...historyDetails];
