@@ -264,23 +264,21 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               }
             }}>清空</button>
           </div>
-          <ScrollArea className="flex-1" data-testid="recite-records-scrollarea">
-            <div className="p-4 grid gap-4 grid-cols-1">
-              <TabsContent value="detail" className="flex-1 mt-2">
-                <div className="space-y-2">
-                  {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
-                  {!loading && todayDetails.length === 0 && historyDetails.length === 0 && (
-                    <div className="text-center text-muted-foreground py-8">暂无背诵明细</div>
-                  )}
-                  {!loading && todayDetails.slice(0, todayPage).map((d) => (
-                    <DetailCard key={d.id} item={d} />
-                  ))}
-                  {todayDetails.length > todayPage && (
-                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-today" onClick={() => setTodayPage(p => p + 5)}>
-                      查看更多
-                    </button>
-                  )}
-                </div>
+          <TabsContent value="detail" className="flex-1 min-h-0 overflow-hidden">
+            <ScrollArea className="h-full" data-testid="recite-records-scrollarea">
+              <div className="p-4 space-y-2">
+                {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
+                {!loading && todayDetails.length === 0 && historyDetails.length === 0 && (
+                  <div className="text-center text-muted-foreground py-8">暂无背诵明细</div>
+                )}
+                {!loading && todayDetails.slice(0, todayPage).map((d) => (
+                  <DetailCard key={d.id} item={d} />
+                ))}
+                {todayDetails.length > todayPage && (
+                  <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-today" onClick={() => setTodayPage(p => p + 5)}>
+                    查看更多
+                  </button>
+                )}
                 {historyDetails.length > 0 && (
                   <div className="mt-4">
                     <div className="font-semibold text-sm mb-2">历史背诵</div>
@@ -289,30 +287,32 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                         <DetailCard key={d.id} item={d} />
                       ))}
                     </div>
-                  {historyDetails.length > historyPage && (
-                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-history" onClick={() => setHistoryPage(p => p + 5)}>查看更多</button>
+                    {historyDetails.length > historyPage && (
+                      <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-history" onClick={() => setHistoryPage(p => p + 5)}>查看更多</button>
                     )}
                   </div>
                 )}
-              </TabsContent>
-              <TabsContent value="summary" className="flex-1 mt-2">
-                <div className="space-y-2">
-                  {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
-                  {!loading && summaries.length === 0 && (
-                    <div className="text-center text-muted-foreground py-8">暂无背诵汇总</div>
-                  )}
-                  {!loading && summaries.slice(0, summaryPage).map((s) => (
-                    <SummaryCard key={s.id} item={s} />
-                  ))}
-                </div>
+              </div>
+            </ScrollArea>
+          </TabsContent>
+          <TabsContent value="summary" className="flex-1 min-h-0 overflow-hidden">
+            <ScrollArea className="h-full" data-testid="recite-records-scrollarea-summary">
+              <div className="p-4 space-y-2">
+                {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
+                {!loading && summaries.length === 0 && (
+                  <div className="text-center text-muted-foreground py-8">暂无背诵汇总</div>
+                )}
+                {!loading && summaries.slice(0, summaryPage).map((s) => (
+                  <SummaryCard key={s.id} item={s} />
+                ))}
                 {summaries.length > summaryPage && (
-                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-summaries" onClick={() => setSummaryPage(p => p + 5)}>
+                  <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-summaries" onClick={() => setSummaryPage(p => p + 5)}>
                     查看更多
                   </button>
                 )}
-              </TabsContent>
-            </div>
-          </ScrollArea>
+              </div>
+            </ScrollArea>
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>
