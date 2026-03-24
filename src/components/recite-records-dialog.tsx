@@ -359,28 +359,32 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               )}
               {!loading && (
                 <>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {todayDetails.slice(0, todayPage).map((d) => (
                       <DetailCard key={d.id} item={d} />
                     ))}
                   </div>
                   {todayDetails.length > todayPage && (
-                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-today" onClick={() => setTodayPage(p => p + 5)}>
-                      查看更多
-                    </button>
+                    <div className="flex justify-center mt-2">
+                      <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-today" onClick={() => setTodayPage(p => p + 5)}>
+                        查看更多
+                      </Button>
+                    </div>
                   )}
                 </>
               )}
               {historyDetails.length > 0 && (
                 <div className="mt-4">
                   <div className="font-semibold text-sm mb-2">历史背诵</div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {historyDetails.slice(0, historyPage).map((d) => (
                       <DetailCard key={d.id} item={d} />
                     ))}
                   </div>
                   {historyDetails.length > historyPage && (
-                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-history" onClick={() => setHistoryPage(p => p + 5)}>查看更多</button>
+                    <div className="flex justify-center mt-2">
+                      <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-history" onClick={() => setHistoryPage(p => p + 5)}>查看更多</Button>
+                    </div>
                   )}
                 </div>
               )}
@@ -423,9 +427,11 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 <SummaryCard key={s.id} item={s} />
               ))}
               {summaries.length > summaryPage && (
-                <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-summaries" onClick={() => setSummaryPage(p => p + 5)}>
-                  查看更多
-                </button>
+                <div className="flex justify-center mt-2">
+                  <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-summaries" onClick={() => setSummaryPage(p => p + 5)}>
+                    查看更多
+                  </Button>
+                </div>
               )}
             </TabsContent>
           </Tabs>
