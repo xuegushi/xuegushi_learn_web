@@ -176,8 +176,12 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     return (
       <div className="p-3 border rounded-lg bg-white">
         <div className="flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">
-            未掌握：{item.unpass_count} &nbsp; 掌握：{item.pass_count} &nbsp; 跳过：{item.skip_count}
+          <div className="text-sm text-muted-foreground">
+            <span className="text-red-600 font-semibold">{item.unpass_count}</span> 未掌握
+            <span className="mx-2">|</span>
+            <span className="text-green-600 font-bold text-base">{item.pass_count}</span> 掌握
+            <span className="mx-2">|</span>
+            <span className="text-gray-500 font-semibold">{item.skip_count}</span> 跳过
           </div>
           {item.poem_ids.length > 0 && (
             <button
@@ -204,15 +208,15 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
           {dateStr}
         </div>
         {isExpanded && item.poem_ids.length > 0 && (
-          <div className="mt-2 pt-2 border-t space-y-1">
+          <div className="mt-2 pt-2 border-t grid grid-cols-3 gap-1">
             {item.poem_ids.map((p, idx) => (
-              <div key={idx} className="flex items-center gap-2 text-xs">
+              <div key={idx} className="flex items-center gap-1 text-xs">
                 {p.status ? (
                   <CircleCheck className="h-3 w-3 text-green-500 flex-shrink-0" />
                 ) : (
                   <CircleX className="h-3 w-3 text-red-500 flex-shrink-0" />
                 )}
-                <span className={p.status ? 'text-green-700' : 'text-red-700'}>{p.title}</span>
+                <span className={p.status ? 'text-green-700 truncate' : 'text-red-700 truncate'}>{p.title}</span>
               </div>
             ))}
           </div>
