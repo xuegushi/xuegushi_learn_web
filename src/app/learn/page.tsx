@@ -50,7 +50,7 @@ export default function LearnPage() {
   const [showResult, setShowResult] = useState(false);
 
   // 模式
-  const [mode, setMode] = useState<"recite" | "learn">("recite");
+  const [mode, setMode] = useState<"recite" | "learn">("learn");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [localDataOpen, setLocalDataOpen] = useState(false);
