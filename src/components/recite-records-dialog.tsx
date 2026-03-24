@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DynastySelect } from "@/components/ui/dynasty-select";
 import { UserSquare, Clock } from "lucide-react";
-import { getAllFromDB, STORES } from "@/lib/db";
+import { getAllFromDB, STORES, exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 
 export interface ReciteDetail {
   id?: number;
@@ -164,6 +164,17 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               setSearchKeyword('');
               setSelectedDynasty('all');
             }}>重置筛选</button>
+            <button className="ml-2 text-sm text-green-600 hover:underline" data-testid="recite-records-export" onClick={async () => {
+              await exportReciteRecordsJson();
+            }}>导出</button>
+            <button className="ml-2 text-sm text-red-600 hover:underline" data-testid="recite-records-clear" onClick={async () => {
+              if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
+                await clearReciteRecords();
+                setTodayDetails([]);
+                setHistoryDetails([]);
+                setSummaries([]);
+              }
+            }}>清空</button>
           </div>
           <ScrollArea className="flex-1" data-testid="recite-records-scrollarea">
             <div className="p-4 grid gap-4 grid-cols-1">
