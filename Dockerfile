@@ -15,5 +15,5 @@ RUN pnpm install next@16.1.7
 COPY .next ./.next
 COPY public ./public
 
-EXPOSE 1234
+EXPOSE 2345
 CMD ["pnpm", "start"]
