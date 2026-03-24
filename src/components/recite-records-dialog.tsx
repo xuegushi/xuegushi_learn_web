@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DynastySelect } from "@/components/ui/dynasty-select";
-import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3 } from "lucide-react";
+import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, ChevronDown, ChevronUp } from "lucide-react";
 import { getAllFromDB, STORES, exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 
 export interface DBUser {
@@ -45,6 +45,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedDynasty, setSelectedDynasty] = useState<string>("all");
+  const [expandedSummaries, setExpandedSummaries] = useState<Set<number>>(new Set());
   const [users, setUsers] = useState<DBUser[]>([]);
 
   // Data sources (loaded from IndexedDB)
@@ -87,10 +88,31 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     const date = new Date(item.createdAt);
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
     const userName = users.find(u => u.id.toString() === item.user_id)?.user_name || item.user_id;
+    const isExpanded = expandedSummaries.has(item.id || 0);
+
     return (
       <div className="p-3 border rounded-lg bg-white">
-        <div className="text-xs text-muted-foreground">
-          未掌握：{item.unpass_count} &nbsp; 掌握：{item.pass_count} &nbsp; 跳过：{item.skip_count}
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-muted-foreground">
+            未掌握：{item.unpass_count} &nbsp; 掌握：{item.pass_count} &nbsp; 跳过：{item.skip_count}
+          </div>
+          {item.poem_ids.length > 0 && (
+            <button
+              className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+              onClick={() => {
+                const id = item.id || 0;
+                setExpandedSummaries(prev => {
+                  const next = new Set(prev);
+                  if (next.has(id)) next.delete(id);
+                  else next.add(id);
+                  return next;
+                });
+              }}
+            >
+              {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {item.poem_ids.length}首
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
           <UserSquare className="h-3 w-3" />
@@ -98,6 +120,20 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
           <Clock className="h-3 w-3 ml-2" />
           {dateStr}
         </div>
+        {isExpanded && item.poem_ids.length > 0 && (
+          <div className="mt-2 pt-2 border-t space-y-1">
+            {item.poem_ids.map((p, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-xs">
+                {p.status ? (
+                  <CircleCheck className="h-3 w-3 text-green-500 flex-shrink-0" />
+                ) : (
+                  <CircleX className="h-3 w-3 text-red-500 flex-shrink-0" />
+                )}
+                <span className={p.status ? 'text-green-700' : 'text-red-700'}>{p.title}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
