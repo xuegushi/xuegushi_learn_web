@@ -115,9 +115,9 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
   }, [open, filters]);
 
   const resetPagination = useCallback(() => {
-    setTodayPage(5);
-    setHistoryPage(5);
-    setSummaryPage(5);
+    setTodayPage(9);
+    setHistoryPage(9);
+    setSummaryPage(9);
   }, []);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);

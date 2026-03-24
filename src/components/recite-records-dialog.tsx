@@ -324,7 +324,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 重置
               </Button>
             </div>
-            <TabsContent value="detail" className="p-4">
+            <TabsContent value="detail" className="p-0">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs text-muted-foreground">排序</span>
                 <Select value={detailSort} onValueChange={(v) => v && setDetailSort(v)}>
