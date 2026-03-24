@@ -193,70 +193,64 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               <TabsTrigger value="detail" data-testid="recite-records-detail-tab">背诵明细</TabsTrigger>
               <TabsTrigger value="summary" data-testid="recite-records-summary-tab">背诵汇总</TabsTrigger>
             </TabsList>
-            <div className="flex flex-nowrap items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 overflow-x-auto" data-testid="recite-records-filter-bar">
-              <div className="flex flex-nowrap items-center gap-2 shrink-0">
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">筛选</span>
-                <DynastySelect value={selectedDynasty} onValueChange={setSelectedDynasty} />
-                <Select value={selectedUser} onValueChange={(v) => v !== null && setSelectedUser(v)}>
-                  <SelectTrigger className="w-40 md:w-48 ml-2">
-                    <SelectValue>{selectedUser === 'all' ? '全部用户' : users.find(u => u.id.toString() === selectedUser)?.user_name || selectedUser}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部用户</SelectItem>
-                    {users.map((u) => (
-                      <SelectItem key={u.id} value={u.id}>{u.user_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <input
-                  type="text"
-                  aria-label="搜索诗词/诗人"
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
-                  className="ml-2 px-3 py-1.5 border rounded-md text-sm bg-background"
-                />
-                <input
-                  type="date"
-                  aria-label="开始日期"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="ml-2 px-2 py-1.5 border rounded-md text-sm bg-background"
-                />
-                <span className="text-xs text-muted-foreground">至</span>
-                <input
-                  type="date"
-                  aria-label="结束日期"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="px-2 py-1.5 border rounded-md text-sm bg-background"
-                />
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-muted-foreground">明细</span>
-                <Select value={detailSort} onValueChange={(v) => v && setDetailSort(v)}>
-                  <SelectTrigger className="w-24 text-xs py-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">最新优先</SelectItem>
-                    <SelectItem value="oldest">最早优先</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span className="text-xs text-muted-foreground ml-2">汇总</span>
-                <Select value={summarySort} onValueChange={(v) => v && setSummarySort(v)}>
-                  <SelectTrigger className="w-24 text-xs py-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">最新优先</SelectItem>
-                    <SelectItem value="oldest">最早优先</SelectItem>
-                    <SelectItem value="pass-rate">掌握率</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <button className="ml-auto text-sm text-gray-600 hover:underline" onClick={resetFilters}>重置筛选</button>
-              <button className="ml-2 text-sm text-green-600 hover:underline" data-testid="recite-records-export" onClick={() => exportReciteRecordsJson()}>导出</button>
-              <button className="ml-2 text-sm text-red-600 hover:underline" data-testid="recite-records-clear" onClick={async () => {
+            <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 overflow-x-auto" data-testid="recite-records-filter-bar">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap shrink-0">筛选</span>
+              <DynastySelect value={selectedDynasty} onValueChange={setSelectedDynasty} />
+              <Select value={selectedUser} onValueChange={(v) => v !== null && setSelectedUser(v)}>
+                <SelectTrigger className="w-40 md:w-48">
+                  <SelectValue>{selectedUser === 'all' ? '全部用户' : users.find(u => u.id.toString() === selectedUser)?.user_name || selectedUser}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部用户</SelectItem>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>{u.user_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input
+                type="text"
+                aria-label="搜索诗词/诗人"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                className="px-3 py-1.5 border rounded-md text-sm bg-background"
+              />
+              <input
+                type="date"
+                aria-label="开始日期"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="px-2 py-1.5 border rounded-md text-sm bg-background"
+              />
+              <span className="text-xs text-muted-foreground shrink-0">至</span>
+              <input
+                type="date"
+                aria-label="结束日期"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="px-2 py-1.5 border rounded-md text-sm bg-background"
+              />
+              <Select value={detailSort} onValueChange={(v) => v && setDetailSort(v)}>
+                <SelectTrigger className="w-24 text-xs py-1 shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">最新</SelectItem>
+                  <SelectItem value="oldest">最早</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={summarySort} onValueChange={(v) => v && setSummarySort(v)}>
+                <SelectTrigger className="w-24 text-xs py-1 shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">最新</SelectItem>
+                  <SelectItem value="oldest">最早</SelectItem>
+                  <SelectItem value="pass-rate">掌握率</SelectItem>
+                </SelectContent>
+              </Select>
+              <button className="ml-auto text-sm text-gray-600 hover:underline shrink-0" onClick={resetFilters}>重置</button>
+              <button className="text-sm text-green-600 hover:underline shrink-0" data-testid="recite-records-export" onClick={() => exportReciteRecordsJson()}>导出</button>
+              <button className="text-sm text-red-600 hover:underline shrink-0" data-testid="recite-records-clear" onClick={async () => {
                 if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
                   await clearReciteRecords();
                   onOpenChange(false);
