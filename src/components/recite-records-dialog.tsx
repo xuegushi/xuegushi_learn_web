@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,6 +54,20 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
 
   const filters = useMemo(() => ({ selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort, summarySort }), [selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort, summarySort]);
   const { loading, users, todayDetails, historyDetails, summaries, stats, todayPage, historyPage, summaryPage, setTodayPage, setHistoryPage, setSummaryPage } = useReciteRecords(open, filters);
+
+  useEffect(() => {
+    if (open && users.length > 0) {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        try {
+          const user = JSON.parse(stored);
+          if (user?.user_id && users.some(u => u.id.toString() === user.user_id.toString())) {
+            setSelectedUser(user.user_id.toString());
+          }
+        } catch { /* ignore */ }
+      }
+    }
+  }, [open, users]);
 
   function DetailCard({ item }: { item: ReciteDetail }) {
     const date = new Date(item.createdAt);
@@ -207,7 +221,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 placeholder="搜索诗词/诗人"
               />
               <Select value={selectedUser} onValueChange={(v) => v !== null && setSelectedUser(v)}>
-                <SelectTrigger className="w-40 md:w-48 shrink-0">
+                <SelectTrigger className="w-28 md:w-32 shrink-0">
                   <SelectValue>{selectedUser === 'all' ? '全部用户' : users.find(u => u.id.toString() === selectedUser)?.user_name || selectedUser}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -218,7 +232,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 </SelectContent>
               </Select>
               <Select value={selectedDynasty} onValueChange={(v) => setSelectedDynasty(v ?? "all")}>
-                <SelectTrigger className="w-36 md:w-40 shrink-0">
+                <SelectTrigger className="w-24 md:w-28 shrink-0">
                   <SelectValue>{selectedDynasty === 'all' ? '全部朝代' : selectedDynasty}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
