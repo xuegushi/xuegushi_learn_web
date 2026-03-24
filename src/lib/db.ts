@@ -276,6 +276,23 @@ export async function clearDB(): Promise<void> {
   }
 }
 
+// Patch 3: 背诵记录写入接口
+export async function addReciteDetail(detail: any): Promise<void> {
+  try {
+    await setToDB<any>(STORES.RECITE_DETAIL, detail);
+  } catch {
+    // ignore
+  }
+}
+
+export async function addReciteSummary(summary: any): Promise<void> {
+  try {
+    await setToDB<any>(STORES.RECITE_SUMMARY, summary);
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * 获取 IndexedDB 数据库大小（估算）
  */
@@ -298,4 +315,3 @@ export async function getDBSize(): Promise<{ bytes: number; mb: string }> {
     return { bytes: 0, mb: '0.00' };
   }
 }
-
