@@ -4,10 +4,10 @@ import React, { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DynastySelect } from "@/components/ui/dynasty-select";
 import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, ChevronDown, ChevronUp } from "lucide-react";
 import { exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 import { useReciteRecords } from "@/hooks/use-recite-records";
+import { DynastyArr } from "@/config/poem";
 
 export interface DBUser {
   id: number;
@@ -214,7 +214,17 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   ))}
                 </SelectContent>
               </Select>
-              <DynastySelect value={selectedDynasty} onValueChange={setSelectedDynasty} />
+              <Select value={selectedDynasty} onValueChange={(v) => setSelectedDynasty(v ?? "all")}>
+                <SelectTrigger className="w-36 md:w-40 shrink-0">
+                  <SelectValue>{selectedDynasty === 'all' ? '全部朝代' : selectedDynasty}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部朝代</SelectItem>
+                  {DynastyArr.map((d) => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <input
                 type="date"
                 aria-label="开始日期"
