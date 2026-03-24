@@ -12,6 +12,7 @@ import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, ChevronDo
 import { exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 import { useReciteRecords } from "@/hooks/use-recite-records";
 import { DynastyArr } from "@/config/poem";
+import { useUserStore } from "@/lib/api/user-store";
 
 function RangeCalendarSelect({
   dateFrom,
@@ -115,6 +116,12 @@ export interface ReciteRecordsDialogProps {
 }
 
 export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogProps) {
+  const { currentUser, initialize } = useUserStore();
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedDynasty, setSelectedDynasty] = useState<string>("all");
@@ -137,17 +144,12 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     if (defaultUserSet.current) return;
     if (users.length === 0) return;
     defaultUserSet.current = true;
-    const stored = localStorage.getItem("user");
-    if (!stored) return;
-    try {
-      const user = JSON.parse(stored);
-      if (user?.user_id && users.some(u => u.id === user.user_id)) {
-        startTransition(() => {
-          setSelectedUser(user.user_id.toString());
-        });
-      }
-    } catch { /* ignore */ }
-  }, [open, users]);
+    if (currentUser && users.some(u => u.id === currentUser.user_id)) {
+      startTransition(() => {
+        setSelectedUser(currentUser.user_id.toString());
+      });
+    }
+  }, [open, users, currentUser]);
 
   function DetailCard({ item }: { item: ReciteDetail }) {
     const date = new Date(item.createdAt);

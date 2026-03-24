@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DynastyArr } from "@/config/poem";
+import { useUserStore } from "@/lib/api/user-store";
 import { getAllFromDB, STORES } from "@/lib/db";
 import { SquareUser, Clock, CheckCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -352,6 +353,12 @@ export function CheckInRecordsDialog({
   open,
   onOpenChange,
 }: CheckInRecordsDialogProps) {
+  const { currentUser, initialize } = useUserStore();
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
   const [details, setDetails] = useState<CheckInDetail[]>([]);
   const [summaries, setSummaries] = useState<CheckInSummary[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -376,13 +383,8 @@ export function CheckInRecordsDialog({
 
   // 获取当前用户ID
   const currentUserId = useMemo(() => {
-    const currentUserStr = localStorage.getItem("user");
-    if (currentUserStr) {
-      const currentUser = JSON.parse(currentUserStr);
-      return parseInt(currentUser.user_id);
-    }
-    return null;
-  }, []);
+    return currentUser ? currentUser.user_id : null;
+  }, [currentUser]);
 
   // 加载数据
   const loadData = useCallback(async () => {
@@ -394,8 +396,6 @@ export function CheckInRecordsDialog({
     ]);
 
     // 设置默认选中当前用户
-    const currentUserStr = localStorage.getItem("user");
-    const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
     if (currentUser) {
       setSelectedUser(currentUser.user_id.toString());
     }
@@ -415,7 +415,8 @@ export function CheckInRecordsDialog({
     setDetails(enrichedDetails);
     setSummaries(enrichedSummaries);
     setLoading(false);
-  }, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+  }, [currentUser]);
 
   // 计算每天打卡数量（用于日历显示）
   const dateCheckInCount = useMemo(() => {

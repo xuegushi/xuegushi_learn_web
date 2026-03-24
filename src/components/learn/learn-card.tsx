@@ -4,12 +4,13 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail, PinyinData } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CheckCheck } from "lucide-react";
 import { CreateUserDialog } from "@/components/create-user-dialog";
 import { CheckInSuccessDialog } from "@/components/check-in-success-dialog";
 import { setToDB, getAllFromDB, STORES } from "@/lib/db";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useUserStore } from "@/lib/api/user-store";
 
 interface LearnCardProps {
   poemDetail: PoemDetail | null;
@@ -29,21 +30,19 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
   const [checkedInToday, setCheckedInToday] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
 
-  // 获取用户信息
-  const getUser = () => {
-    try {
-      const userStr = localStorage.getItem("user");
-      return userStr ? JSON.parse(userStr) : null;
-    } catch {
-      return null;
-    }
-  };
+  const { currentUser, addUser, switchUser, initialize } = useUserStore();
 
-  // 检查是否已打卡
-  const checkIfCheckedInToday = async () => {
-    const user = getUser();
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  const checkIfCheckedInToday = useCallback(async () => {
+    if (!currentUser) {
+      setCheckedInToday(false);
+      return;
+    }
     const poemId = poemDetail?.poem?.id;
-    if (!user || !poemId) {
+    if (!poemId) {
       setCheckedInToday(false);
       return;
     }
@@ -51,46 +50,29 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
     const today = new Date().toISOString().split("T")[0];
     const allRecords = await getAllFromDB<{ user_id: number; poem_id: number; check_in_time: string }>(STORES.POEM_STUDY);
     const hasCheckedInToday = allRecords.some(
-      (r) => r.user_id === user.user_id && r.poem_id === poemId && r.check_in_time.startsWith(today)
+      (r) => r.user_id === currentUser.user_id && r.poem_id === poemId && r.check_in_time.startsWith(today)
     );
     setCheckedInToday(hasCheckedInToday);
-  };
+  }, [currentUser, poemDetail?.poem?.id]);
 
-  // 诗词变化时检查打卡状态
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkIfCheckedInToday();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [poemDetail?.poem?.id]);
+  }, [poemDetail?.poem?.id, currentUser, checkIfCheckedInToday]);
 
-  // 保存用户信息
-  const saveUser = (user: { user_id: number; user_name: string }) => {
-    localStorage.setItem("user", JSON.stringify(user));
-  };
-
-  // 创建用户
   const handleCreateUser = async (userName: string) => {
-    const userData = {
-      user_name: userName,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    await setToDB(STORES.USERS, userData);
-
-    // 获取刚创建的用户
-    const users = await getAllFromDB<{ id: number; user_name: string }>(STORES.USERS);
-    const newUser = users[users.length - 1];
-    saveUser({ user_id: newUser.id, user_name: newUser.user_name });
-
-    // 创建用户后直接打卡
-    await handleCheckIn({ user_id: newUser.id, user_name: newUser.user_name });
+    const newUser = await addUser(userName);
+    if (newUser) {
+      await switchUser(newUser);
+      await handleCheckIn({ user_id: newUser.id, user_name: newUser.user_name });
+    }
   };
 
-  // 打卡
   const handleCheckIn = async (user?: { user_id: number; user_name: string }) => {
     if (checkingIn || checkedInToday) return;
 
-    const currentUser = user || getUser();
-    if (!currentUser) {
+    const userToUse = user || currentUser;
+    if (!userToUse) {
       setShowCreateUser(true);
       return;
     }
@@ -102,9 +84,8 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
 
     const now = new Date().toISOString();
 
-    // 新增打卡明细
     await setToDB(STORES.POEM_STUDY, {
-      user_id: currentUser.user_id,
+      user_id: userToUse.user_id,
       poem_id: poem.id,
       poem_title: poem.title || "",
       author: poem.author || "",
@@ -112,15 +93,13 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
       check_in_time: now,
     });
 
-    // 更新汇总
     const allSummary = await getAllFromDB<{ id: number; user_id: number; poem_id: number; count: number; created_at: string; updated_at: string }>(STORES.POEM_STUDY_SUMMARY);
     const existingSummary = allSummary.find(
-      (s) => s.user_id === currentUser.user_id && s.poem_id === poem.id
+      (s) => s.user_id === userToUse.user_id && s.poem_id === poem.id
     );
 
     let finalCount = 1;
     if (existingSummary) {
-      // 更新已有记录
       finalCount = existingSummary.count + 1;
       await setToDB(STORES.POEM_STUDY_SUMMARY, {
         ...existingSummary,
@@ -128,9 +107,8 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
         updated_at: now,
       });
     } else {
-      // 新增记录
       await setToDB(STORES.POEM_STUDY_SUMMARY, {
-        user_id: currentUser.user_id,
+        user_id: userToUse.user_id,
         poem_id: poem.id,
         poem_title: poem.title || "",
         count: 1,
@@ -139,7 +117,6 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
       });
     }
 
-    // 打卡成功弹窗
     setCheckInCount(finalCount);
     setCheckedInToday(true);
     setShowCheckInSuccess(true);
@@ -147,13 +124,11 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
     onCheckInSuccess?.();
   };
 
-  // 打卡按钮点击
   const handleCheckInClick = () => {
-    const user = getUser();
-    if (!user) {
+    if (!currentUser) {
       setShowCreateUser(true);
     } else {
-      handleCheckIn(user);
+      handleCheckIn(currentUser);
     }
   };
 
@@ -188,29 +163,24 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
   return (
     <div className="flex items-center justify-center h-full px-6 md:px-6 py-6">
       <div className="relative w-full h-full min-w-80">
-        {/* 序号标记 */}
         <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg z-10">
           {currentIndex + 1}
         </div>
-        {/* 译文按钮 */}
         <button
           onClick={() => setShowTranslation(!showTranslation)}
           className={`absolute top-7 right-20 z-9 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showTranslation ? "bg-primary text-primary-foreground" : "bg-primary-foreground text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showTranslation ? "primary/50" : "primary/20"}`}
           title="显示/隐藏译文">
           译
         </button>
-        {/* 拼音按钮 */}
         <button
           onClick={() => setShowPinyin(!showPinyin)}
           className={`absolute top-7 right-12 z-9 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showPinyin ? "bg-primary text-primary-foreground " : "bg-primary-foreground text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showPinyin ? "primary/50" : "primary/20"}`}
           title="显示/隐藏拼音">
           拼
         </button>
-        <Card className="py-4 shadow-lg w-full  h-[calc(100%-60px)] sm:h-full flex flex-col">
+        <Card className="py-4 shadow-lg w-full  h-[calc(100%-50px)] sm:h-full flex flex-col">
           <CardContent className="flex flex-col flex-1 overflow-hidden">
-            {/* 内容区域 */}
             <ScrollArea className="p-4 py-3 flex-1 h-full max-h-[calc(100%-56px)]">
-              {/* 标题+拼音 */}
               <div className="text-center space-y-1 mb-4">
                 <div className="flex justify-center gap-1 flex-wrap">
                   {poemDetail.poem?.title?.split("").map((char, idx) => (
@@ -229,7 +199,6 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                 </div>
               </div>
 
-              {/* 诗词正文 */}
               {poemDetail.poem?.content?.content && (
                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                   {poemDetail.poem.xu && (
@@ -279,7 +248,6 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                 </div>
               )}
 
-              {/* 注释 - HTML渲染 */}
               {poemDetail.detail?.zhu?.content && (
                 <Section
                   title="注释"
@@ -288,12 +256,10 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                 />
               )}
 
-              {/* 译文 */}
               {poemDetail.detail?.yi?.content && (
                 <Section title="译文" content={poemDetail.detail.yi.content} />
               )}
 
-              {/* 背景 - HTML渲染 */}
               {poemDetail.poem?.background && (
                 <Section
                   title="创作背景"
@@ -302,7 +268,6 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                 />
               )}
 
-              {/* 诗人介绍 - HTML渲染 */}
               {poemDetail.author?.profile && (
                 <Section
                   title="诗人介绍"
@@ -311,7 +276,6 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                 />
               )}
 
-              {/* 赏析 - HTML渲染 */}
               {poemDetail.detail?.shangxi?.content && (
                 <Section
                   title="赏析"
@@ -322,7 +286,6 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
               )}
             </ScrollArea>
 
-            {/* 底部导航 */}
             <div className="flex items-center gap-4 pt-4 border-t flex-shrink-0">
               <button
                 onClick={onPrev}
@@ -369,7 +332,6 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
   );
 }
 
-/** 通用章节组件 */
 function Section({ title, content, isHtml, className }: { title: string; content: string[]; isHtml?: boolean; className?: string }) {
   return (
     <div className={`mt-4 ${className || ""}`}>

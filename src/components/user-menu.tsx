@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -12,58 +12,23 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { CreateUserDialog } from "@/components/create-user-dialog";
-import { getAllFromDB, setToDB, STORES } from "@/lib/db";
-
-interface User {
-  id: number;
-  user_name: string;
-}
+import { useUserStore, User } from "@/lib/api/user-store";
 
 export function UserMenu() {
-  const [currentUser, setCurrentUser] = useState<{ user_id: number; user_name: string } | null>(null);
-  const [otherUsers, setOtherUsers] = useState<User[]>([]);
+  const { currentUser, users, initialize, switchUser, addUser } = useUserStore();
   const [showCreateUser, setShowCreateUser] = useState(false);
-  const loadedRef = useRef(false);
 
   useEffect(() => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
+    initialize();
+  }, [initialize]);
 
-    const loadUserData = async () => {
-      try {
-        const userStr = localStorage.getItem("user");
-        if (userStr) {
-          const user = JSON.parse(userStr);
-          setCurrentUser(user);
-          const users = await getAllFromDB<User>(STORES.USERS);
-          setOtherUsers(users.filter((u) => u.id !== user.user_id));
-        }
-      } catch {
-        // Silent fail
-      }
-    };
-    loadUserData();
-  }, []);
-
-  const switchUser = async (user: User) => {
-    const userData = { user_id: user.id, user_name: user.user_name };
-    localStorage.setItem("user", JSON.stringify(userData));
-    setCurrentUser(userData);
-    const users = await getAllFromDB<User>(STORES.USERS);
-    setOtherUsers(users.filter((u) => u.id !== user.id));
-  };
+  const otherUsers = users.filter((u) => u.id !== currentUser?.user_id);
 
   const handleCreateUser = async (userName: string) => {
-    const userData = {
-      user_name: userName,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    await setToDB(STORES.USERS, userData);
-
-    const users = await getAllFromDB<User>(STORES.USERS);
-    const newUser = users[users.length - 1];
-    await switchUser(newUser);
+    const newUser = await addUser(userName);
+    if (newUser) {
+      await switchUser(newUser);
+    }
   };
 
   if (!currentUser) return null;
@@ -75,7 +40,7 @@ export function UserMenu() {
           <span className="text-sm font-medium">{currentUser.user_name}</span>
           <ChevronDown className="h-4 w-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-30">
           {otherUsers.length > 0 && (
             <DropdownMenuGroup>
               <DropdownMenuLabel>其他用户</DropdownMenuLabel>
@@ -89,7 +54,9 @@ export function UserMenu() {
               ))}
             </DropdownMenuGroup>
           )}
-          <DropdownMenuSeparator />
+          {otherUsers.length > 0 &&
+            <DropdownMenuSeparator />
+          }
           <DropdownMenuGroup>
             <DropdownMenuItem
               onClick={() => setShowCreateUser(true)}

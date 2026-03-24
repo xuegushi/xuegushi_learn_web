@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { PanelLeftOpen } from "lucide-react";
 import { getAllFromDB, getFromDB, setToDB, STORES, updateLearningProgress, addReciteDetail, addReciteSummary } from "@/lib/db";
+import { useUserStore } from "@/lib/api/user-store";
 import { LocalDataManager } from "@/components/local-data-manager";
 import { CheckInRecordsDialog } from "@/components/check-in-records-dialog";
 import { ReciteRecordsDialog } from "@/components/recite-records-dialog";
@@ -25,6 +26,12 @@ import { MobileButtons, PcButtons } from "./components/PageButtons";
 
 /** 页面主组件 */
 export default function LearnPage() {
+  const { currentUser, initialize } = useUserStore();
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
   // ==================== 状态定义 ====================
   const [catalogList, setCatalogList] = useState<CatalogItem[]>([]);
   const [catalogDetail, setCatalogDetail] = useState<CatalogDetail | null>(
@@ -291,16 +298,6 @@ export default function LearnPage() {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : poems.length - 1));
   }, [poems.length]);
 
-  const getCurrentUser = () => {
-    if (typeof window === "undefined") return null;
-    try {
-      const userStr = localStorage.getItem("user");
-      return userStr ? JSON.parse(userStr) : null;
-    } catch {
-      return null;
-    }
-  };
-
   const handleNotMastered = useCallback(
     (key: string) => {
       const isAllDone =
@@ -308,11 +305,11 @@ export default function LearnPage() {
       setNotMasteredPoems((prev) => new Set(prev).add(key));
       setErrorCount((prev) => prev + 1);
 
-      const user = getCurrentUser();
+      const user = currentUser;
       const poem = poems[currentIndex];
       const poemId = poem?.targetId?.toString();
       if (user?.user_id && poemId) {
-        updateLearningProgress(user.user_id, poemId, false);
+        updateLearningProgress(user.user_id.toString(), poemId, false);
         addReciteDetail({
           user_id: user.user_id,
           user_name: user.user_name,
@@ -326,7 +323,7 @@ export default function LearnPage() {
       }
 
       if (isAllDone) {
-        const user = getCurrentUser();
+        const user = currentUser;
         if (user?.user_id) {
           const poemIds = poems.map((p) => ({
             poem_id: p.targetId.toString(),
@@ -365,11 +362,11 @@ export default function LearnPage() {
       setMasteredPoems((prev) => new Set(prev).add(key));
       setCorrectCount((prev) => prev + 1);
 
-      const user = getCurrentUser();
+      const user = currentUser;
       const poem = poems[currentIndex];
       const poemId = poem?.targetId?.toString();
       if (user?.user_id && poemId) {
-        updateLearningProgress(user.user_id, poemId, true);
+        updateLearningProgress(user.user_id.toString(), poemId, true);
         addReciteDetail({
           user_id: user.user_id,
           user_name: user.user_name,
@@ -383,7 +380,7 @@ export default function LearnPage() {
       }
 
       if (isAllDone) {
-        const user = getCurrentUser();
+        const user = currentUser;
         if (user?.user_id) {
           const poemIds = poems.map((p) => ({
             poem_id: p.targetId.toString(),
@@ -423,7 +420,7 @@ export default function LearnPage() {
   const handleEarlyEnd = useCallback(() => {
     setSkippedCount(poems.length - masteredPoems.size - notMasteredPoems.size);
 
-    const user = getCurrentUser();
+    const user = currentUser;
     if (user?.user_id) {
       const poemIds = poems.map((p) => ({
         poem_id: p.targetId.toString(),

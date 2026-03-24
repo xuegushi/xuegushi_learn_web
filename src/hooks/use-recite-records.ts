@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { getAllFromDB, clearReciteRecords, STORES } from "@/lib/db";
 import { DBUser, ReciteDetail, ReciteSummary } from "@/components/recite-records-dialog";
+import { useUserStore } from "@/lib/api/user-store";
 
 export interface ReciteRecordsState {
   loading: boolean;
@@ -31,8 +32,8 @@ export interface ReciteFilters {
 }
 
 export function useReciteRecords(open: boolean, filters: ReciteFilters) {
+  const { users: storeUsers, initialize } = useUserStore();
   const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState<DBUser[]>([]);
   const [todayDetails, setTodayDetails] = useState<ReciteDetail[]>([]);
   const [historyDetails, setHistoryDetails] = useState<ReciteDetail[]>([]);
   const [summaries, setSummaries] = useState<ReciteSummary[]>([]);
@@ -40,10 +41,11 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
   const [historyPage, setHistoryPage] = useState(9);
   const [summaryPage, setSummaryPage] = useState(9);
 
-  const loadUsers = useCallback(async () => {
-    const userList = await getAllFromDB<DBUser>(STORES.USERS);
-    setUsers(userList);
-  }, []);
+  const users: DBUser[] = storeUsers.map(u => ({ id: u.id, user_name: u.user_name }));
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   const loadData = useCallback(async () => {
     if (!open) return;
@@ -120,7 +122,6 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
     setSummaryPage(9);
   }, []);
 
-  useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => { if (open) resetPagination(); }, [open, resetPagination]);
 
