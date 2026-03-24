@@ -267,9 +267,10 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
                               <div
                                 key={`${lineIdx}-translation`}
                                 className="mt-2">
-                                <div className="text-xs text-muted-foreground italic bg-gray-100 dark:bg-gray-700 p-2 rounded">
-                                  {poemDetail.detail.yi.content[lineIdx]}
-                                </div>
+                                <div 
+                                  className="text-xs text-muted-foreground italic bg-gray-100 dark:bg-gray-700 p-2 rounded whitespace-pre-wrap"
+                                  dangerouslySetInnerHTML={{ __html: poemDetail.detail.yi.content[lineIdx] }}
+                                />
                               </div>
                             )}
                         </React.Fragment>
