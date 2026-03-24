@@ -5,7 +5,7 @@ import { PoemDetail } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Shuffle, CircleX, CheckCircle2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { addReciteDetail, addReciteSummary } from "@/lib/db";
+import { addReciteDetail } from "@/lib/db";
 import { ReciteRecordsDialog } from "@/components/recite-records-dialog";
 import { useState } from "react";
 
@@ -53,41 +53,6 @@ export function ReciteCard({
       ? "bg-red-500"
       : "bg-gray-300";
   const [reciteRecordsOpen, setReciteRecordsOpen] = useState(false);
-  // Write-back helper for recite detail/summary (Patch 3)
-  const logReciteRecord = async (status: boolean) => {
-    try {
-      const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
-      let userId = "guest";
-      if (userStr) {
-        const userObj = JSON.parse(userStr);
-        userId = userObj?.id ?? "guest";
-      }
-      const poem = (poemDetail?.poem ?? {}) as { title?: string; author?: string; dynasty?: string; id?: string | number };
-      const title = poem.title ?? "";
-      const poemId = String(poem.id ?? 0);
-      const detail = {
-        user_id: userId,
-        poem_id: poemId,
-        title,
-        author: poem.author ?? "",
-        dynasty: poem.dynasty ?? "",
-        status,
-        createdAt: new Date().toISOString(),
-      } as const;
-      await addReciteDetail(detail);
-      const summary = {
-        user_id: userId,
-        poem_ids: [{ poem_id: poemId, title, status }],
-        pass_count: status ? 1 : 0,
-        unpass_count: status ? 0 : 1,
-        skip_count: 0,
-        createdAt: new Date().toISOString(),
-      };
-      await addReciteSummary(summary);
-    } catch {
-      // ignore
-    }
-  };
 
   if (!poemDetail) {
     return (
@@ -211,22 +176,20 @@ export function ReciteCard({
 
             {/* 底部按钮 */}
             <div className="mt-auto pt-2 flex-shrink-0">
-            <div className="flex gap-4">
-              <button
-                onClick={() => setReciteRecordsOpen(true)}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 cursor-pointer"
-              >
-                背诵记录
-              </button>
+              <div className="flex gap-4">
                 <button
-                  onClick={async () => { await logReciteRecord(false); onNotMastered(key); }}
+                  onClick={() => {
+                    onNotMastered(key);
+                  }}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-red-100 text-red-700 rounded-xl hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   disabled={isDisabled}>
                   <CircleX className="h-5 w-5" />
                   未掌握
                 </button>
                 <button
-                  onClick={async () => { await logReciteRecord(true); onMastered(key); }}
+                  onClick={() => {
+                    onMastered(key);
+                  }}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-green-100 text-green-700 rounded-xl hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   disabled={isDisabled}>
                   <CheckCircle2 className="h-5 w-5" />
@@ -241,7 +204,10 @@ export function ReciteCard({
             </div>
           </CardContent>
         </Card>
-        <ReciteRecordsDialog open={reciteRecordsOpen} onOpenChange={setReciteRecordsOpen} />
+        <ReciteRecordsDialog
+          open={reciteRecordsOpen}
+          onOpenChange={setReciteRecordsOpen}
+        />
       </div>
     </div>
   );

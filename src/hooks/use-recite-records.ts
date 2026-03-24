@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { getAllFromDB, STORES } from "@/lib/db";
+import { getAllFromDB, clearReciteRecords, STORES } from "@/lib/db";
 import { DBUser, ReciteDetail, ReciteSummary } from "@/components/recite-records-dialog";
 
 export interface ReciteRecordsState {
@@ -36,9 +36,9 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
   const [todayDetails, setTodayDetails] = useState<ReciteDetail[]>([]);
   const [historyDetails, setHistoryDetails] = useState<ReciteDetail[]>([]);
   const [summaries, setSummaries] = useState<ReciteSummary[]>([]);
-  const [todayPage, setTodayPage] = useState(5);
-  const [historyPage, setHistoryPage] = useState(5);
-  const [summaryPage, setSummaryPage] = useState(5);
+  const [todayPage, setTodayPage] = useState(9);
+  const [historyPage, setHistoryPage] = useState(9);
+  const [summaryPage, setSummaryPage] = useState(9);
 
   const loadUsers = useCallback(async () => {
     const userList = await getAllFromDB<DBUser>(STORES.USERS);
@@ -53,7 +53,7 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
       let data = [...details];
 
       if (filters.selectedUser !== 'all') {
-        data = data.filter((d) => d.user_id === filters.selectedUser);
+        data = data.filter((d) => String(d.user_id) === filters.selectedUser);
       }
       if (filters.searchKeyword.trim()) {
         const kw = filters.searchKeyword.toLowerCase();
@@ -83,7 +83,7 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
       const sums = await getAllFromDB<ReciteSummary>(STORES.RECITE_SUMMARY);
       let filteredSums = [...sums];
       if (filters.selectedUser !== 'all') {
-        filteredSums = filteredSums.filter((s) => s.user_id === filters.selectedUser);
+        filteredSums = filteredSums.filter((s) => String(s.user_id) === filters.selectedUser);
       }
       if (filters.searchKeyword.trim()) {
         const kw = filters.searchKeyword.toLowerCase();
@@ -115,14 +115,25 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
   }, [open, filters]);
 
   const resetPagination = useCallback(() => {
-    setTodayPage(5);
-    setHistoryPage(5);
-    setSummaryPage(5);
+    setTodayPage(9);
+    setHistoryPage(9);
+    setSummaryPage(9);
   }, []);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => { if (open) resetPagination(); }, [open, resetPagination]);
+
+  const clearOldData = useCallback(async () => {
+    await clearReciteRecords();
+  }, []);
+
+  useEffect(() => {
+    const CLEARED_KEY = "recite_records_cleared_v1";
+    if (open && !sessionStorage.getItem(CLEARED_KEY)) {
+      clearOldData().then(() => sessionStorage.setItem(CLEARED_KEY, "true"));
+    }
+  }, [open, clearOldData]);
 
   const stats = useMemo(() => {
     const allDetails = [...todayDetails, ...historyDetails];

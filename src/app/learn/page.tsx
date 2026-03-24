@@ -283,10 +283,11 @@ export default function LearnPage() {
       const user = getCurrentUser();
       const poem = poems[currentIndex];
       const poemId = poem?.targetId?.toString();
-      if (user?.id && poemId) {
-        updateLearningProgress(user.id, poemId, false);
+      if (user?.user_id && poemId) {
+        updateLearningProgress(user.user_id, poemId, false);
         addReciteDetail({
-          user_id: user.id,
+          user_id: user.user_id,
+          user_name: user.user_name,
           poem_id: poemId,
           title: poem.title,
           author: poem.author,
@@ -298,14 +299,15 @@ export default function LearnPage() {
 
       if (isAllDone) {
         const user = getCurrentUser();
-        if (user?.id) {
+        if (user?.user_id) {
           const poemIds = poems.map((p) => ({
             poem_id: p.targetId.toString(),
             title: p.title,
             status: masteredPoems.has(p.targetId.toString()),
           }));
           addReciteSummary({
-            user_id: user.id,
+            user_id: user.user_id,
+            user_name: user.user_name,
             poem_ids: poemIds,
             pass_count: masteredPoems.size,
             unpass_count: notMasteredPoems.size + 1,
@@ -331,10 +333,11 @@ export default function LearnPage() {
       const user = getCurrentUser();
       const poem = poems[currentIndex];
       const poemId = poem?.targetId?.toString();
-      if (user?.id && poemId) {
-        updateLearningProgress(user.id, poemId, true);
+      if (user?.user_id && poemId) {
+        updateLearningProgress(user.user_id, poemId, true);
         addReciteDetail({
-          user_id: user.id,
+          user_id: user.user_id,
+          user_name: user.user_name,
           poem_id: poemId,
           title: poem.title,
           author: poem.author,
@@ -346,7 +349,7 @@ export default function LearnPage() {
 
       if (isAllDone) {
         const user = getCurrentUser();
-        if (user?.id) {
+        if (user?.user_id) {
           const poemIds = poems.map((p) => ({
             poem_id: p.targetId.toString(),
             title: p.title,
@@ -355,7 +358,8 @@ export default function LearnPage() {
               : false,
           }));
           addReciteSummary({
-            user_id: user.id,
+            user_id: user.user_id,
+            user_name: user.user_name,
             poem_ids: poemIds,
             pass_count: masteredPoems.size + 1,
             unpass_count: notMasteredPoems.size,
@@ -376,7 +380,7 @@ export default function LearnPage() {
     setSkippedCount(poems.length - masteredPoems.size - notMasteredPoems.size);
 
     const user = getCurrentUser();
-    if (user?.id) {
+    if (user?.user_id) {
       const poemIds = poems.map((p) => ({
         poem_id: p.targetId.toString(),
         title: p.title,
@@ -385,7 +389,8 @@ export default function LearnPage() {
           : false,
       }));
       addReciteSummary({
-        user_id: user.id,
+        user_id: user.user_id,
+        user_name: user.user_name,
         poem_ids: poemIds,
         pass_count: masteredPoems.size,
         unpass_count: notMasteredPoems.size,
