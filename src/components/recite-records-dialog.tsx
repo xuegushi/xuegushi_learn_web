@@ -59,9 +59,9 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     const userName = users.find(u => u.id.toString() === item.user_id)?.user_name || item.user_id;
     return (
       <div className="p-3 border rounded-lg bg-white relative">
-        <div className="flex items-center justify-between mb-1 pr-8">
-          <span className="text-sm font-semibold">{item.title}</span>
-          <span className="text-xs text-muted-foreground">{item.dynasty} · {item.author}</span>
+        <div className="pr-8">
+          <div className="text-sm font-semibold">{item.title}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">{item.dynasty} · {item.author}</div>
         </div>
         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
           <UserSquare className="h-3 w-3" />
@@ -239,7 +239,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 }
               }}>清空</button>
             </div>
-            <TabsContent value="detail" className="p-4 space-y-2">
+            <TabsContent value="detail" className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs text-muted-foreground">排序</span>
                 <Select value={detailSort} onValueChange={(v) => v && setDetailSort(v)}>
@@ -256,18 +256,24 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               {!loading && todayDetails.length === 0 && historyDetails.length === 0 && (
                 <div className="text-center text-muted-foreground py-8">暂无背诵明细</div>
               )}
-              {!loading && todayDetails.slice(0, todayPage).map((d) => (
-                <DetailCard key={d.id} item={d} />
-              ))}
-              {todayDetails.length > todayPage && (
-                <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-today" onClick={() => setTodayPage(p => p + 5)}>
-                  查看更多
-                </button>
+              {!loading && (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {todayDetails.slice(0, todayPage).map((d) => (
+                      <DetailCard key={d.id} item={d} />
+                    ))}
+                  </div>
+                  {todayDetails.length > todayPage && (
+                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-today" onClick={() => setTodayPage(p => p + 5)}>
+                      查看更多
+                    </button>
+                  )}
+                </>
               )}
               {historyDetails.length > 0 && (
                 <div className="mt-4">
                   <div className="font-semibold text-sm mb-2">历史背诵</div>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {historyDetails.slice(0, historyPage).map((d) => (
                       <DetailCard key={d.id} item={d} />
                     ))}
