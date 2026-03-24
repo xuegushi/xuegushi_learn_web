@@ -532,9 +532,9 @@ export default function LearnPage() {
         <div className="flex-1 overflow-hidden min-h-0 relative flex">
           {/* 左侧诗词列表 */}
           {poems.length > 0 && (
-            <div className="hidden sm:block w-40 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
+            <div className="hidden sm:block w-46 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
               <ScrollArea className="h-full">
-                <div className="p-2 space-y-1.5">
+                <div className="p-4 space-y-2">
                   {poems.map((poem, idx) => (
                     <div
                       key={poem.targetId}

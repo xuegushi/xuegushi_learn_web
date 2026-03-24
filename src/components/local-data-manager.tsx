@@ -78,6 +78,7 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
   const [keyword, setKeyword] = useState("");
   const [filterDynasty, setFilterDynasty] = useState("不限");
   const [dbSize, setDbSize] = useState<string>("0.00");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   // Sorting state
   type SortKey = 'id' | 'createdAt' | 'updatedAt';
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({
@@ -190,12 +191,13 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
 
     for (const id of selectedIds) {
       try {
+        // 1. 先请求诗词详情
         const res = await fetch(`https://api.xuegushi.com/api/poem/${id}?platform=web`);
         const data = await res.json();
         await setToDB(STORES.POEMS, { id, ...data });
 
+        // 2. 再请求诗词拼音（顺序执行，不并发）
         if (data.poem?.id) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
           const pinyinRes = await fetch(
             `https://api.xuegushi.com/api/pinyin/poem?platform=web&poem_id=${data.poem.id}`
           );
@@ -208,7 +210,6 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
             dynasty: data.poem?.dynasty || "",
           });
         }
-        await new Promise((resolve) => setTimeout(resolve, 200));
       } catch {
         // Continue
       }
@@ -288,7 +289,7 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={deleteSelected}
+                  onClick={() => setDeleteConfirmOpen(true)}
                   disabled={selectedIds.size === 0}
                 >
                   删除选中 ({selectedIds.size})
@@ -430,6 +431,32 @@ export function LocalDataManager({ open, onOpenChange }: LocalDataManagerProps) 
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除确认弹窗 */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>确认删除</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground py-4">
+            确定要删除选中的 {selectedIds.size} 条数据吗？此操作不可恢复。
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setDeleteConfirmOpen(false)}>
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={async () => {
+                await deleteSelected();
+                setDeleteConfirmOpen(false);
+              }}>
+              确认删除
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
