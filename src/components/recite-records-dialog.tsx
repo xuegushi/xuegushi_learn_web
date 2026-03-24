@@ -17,6 +17,7 @@ export interface DBUser {
 export interface ReciteDetail {
   id?: number;
   user_id: string;
+  user_name: string;
   poem_id: string;
   title: string;
   author: string;
@@ -28,6 +29,7 @@ export interface ReciteDetail {
 export interface ReciteSummary {
   id?: number;
   user_id: string;
+  user_name: string;
   poem_ids: { poem_id: string; title: string; status: boolean }[];
   pass_count: number;
   unpass_count: number;
@@ -56,7 +58,6 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   function DetailCard({ item }: { item: ReciteDetail }) {
     const date = new Date(item.createdAt);
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-    const userName = users.find(u => u.id.toString() === item.user_id)?.user_name || item.user_id;
     return (
       <div className="p-3 border rounded-lg bg-white relative">
         <div className="pr-8">
@@ -65,7 +66,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
         </div>
         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
           <UserSquare className="h-3 w-3" />
-          {userName}
+          {item.user_name}
           <Clock className="h-3 w-3 ml-2" />
           {dateStr}
         </div>
@@ -83,7 +84,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   function SummaryCard({ item }: { item: ReciteSummary }) {
     const date = new Date(item.createdAt);
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-    const userName = users.find(u => u.id.toString() === item.user_id)?.user_name || item.user_id;
+
     const isExpanded = expandedSummaries.has(item.id || 0);
 
     return (
@@ -112,7 +113,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
         </div>
         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
           <UserSquare className="h-3 w-3" />
-          {userName}
+          {item.user_name}
           <Clock className="h-3 w-3 ml-2" />
           {dateStr}
         </div>
