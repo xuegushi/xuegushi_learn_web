@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, ChevronDown, ChevronUp, Calendar as CalendarIcon, RotateCcw, Download, Trash2 } from "lucide-react";
 import { exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 import { useReciteRecords } from "@/hooks/use-recite-records";
@@ -240,7 +241,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
           <DialogTitle className="text-2xl font-semibold text-slate-700 dark:text-slate-100" data-testid="recite-records-header">背诵记录</DialogTitle>
         </DialogHeader>
         <div className="border-b border-gray-200 dark:border-gray-700" />
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <ScrollArea className="flex-1 min-h-[60vh]">
           {!loading && (stats.totalCount > 0 || stats.summaryCount > 0) && (
             <div className="flex flex-wrap gap-4 px-4 py-3 bg-muted/30 rounded-lg mb-2">
               <div className="flex items-center gap-1.5 text-sm">
@@ -435,7 +436,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               )}
             </TabsContent>
           </Tabs>
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
