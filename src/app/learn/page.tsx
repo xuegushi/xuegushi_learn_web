@@ -2,9 +2,10 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { PanelLeftOpen } from "lucide-react";
-import { getAllFromDB, getFromDB, setToDB, STORES, updateLearningProgress } from "@/lib/db";
+import { getAllFromDB, getFromDB, setToDB, STORES, updateLearningProgress, addReciteDetail, addReciteSummary } from "@/lib/db";
 import { LocalDataManager } from "@/components/local-data-manager";
 import { CheckInRecordsDialog } from "@/components/check-in-records-dialog";
+import { ReciteRecordsDialog } from "@/components/recite-records-dialog";
 import {
   Sidebar,
   StatusBar,
@@ -54,6 +55,7 @@ export default function LearnPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [localDataOpen, setLocalDataOpen] = useState(false);
   const [checkInRecordsOpen, setCheckInRecordsOpen] = useState(false);
+  const [reciteRecordsOpen, setReciteRecordsOpen] = useState(false);
 
   // 详情弹窗
   const [selectedPoem, setSelectedPoem] = useState<PoemDetail | null>(null);
@@ -279,18 +281,44 @@ export default function LearnPage() {
       setErrorCount((prev) => prev + 1);
 
       const user = getCurrentUser();
-      const poemId = poems[currentIndex]?.targetId?.toString();
+      const poem = poems[currentIndex];
+      const poemId = poem?.targetId?.toString();
       if (user?.id && poemId) {
         updateLearningProgress(user.id, poemId, false);
+        addReciteDetail({
+          user_id: user.id,
+          poem_id: poemId,
+          title: poem.title,
+          author: poem.author,
+          dynasty: poem.dynasty,
+          status: false,
+          createdAt: new Date().toISOString(),
+        });
       }
 
       if (isAllDone) {
+        const user = getCurrentUser();
+        if (user?.id) {
+          const poemIds = poems.map((p) => ({
+            poem_id: p.targetId.toString(),
+            title: p.title,
+            status: masteredPoems.has(p.targetId.toString()),
+          }));
+          addReciteSummary({
+            user_id: user.id,
+            poem_ids: poemIds,
+            pass_count: masteredPoems.size,
+            unpass_count: notMasteredPoems.size + 1,
+            skip_count: 0,
+            createdAt: new Date().toISOString(),
+          });
+        }
         setShowResult(true);
       } else {
         setTimeout(() => nextPoem(), 100);
       }
     },
-    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem, currentIndex],
+    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem, currentIndex, poems],
   );
 
   const handleMastered = useCallback(
@@ -301,25 +329,73 @@ export default function LearnPage() {
       setCorrectCount((prev) => prev + 1);
 
       const user = getCurrentUser();
-      const poemId = poems[currentIndex]?.targetId?.toString();
+      const poem = poems[currentIndex];
+      const poemId = poem?.targetId?.toString();
       if (user?.id && poemId) {
         updateLearningProgress(user.id, poemId, true);
+        addReciteDetail({
+          user_id: user.id,
+          poem_id: poemId,
+          title: poem.title,
+          author: poem.author,
+          dynasty: poem.dynasty,
+          status: true,
+          createdAt: new Date().toISOString(),
+        });
       }
 
       if (isAllDone) {
+        const user = getCurrentUser();
+        if (user?.id) {
+          const poemIds = poems.map((p) => ({
+            poem_id: p.targetId.toString(),
+            title: p.title,
+            status: masteredPoems.has(p.targetId.toString()) || notMasteredPoems.has(p.targetId.toString())
+              ? masteredPoems.has(p.targetId.toString())
+              : false,
+          }));
+          addReciteSummary({
+            user_id: user.id,
+            poem_ids: poemIds,
+            pass_count: masteredPoems.size + 1,
+            unpass_count: notMasteredPoems.size,
+            skip_count: 0,
+            createdAt: new Date().toISOString(),
+          });
+        }
         setShowResult(true);
       } else {
         setTimeout(() => nextPoem(), 100);
       }
     },
-    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem, currentIndex],
+    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem, currentIndex, poems],
   );
 
   // 提前结束
   const handleEarlyEnd = useCallback(() => {
     setSkippedCount(poems.length - masteredPoems.size - notMasteredPoems.size);
+
+    const user = getCurrentUser();
+    if (user?.id) {
+      const poemIds = poems.map((p) => ({
+        poem_id: p.targetId.toString(),
+        title: p.title,
+        status: masteredPoems.has(p.targetId.toString()) || notMasteredPoems.has(p.targetId.toString()) 
+          ? masteredPoems.has(p.targetId.toString())
+          : false,
+      }));
+      addReciteSummary({
+        user_id: user.id,
+        poem_ids: poemIds,
+        pass_count: masteredPoems.size,
+        unpass_count: notMasteredPoems.size,
+        skip_count: poems.length - masteredPoems.size - notMasteredPoems.size,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     setShowResult(true);
-  }, [poems.length, masteredPoems.size, notMasteredPoems.size]);
+  }, [poems, masteredPoems.size, notMasteredPoems.size]);
 
   // 生成随机索引
   const generateRandomIndices = useCallback(() => {
@@ -412,6 +488,12 @@ export default function LearnPage() {
             loadTodayCheckInData();
           }
         }} 
+      />
+
+      {/* 背诵记录弹窗 */}
+      <ReciteRecordsDialog
+        open={reciteRecordsOpen}
+        onOpenChange={setReciteRecordsOpen}
       />
 
       {/* 主内容区 */}
@@ -516,6 +598,7 @@ export default function LearnPage() {
               mode={mode}
               showEarlyEnd={mode === "recite" && !allCompleted}
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+              onReciteRecordsClick={() => setReciteRecordsOpen(true)}
             />
 
             {/* PC端按钮 */}
@@ -527,6 +610,7 @@ export default function LearnPage() {
               mode={mode}
               showEarlyEnd={mode === "recite" && !allCompleted}
               showReset={mode !== "learn"}
+              onReciteRecordsClick={() => setReciteRecordsOpen(true)}
             />
           </div>
         </div>
