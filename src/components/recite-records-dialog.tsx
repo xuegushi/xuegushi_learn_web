@@ -298,7 +298,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 <SelectContent>
                   <SelectItem value="all">全部用户</SelectItem>
                   {users.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>{u.user_name}</SelectItem>
+                    <SelectItem key={u.id} value={u.id.toString()}>{u.user_name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
