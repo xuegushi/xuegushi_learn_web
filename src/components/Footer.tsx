@@ -1,4 +1,5 @@
 import { friendLinks } from "@/config/navigation";
+import { MessageCircleQuestion } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -24,22 +25,33 @@ export default function Footer() {
             </a>
           ))}
         </nav>
-        <div className="relative group">
-          <img
-            src="/image/wx.svg"
-            alt="微信"
-            width={20}
-            height={20}
-            className="cursor-pointer hover:opacity-80 transition-opacity md:w-6 md:h-6 dark:invert"
-          />
-          <div className="absolute w-48 h-48 p-2 bottom-full right-0 mb-2 hidden group-hover:block">
+        <div className="flex items-center gap-5">
+          <a
+            href="https://docs.qq.com/form/page/DSU9hQUpFR0xDeHJP#/fill"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs md:text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+          >
+            <MessageCircleQuestion className="h-4 w-4" />
+            纠错 | 反馈
+          </a>
+          <div className="relative group">
             <img
-              src="/images/xcx.jpg"
-              alt="小程序二维码"
-              width={178}
-              height={178}
-              className="border w-44 h-44 rounded-lg shadow-lg"
+              src="/image/wx.svg"
+              alt="微信"
+              width={20}
+              height={20}
+              className="cursor-pointer hover:opacity-80 transition-opacity md:w-6 md:h-6 dark:invert"
             />
+            <div className="absolute w-48 h-48 p-2 bottom-full right-0 mb-2 hidden group-hover:block">
+              <img
+                src="/images/xcx.jpg"
+                alt="小程序二维码"
+                width={178}
+                height={178}
+                className="border w-44 h-44 rounded-lg shadow-lg"
+              />
+            </div>
           </div>
         </div>
       </div>
