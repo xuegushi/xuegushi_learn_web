@@ -45,6 +45,8 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedDynasty, setSelectedDynasty] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [expandedSummaries, setExpandedSummaries] = useState<Set<number>>(new Set());
   const [users, setUsers] = useState<DBUser[]>([]);
 
@@ -165,6 +167,8 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
             data = data.filter((d) => `${d.title} ${d.author} ${d.dynasty}`.toLowerCase().includes(kw));
           }
           if (selectedDynasty !== 'all') data = data.filter((d) => d.dynasty === selectedDynasty);
+          if (dateFrom) data = data.filter((d) => d.createdAt >= dateFrom);
+          if (dateTo) data = data.filter((d) => d.createdAt <= dateTo + 'T23:59:59.999Z');
           const now = new Date();
           const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
           const today = data.filter((d) => d.createdAt.startsWith(todayKey));
@@ -180,6 +184,8 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               s.poem_ids.some((p) => p.title.toLowerCase().includes(kw))
             );
           }
+          if (dateFrom) filteredSums = filteredSums.filter((s) => s.createdAt >= dateFrom);
+          if (dateTo) filteredSums = filteredSums.filter((s) => s.createdAt <= dateTo + 'T23:59:59.999Z');
           setSummaries(filteredSums);
         } catch {
           // ignore
@@ -188,7 +194,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
         }
       })();
     }
-  }, [open, selectedUser, searchKeyword, selectedDynasty]);
+  }, [open, selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo]);
 
   // Compute statistics
   const stats = useMemo(() => {
@@ -273,11 +279,28 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="ml-2 px-3 py-1.5 border rounded-md text-sm bg-background"
               />
+              <input
+                type="date"
+                aria-label="开始日期"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="ml-2 px-2 py-1.5 border rounded-md text-sm bg-background"
+              />
+              <span className="text-xs text-muted-foreground">至</span>
+              <input
+                type="date"
+                aria-label="结束日期"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="px-2 py-1.5 border rounded-md text-sm bg-background"
+              />
             </div>
             <button className="ml-auto text-sm text-gray-600 hover:underline" onClick={() => {
               setSelectedUser('all');
               setSearchKeyword('');
               setSelectedDynasty('all');
+              setDateFrom('');
+              setDateTo('');
             }}>重置筛选</button>
             <button className="ml-2 text-sm text-green-600 hover:underline" data-testid="recite-records-export" onClick={async () => {
               await exportReciteRecordsJson();
