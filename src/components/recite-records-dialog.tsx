@@ -319,7 +319,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 onDateFromChange={setDateFrom}
                 onDateToChange={setDateTo}
               />
-              <Button variant="ghost" size="sm" className="shrink-0 text-gray-600" onClick={resetFilters}>
+              <Button variant="default" size="sm" className="flex-1" onClick={resetFilters}>
                 <RotateCcw className="h-3 w-3 mr-1" />
                 重置
               </Button>
