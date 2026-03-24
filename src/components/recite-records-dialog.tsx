@@ -48,6 +48,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   const [users, setUsers] = useState<DBUser[]>([]);
 
   // Data sources (loaded from IndexedDB)
+  const [loading, setLoading] = useState(false);
   const [todayDetails, setTodayDetails] = useState<ReciteDetail[]>([]);
   const [historyDetails, setHistoryDetails] = useState<ReciteDetail[]>([]);
   const [summaries, setSummaries] = useState<ReciteSummary[]>([]);
@@ -115,6 +116,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
       setTodayPage(5);
       setHistoryPage(5);
       setSummaryPage(5);
+      setLoading(true);
       (async () => {
         try {
           const details = await getAllFromDB<ReciteDetail>(STORES.RECITE_DETAIL);
@@ -133,10 +135,18 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
           setHistoryDetails(hist);
           const sums = await getAllFromDB<ReciteSummary>(STORES.RECITE_SUMMARY);
           let filteredSums = sums;
-          if (selectedUser !== 'all') filteredSums = sums.filter((s) => s.user_id === selectedUser);
+          if (selectedUser !== 'all') filteredSums = filteredSums.filter((s) => s.user_id === selectedUser);
+          if (searchKeyword.trim()) {
+            const kw = searchKeyword.toLowerCase();
+            filteredSums = filteredSums.filter((s) =>
+              s.poem_ids.some((p) => p.title.toLowerCase().includes(kw))
+            );
+          }
           setSummaries(filteredSums);
         } catch {
           // ignore
+        } finally {
+          setLoading(false);
         }
       })();
     }
@@ -198,7 +208,11 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
             <div className="p-4 grid gap-4 grid-cols-1">
               <TabsContent value="detail" className="flex-1 mt-2">
                 <div className="space-y-2">
-                  {todayDetails.slice(0, todayPage).map((d) => (
+                  {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
+                  {!loading && todayDetails.length === 0 && historyDetails.length === 0 && (
+                    <div className="text-center text-muted-foreground py-8">暂无背诵明细</div>
+                  )}
+                  {!loading && todayDetails.slice(0, todayPage).map((d) => (
                     <DetailCard key={d.id} item={d} />
                   ))}
                   {todayDetails.length > todayPage && (
@@ -225,7 +239,11 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               </TabsContent>
               <TabsContent value="summary" className="flex-1 mt-2">
                 <div className="space-y-2">
-                  {summaries.slice(0, summaryPage).map((s) => (
+                  {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
+                  {!loading && summaries.length === 0 && (
+                    <div className="text-center text-muted-foreground py-8">暂无背诵汇总</div>
+                  )}
+                  {!loading && summaries.slice(0, summaryPage).map((s) => (
                     <SummaryCard key={s.id} item={s} />
                   ))}
                 </div>
