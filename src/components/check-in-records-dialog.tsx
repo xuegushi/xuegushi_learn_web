@@ -37,9 +37,9 @@ function CalendarPanel({
   return (
     <div className="px-4 py-3">
       <Calendar
-        dateData={dateCheckInCount}
-        selectedDate={selectedDate}
-        onSelect={onSelect}
+        mode="single"
+        selected={selectedDate}
+        onSelect={(d) => d && onSelect(d)}
         className="border rounded-lg p-4 mx-auto"
       />
     </div>
@@ -630,9 +630,9 @@ export function CheckInRecordsDialog({
             {/* PC端左侧日历区域 */}
             <div className="hidden md:block w-80 flex-shrink-0 px-6 py-3 overflow-y-auto border-r">
               <Calendar
-                dateData={dateCheckInCount}
-                selectedDate={selectedDate}
-                onSelect={setSelectedDate}
+                mode="single"
+                selected={selectedDate}
+                onSelect={(d) => d && setSelectedDate(d)}
                 className="border rounded-lg p-4 h-full"
               />
             </div>

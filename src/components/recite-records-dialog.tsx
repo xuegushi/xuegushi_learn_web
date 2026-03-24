@@ -4,10 +4,81 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, ChevronDown, ChevronUp } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, ChevronDown, ChevronUp, Calendar as CalendarIcon } from "lucide-react";
 import { exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 import { useReciteRecords } from "@/hooks/use-recite-records";
 import { DynastyArr } from "@/config/poem";
+
+function RangeCalendarSelect({
+  dateFrom,
+  dateTo,
+  onDateFromChange,
+  onDateToChange,
+}: {
+  dateFrom: string;
+  dateTo: string;
+  onDateFromChange: (v: string) => void;
+  onDateToChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const formatDateDisplay = (dateStr: string) => {
+    if (!dateStr) return "选择日期";
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+  };
+
+  const formatDateValue = (date: Date | undefined) => {
+    if (!date) return "";
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  };
+
+  const handleSelect = (range: { from?: Date; to?: Date } | undefined) => {
+    if (range?.from) {
+      onDateFromChange(formatDateValue(range.from));
+    }
+    if (range?.to) {
+      onDateToChange(formatDateValue(range.to));
+    }
+    if (range?.from && range?.to) {
+      setOpen(false);
+    }
+  };
+
+  const selected = dateFrom || dateTo
+    ? {
+        from: dateFrom ? new Date(dateFrom) : undefined,
+        to: dateTo ? new Date(dateTo) : undefined,
+      }
+    : undefined;
+
+  const zhLocale = { code: "zh-CN" };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger>
+        <Button variant="outline" size="sm" className="w-56 md:w-64 text-xs justify-start font-normal">
+          <CalendarIcon className="mr-1 h-3 w-3" />
+          {dateFrom || dateTo
+            ? `${formatDateDisplay(dateFrom)}${dateTo ? ` - ${formatDateDisplay(dateTo)}` : ""}`
+            : "选择日期区间"}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="range"
+          selected={selected}
+          onSelect={handleSelect}
+          numberOfMonths={2}
+          locale={zhLocale}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export interface DBUser {
   id: number;
@@ -242,20 +313,11 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   ))}
                 </SelectContent>
               </Select>
-              <input
-                type="date"
-                aria-label="开始日期"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="px-2 py-1.5 border rounded-md text-sm bg-background shrink-0"
-              />
-              <span className="text-xs text-muted-foreground shrink-0">至</span>
-              <input
-                type="date"
-                aria-label="结束日期"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="px-2 py-1.5 border rounded-md text-sm bg-background shrink-0"
+              <RangeCalendarSelect
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+                onDateFromChange={setDateFrom}
+                onDateToChange={setDateTo}
               />
               <button className="text-sm text-gray-600 hover:underline shrink-0" onClick={resetFilters}>重置</button>
             </div>
