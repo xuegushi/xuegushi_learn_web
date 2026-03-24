@@ -123,6 +123,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   const [detailSort, setDetailSort] = useState<string>("newest");
   const [summarySort, setSummarySort] = useState<string>("newest");
   const [expandedSummaries, setExpandedSummaries] = useState<Set<number>>(new Set());
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   const filters = useMemo(() => ({ selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort, summarySort }), [selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort, summarySort]);
   const { loading, users, todayDetails, historyDetails, summaries, stats, todayPage, historyPage, summaryPage, setTodayPage, setHistoryPage, setSummaryPage } = useReciteRecords(open, filters);
@@ -240,12 +241,16 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-4xl max-h-[85vh] flex flex-col">
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-4xl max-h-[85vh] flex flex-col min-h-[70vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold text-slate-700 dark:text-slate-100" data-testid="recite-records-header">背诵记录</DialogTitle>
+          <DialogTitle
+            className="text-2xl font-semibold text-slate-700 dark:text-slate-100"
+            data-testid="recite-records-header">
+            背诵记录
+          </DialogTitle>
         </DialogHeader>
         <div className="border-b border-gray-200 dark:border-gray-700" />
-        <ScrollArea className="flex-1 min-h-[60vh]">
+        <ScrollArea className="h-120 max-h-[70vh]">
           {!loading && (stats.totalCount > 0 || stats.summaryCount > 0) && (
             <div className="flex flex-wrap gap-4 px-4 py-3 bg-muted/30 rounded-lg mb-2">
               <div className="flex items-center gap-1.5 text-sm">
@@ -264,17 +269,22 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 <>
                   <div className="flex items-center gap-1.5 text-sm">
                     <CircleCheck className="h-4 w-4 text-green-500" />
-                    <span className="font-semibold text-green-600">{stats.passCount}</span>
+                    <span className="font-semibold text-green-600">
+                      {stats.passCount}
+                    </span>
                     <span className="text-muted-foreground">掌握</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-sm">
                     <CircleX className="h-4 w-4 text-red-500" />
-                    <span className="font-semibold text-red-600">{stats.unpassCount}</span>
+                    <span className="font-semibold text-red-600">
+                      {stats.unpassCount}
+                    </span>
                     <span className="text-muted-foreground">未掌握</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-sm ml-auto">
                     <span className="text-muted-foreground">掌握率</span>
-                    <span className={`font-semibold ${stats.passRate >= 70 ? 'text-green-600' : stats.passRate >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    <span
+                      className={`font-semibold ${stats.passRate >= 70 ? "text-green-600" : stats.passRate >= 40 ? "text-yellow-600" : "text-red-600"}`}>
                       {stats.passRate}%
                     </span>
                   </div>
@@ -283,11 +293,23 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
             </div>
           )}
           <Tabs defaultValue="detail" data-testid="recite-records-tabs">
-            <TabsList className="grid w-full grid-cols-2" data-testid="recite-records-tablist">
-              <TabsTrigger value="detail" data-testid="recite-records-detail-tab">背诵明细</TabsTrigger>
-              <TabsTrigger value="summary" data-testid="recite-records-summary-tab">背诵汇总</TabsTrigger>
+            <TabsList
+              className="grid w-full grid-cols-2"
+              data-testid="recite-records-tablist">
+              <TabsTrigger
+                value="detail"
+                data-testid="recite-records-detail-tab">
+                背诵明细
+              </TabsTrigger>
+              <TabsTrigger
+                value="summary"
+                data-testid="recite-records-summary-tab">
+                背诵汇总
+              </TabsTrigger>
             </TabsList>
-            <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 overflow-x-auto" data-testid="recite-records-filter-bar">
+            <div
+              className="flex flex-wrap items-center gap-2 px-2 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 overflow-x-auto"
+              data-testid="recite-records-filter-bar">
               <input
                 type="text"
                 aria-label="搜索诗词/诗人"
@@ -296,25 +318,40 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 className="px-3 py-1.5 border rounded-md text-sm bg-background shrink-0"
                 placeholder="搜索诗词/诗人"
               />
-              <Select value={selectedUser} onValueChange={(v) => v !== null && setSelectedUser(v)}>
+              <Select
+                value={selectedUser}
+                onValueChange={(v) => v !== null && setSelectedUser(v)}>
                 <SelectTrigger className="w-28 md:w-32 shrink-0">
-                  <SelectValue>{selectedUser === 'all' ? '全部用户' : users.find(u => u.id.toString() === selectedUser)?.user_name || selectedUser}</SelectValue>
+                  <SelectValue>
+                    {selectedUser === "all"
+                      ? "全部用户"
+                      : users.find((u) => u.id.toString() === selectedUser)
+                          ?.user_name || selectedUser}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部用户</SelectItem>
                   {users.map((u) => (
-                    <SelectItem key={u.id} value={u.id.toString()}>{u.user_name}</SelectItem>
+                    <SelectItem key={u.id} value={u.id.toString()}>
+                      {u.user_name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={selectedDynasty} onValueChange={(v) => setSelectedDynasty(v ?? "all")}>
+              <Select
+                value={selectedDynasty}
+                onValueChange={(v) => setSelectedDynasty(v ?? "all")}>
                 <SelectTrigger className="w-24 md:w-28 shrink-0">
-                  <SelectValue>{selectedDynasty === 'all' ? '全部朝代' : selectedDynasty}</SelectValue>
+                  <SelectValue>
+                    {selectedDynasty === "all" ? "全部朝代" : selectedDynasty}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部朝代</SelectItem>
                   {DynastyArr.map((d) => (
-                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -324,7 +361,11 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 onDateFromChange={setDateFrom}
                 onDateToChange={setDateTo}
               />
-              <Button variant="default" size="sm" className="flex-1 cursor-pointer" onClick={resetFilters}>
+              <Button
+                variant="default"
+                size="sm"
+                className="flex-1 cursor-pointer"
+                onClick={resetFilters}>
                 <RotateCcw className="h-3 w-3 mr-1" />
                 重置
               </Button>
@@ -332,7 +373,9 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
             <TabsContent value="detail" className="p-0">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs text-muted-foreground">排序</span>
-                <Select value={detailSort} onValueChange={(v) => v && setDetailSort(v)}>
+                <Select
+                  value={detailSort}
+                  onValueChange={(v) => v && setDetailSort(v)}>
                   <SelectTrigger className="w-24 text-xs shrink-0">
                     <SelectValue>{detailSortLabel}</SelectValue>
                   </SelectTrigger>
@@ -342,26 +385,38 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   </SelectContent>
                 </Select>
                 <div className="ml-auto flex gap-2">
-                  <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50 cursor-pointer" data-testid="recite-records-export" onClick={() => exportReciteRecordsJson()}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-green-600 border-green-200 hover:bg-green-50 cursor-pointer"
+                    data-testid="recite-records-export"
+                    onClick={() => exportReciteRecordsJson()}>
                     <Download className="h-3 w-3 mr-1" />
                     导出
                   </Button>
-                  <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 cursor-pointer" data-testid="recite-records-clear" onClick={async () => {
-                    if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
-                      await clearReciteRecords();
-                      onOpenChange(false);
-                      setTimeout(() => onOpenChange(true), 0);
-                    }
-                  }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 border-red-200 hover:bg-red-50 cursor-pointer"
+                    data-testid="recite-records-clear"
+                    onClick={() => setClearConfirmOpen(true)}>
                     <Trash2 className="h-3 w-3 mr-1" />
                     清空
                   </Button>
                 </div>
               </div>
-              {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
-              {!loading && todayDetails.length === 0 && historyDetails.length === 0 && (
-                <div className="text-center text-muted-foreground py-8">暂无背诵明细</div>
+              {loading && (
+                <div className="text-center text-muted-foreground py-8">
+                  加载中...
+                </div>
               )}
+              {!loading &&
+                todayDetails.length === 0 &&
+                historyDetails.length === 0 && (
+                  <div className="text-center text-muted-foreground py-8">
+                    暂无背诵明细
+                  </div>
+                )}
               {!loading && (
                 <>
                   <div className="grid grid-cols-3 gap-2">
@@ -370,8 +425,13 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                     ))}
                   </div>
                   {todayDetails.length > todayPage && (
-                    <div className="flex justify-center mt-2">
-                      <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-today" onClick={() => setTodayPage(p => p + 9)}>
+                    <div className="flex justify-center mt-4">
+                      <Button
+                        variant="default"
+                        size="default"
+                        className="cursor-pointer px-5"
+                        data-testid="recite-records-load-more-today"
+                        onClick={() => setTodayPage((p) => p + 9)}>
                         查看更多
                       </Button>
                     </div>
@@ -387,8 +447,15 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                     ))}
                   </div>
                   {historyDetails.length > historyPage && (
-                    <div className="flex justify-center mt-2">
-                      <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-history" onClick={() => setHistoryPage(p => p + 9)}>查看更多</Button>
+                    <div className="flex justify-center mt-4">
+                      <Button
+                        variant="default"
+                        size="default"
+                        className="px-5 cursor-pointer"
+                        data-testid="recite-records-load-more-history"
+                        onClick={() => setHistoryPage((p) => p + 9)}>
+                        查看更多
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -397,7 +464,9 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
             <TabsContent value="summary" className="p-4 space-y-2">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs text-muted-foreground">排序</span>
-                <Select value={summarySort} onValueChange={(v) => v && setSummarySort(v)}>
+                <Select
+                  value={summarySort}
+                  onValueChange={(v) => v && setSummarySort(v)}>
                   <SelectTrigger className="w-24 text-xs shrink-0">
                     <SelectValue>{summarySortLabel}</SelectValue>
                   </SelectTrigger>
@@ -408,25 +477,33 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   </SelectContent>
                 </Select>
                 <div className="ml-auto flex gap-2">
-                  <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50 cursor-pointer" onClick={() => exportReciteRecordsJson()}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-green-600 border-green-200 hover:bg-green-50 cursor-pointer"
+                    onClick={() => exportReciteRecordsJson()}>
                     <Download className="h-3 w-3 mr-1" />
                     导出
                   </Button>
-                  <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 cursor-pointer" onClick={async () => {
-                    if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
-                      await clearReciteRecords();
-                      onOpenChange(false);
-                      setTimeout(() => onOpenChange(true), 0);
-                    }
-                  }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 border-red-200 hover:bg-red-50 cursor-pointer"
+                    onClick={() => setClearConfirmOpen(true)}>
                     <Trash2 className="h-3 w-3 mr-1" />
                     清空
                   </Button>
                 </div>
               </div>
-              {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
+              {loading && (
+                <div className="text-center text-muted-foreground py-8">
+                  加载中...
+                </div>
+              )}
               {!loading && summaries.length === 0 && (
-                <div className="text-center text-muted-foreground py-8">暂无背诵汇总</div>
+                <div className="text-center text-muted-foreground py-8">
+                  暂无背诵汇总
+                </div>
               )}
               {!loading && (
                 <div className="grid grid-cols-2 gap-2">
@@ -437,7 +514,12 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               )}
               {summaries.length > summaryPage && (
                 <div className="flex justify-center mt-2">
-                  <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-summaries" onClick={() => setSummaryPage(p => p + 9)}>
+                  <Button
+                    variant="default"
+                    size="default"
+                    className="px-5 cursor-pointer"
+                    data-testid="recite-records-load-more-summaries"
+                    onClick={() => setSummaryPage((p) => p + 9)}>
                     查看更多
                   </Button>
                 </div>
@@ -446,6 +528,32 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
           </Tabs>
         </ScrollArea>
       </DialogContent>
+      <Dialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>确认清空</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground py-4">
+            确定要清空所有背诵记录吗？此操作不可恢复。
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setClearConfirmOpen(false)}>
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={async () => {
+                await clearReciteRecords();
+                setClearConfirmOpen(false);
+                onOpenChange(false);
+                setTimeout(() => onOpenChange(true), 0);
+              }}>
+              确认清空
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
