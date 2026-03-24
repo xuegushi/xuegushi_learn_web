@@ -193,8 +193,8 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               <TabsTrigger value="detail" data-testid="recite-records-detail-tab">背诵明细</TabsTrigger>
               <TabsTrigger value="summary" data-testid="recite-records-summary-tab">背诵汇总</TabsTrigger>
             </TabsList>
-            <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95" data-testid="recite-records-filter-bar">
-              <div className="flex-1 flex items-center gap-2">
+            <div className="flex flex-nowrap items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 overflow-x-auto" data-testid="recite-records-filter-bar">
+              <div className="flex flex-nowrap items-center gap-2 shrink-0">
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">筛选</span>
                 <DynastySelect value={selectedDynasty} onValueChange={setSelectedDynasty} />
                 <Select value={selectedUser} onValueChange={(v) => v !== null && setSelectedUser(v)}>
