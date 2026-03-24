@@ -53,7 +53,7 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
       let data = [...details];
 
       if (filters.selectedUser !== 'all') {
-        data = data.filter((d) => d.user_id === filters.selectedUser);
+        data = data.filter((d) => String(d.user_id) === filters.selectedUser);
       }
       if (filters.searchKeyword.trim()) {
         const kw = filters.searchKeyword.toLowerCase();
@@ -83,7 +83,7 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
       const sums = await getAllFromDB<ReciteSummary>(STORES.RECITE_SUMMARY);
       let filteredSums = [...sums];
       if (filters.selectedUser !== 'all') {
-        filteredSums = filteredSums.filter((s) => s.user_id === filters.selectedUser);
+        filteredSums = filteredSums.filter((s) => String(s.user_id) === filters.selectedUser);
       }
       if (filters.searchKeyword.trim()) {
         const kw = filters.searchKeyword.toLowerCase();

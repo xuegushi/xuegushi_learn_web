@@ -132,7 +132,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
       if (stored) {
         try {
           const user = JSON.parse(stored);
-          if (user?.user_id && users.some(u => u.id.toString() === user.user_id.toString())) {
+          if (user?.user_id && users.some(u => u.id === user.user_id)) {
             setSelectedUser(user.user_id.toString());
           }
         } catch { /* ignore */ }
