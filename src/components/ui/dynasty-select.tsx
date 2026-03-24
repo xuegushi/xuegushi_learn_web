@@ -13,7 +13,7 @@ const DYNASTY_OPTIONS: Dyn[] = [
 export function DynastySelect({ value, onValueChange }: { value: string; onValueChange: (v: string) => void }) {
   return (
     <Select value={value} onValueChange={(v) => onValueChange(v ?? "all")}>
-      <SelectTrigger className="w-full">
+      <SelectTrigger>
         <SelectValue>{DYNASTY_OPTIONS.find((d) => d.value === value)?.label ?? "全部朝代"}</SelectValue>
       </SelectTrigger>
       <SelectContent>

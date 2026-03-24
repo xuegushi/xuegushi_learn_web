@@ -195,9 +195,16 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
             </TabsList>
             <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 overflow-x-auto" data-testid="recite-records-filter-bar">
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap shrink-0">筛选</span>
-              <DynastySelect value={selectedDynasty} onValueChange={setSelectedDynasty} />
+              <input
+                type="text"
+                aria-label="搜索诗词/诗人"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                className="px-3 py-1.5 border rounded-md text-sm bg-background shrink-0"
+                placeholder="搜索诗词/诗人"
+              />
               <Select value={selectedUser} onValueChange={(v) => v !== null && setSelectedUser(v)}>
-                <SelectTrigger className="w-40 md:w-48">
+                <SelectTrigger className="w-40 md:w-48 shrink-0">
                   <SelectValue>{selectedUser === 'all' ? '全部用户' : users.find(u => u.id.toString() === selectedUser)?.user_name || selectedUser}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -207,19 +214,13 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   ))}
                 </SelectContent>
               </Select>
-              <input
-                type="text"
-                aria-label="搜索诗词/诗人"
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                className="px-3 py-1.5 border rounded-md text-sm bg-background"
-              />
+              <DynastySelect value={selectedDynasty} onValueChange={setSelectedDynasty} />
               <input
                 type="date"
                 aria-label="开始日期"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="px-2 py-1.5 border rounded-md text-sm bg-background"
+                className="px-2 py-1.5 border rounded-md text-sm bg-background shrink-0"
               />
               <span className="text-xs text-muted-foreground shrink-0">至</span>
               <input
@@ -227,7 +228,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 aria-label="结束日期"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="px-2 py-1.5 border rounded-md text-sm bg-background"
+                className="px-2 py-1.5 border rounded-md text-sm bg-background shrink-0"
               />
               <Select value={detailSort} onValueChange={(v) => v && setDetailSort(v)}>
                 <SelectTrigger className="w-24 text-xs py-1 shrink-0">
