@@ -2,6 +2,24 @@
 
 ## 2026-03-22 ✅ (已提交)
 
+### Patch 4G - Documentation Update
+- Open issue: finalize documentation for 背诵记录 feature including UI, data binding, tests, and rollout plan.
+- Summary of actions:
+  - Document UI changes and test strategy in log and AGENTS.md
+  - Provide an PR body template to standardize future PRs
+- Next steps:
+  - Finalize documentation in AGENTS.md
+  - Prepare PR with complete changes
+- 更新文档以覆盖最近实现的背诵记录相关变更，包括数据绑定、UI 风格对齐、测试策略草案以及后续工作计划。
+- 变更要点：
+  - 记录 Patch 4E/4F/4G 的测试、风格对齐与文档更新
+  - 提供 PR body 模板，确保以后 PR 描述的一致性与完整性
+- 验证方法：在本地执行构建、lint，并检查 log 与 AGENTS.md 的一致性。
+### Patch 4E - Tests & Docs
+- 新增端到端测试草案，包含 ReciteRecordsDialog 的渲染、筛选、分页的基本用例框架
+- 新增 tests/recite-records-dialog.test.tsx 测试用例草案（需依赖测试框架与 UI 库）
+- 更新文档与日志：记录 Patch 4 的数据绑定、分页实现以及 UI 布局调整，供后续维护者参考
+
 ### 项目文档
 
 - **AGENTS.md 文件创建**

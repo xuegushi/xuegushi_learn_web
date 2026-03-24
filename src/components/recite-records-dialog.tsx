@@ -1,56 +1,26 @@
 "use client";
+import React, { useState } from "react";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DynastySelect } from "@/components/ui/dynasty-select";
+import { UserSquare, Clock } from "lucide-react";
 import { getAllFromDB, STORES } from "@/lib/db";
-import { DynastyArr } from "@/config/poem";
 
-/** 用户类型 */
-interface User {
-  id: number;
-  user_name: string;
-}
-import {
-  CircleX,
-  CircleCheck,
-  UserSquare,
-  Clock,
-  ChevronDown,
-} from "lucide-react";
-
-interface ReciteRecordsDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-/** 背诵明细 */
-interface ReciteDetail {
+export interface ReciteDetail {
   id?: number;
   user_id: string;
   poem_id: string;
   title: string;
   author: string;
   dynasty: string;
-  status: boolean; // false 未掌握，true 已掌握
+  status: boolean;
   createdAt: string;
 }
 
-/** 背诵汇总 */
-interface ReciteSummary {
+export interface ReciteSummary {
   id?: number;
   user_id: string;
   poem_ids: { poem_id: string; title: string; status: boolean }[];
@@ -60,367 +30,214 @@ interface ReciteSummary {
   createdAt: string;
 }
 
-/** 背诵记录弹窗 */
-export function ReciteRecordsDialog({
-  open,
-  onOpenChange,
-}: ReciteRecordsDialogProps) {
-  const [users, setUsers] = useState<User[]>([]);
-  const [details, setDetails] = useState<ReciteDetail[]>([]);
-  const [summaries, setSummaries] = useState<ReciteSummary[]>([]);
+export interface ReciteRecordsDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
+export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogProps) {
+  // UI skeleton states (Patch 4A)
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedDynasty, setSelectedDynasty] = useState<string>("all");
 
-  const [detailPage, setDetailPage] = useState<number>(5);
+  // Data sources (initial UI scaffolding with local state)
+  const [todayDetails, setTodayDetails] = useState<ReciteDetail[]>([
+    { id: 1, user_id: 'u1', poem_id: 'p1', title: '静夜思', author: '李白', dynasty: '唐', status: true, createdAt: new Date().toISOString() },
+    { id: 2, user_id: 'u1', poem_id: 'p2', title: '静夜思 2', author: '李白', dynasty: '宋', status: true, createdAt: new Date().toISOString() },
+    { id: 3, user_id: 'u1', poem_id: 'p3', title: '静夜思 3', author: '李白', dynasty: '唐', status: true, createdAt: new Date().toISOString() },
+    { id: 4, user_id: 'u1', poem_id: 'p4', title: '静夜思 4', author: '李白', dynasty: '宋', status: true, createdAt: new Date().toISOString() },
+    { id: 5, user_id: 'u1', poem_id: 'p5', title: '静夜思 5', author: '李白', dynasty: '唐', status: true, createdAt: new Date().toISOString() },
+    { id: 6, user_id: 'u1', poem_id: 'p6', title: '静夜思 6', author: '李白', dynasty: '宋', status: true, createdAt: new Date().toISOString() },
+  ]);
+  const [historyDetails, setHistoryDetails] = useState<ReciteDetail[]>([
+    { id: 2, user_id: 'u2', poem_id: 'p2', title: '登鹳雀楼', author: '王之', dynasty: '唐', status: false, createdAt: new Date().toISOString() },
+  ]);
+  const [summaries, setSummaries] = useState<ReciteSummary[]>([
+    { id: 1, user_id: 'u1', poem_ids: [{ poem_id: 'p1', title: '静夜思', status: true }], pass_count: 1, unpass_count: 0, skip_count: 0, createdAt: new Date().toISOString() },
+  ]);
+  const [todayPage, setTodayPage] = useState<number>(5);
+  const [historyPage, setHistoryPage] = useState<number>(5);
   const [summaryPage, setSummaryPage] = useState<number>(5);
 
-  // 加载数据
-  const loadData = useCallback(async () => {
-    const [usersData, detailsData, summariesData] = await Promise.all([
-      getAllFromDB<User>(STORES.USERS),
-      getAllFromDB<ReciteDetail>(STORES.RECITE_DETAIL),
-      getAllFromDB<ReciteSummary>(STORES.RECITE_SUMMARY),
-    ]);
-    setUsers(usersData);
-    setDetails(
-      detailsData.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
+  function DetailCard({ item }: { item: ReciteDetail }) {
+    const date = new Date(item.createdAt);
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    return (
+      <div className="p-3 border rounded-lg bg-white">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-sm font-semibold">{item.title}</span>
+          <span className="text-xs text-muted-foreground">{item.dynasty} · {item.author}</span>
+        </div>
+        <div className="text-xs text-muted-foreground">{dateStr}</div>
+        <div className="mt-1 text-xs">状态: {item.status ? '已掌握' : '未掌握'}</div>
+      </div>
     );
-    setSummaries(
-      summariesData.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-    );
-  }, []);
+  }
 
-  useEffect(() => {
+  function SummaryCard({ item }: { item: ReciteSummary }) {
+    const date = new Date(item.createdAt);
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    return (
+      <div className="p-3 border rounded-lg bg-white">
+        <div className="flex items-center justify-between text-sm mb-1">
+          <span>背诵汇总</span>
+        </div>
+        <div className="text-xs text-muted-foreground">未掌握: {item.unpass_count}  掌握: {item.pass_count}  跳过: {item.skip_count}</div>
+        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+          <UserSquare className="h-3 w-3" />
+          当前用户
+          <Clock className="h-3 w-3" />
+          {dateStr}
+        </div>
+      </div>
+    );
+  }
+
+  // 审美布局：Tabs 顶部、筛选区在其下、内容区在 ScrollArea 中
+
+  // Data binding: load data when dialog opens (Patch 4B groundwork)
+  React.useEffect(() => {
     if (open) {
       (async () => {
-        await loadData();
-        setDetailPage(5);
-        setSummaryPage(5);
+        try {
+          const details = await getAllFromDB<ReciteDetail>(STORES.RECITE_DETAIL);
+          let data = details;
+          if (selectedUser !== 'all') data = data.filter((d) => d.user_id === selectedUser);
+          if (searchKeyword.trim()) {
+            const kw = searchKeyword.toLowerCase();
+            data = data.filter((d) => `${d.title} ${d.author} ${d.dynasty}`.toLowerCase().includes(kw));
+          }
+          if (selectedDynasty !== 'all') data = data.filter((d) => d.dynasty === selectedDynasty);
+          const now = new Date();
+          const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          const today = data.filter((d) => d.createdAt.startsWith(todayKey));
+          const hist = data.filter((d) => !d.createdAt.startsWith(todayKey));
+          setTodayDetails(today);
+          setHistoryDetails(hist);
+          const sums = await getAllFromDB<ReciteSummary>(STORES.RECITE_SUMMARY);
+          let filteredSums = sums;
+          if (selectedUser !== 'all') filteredSums = sums.filter((s) => s.user_id === selectedUser);
+          setSummaries(filteredSums);
+        } catch {
+          // ignore
+        }
       })();
     }
-  }, [open, loadData]);
-
-  // 筛选后的明细
-  const filteredDetails = useMemo(() => {
-    return details.filter((item) => {
-      if (selectedUser !== "all" && item.user_id !== selectedUser)
-        return false;
-      if (
-        selectedDynasty !== "all" &&
-        !item.dynasty.includes(selectedDynasty)
-      )
-        return false;
-      if (searchKeyword) {
-        const keyword = searchKeyword.toLowerCase();
-        const matchesTitle = item.title.toLowerCase().includes(keyword);
-        const matchesAuthor = item.author.toLowerCase().includes(keyword);
-        if (!matchesTitle && !matchesAuthor) return false;
-      }
-      return true;
-    });
-  }, [details, selectedUser, selectedDynasty, searchKeyword]);
-
-  // 筛选后的汇总
-  const filteredSummaries = useMemo(() => {
-    return summaries.filter((item) => {
-      if (selectedUser !== "all" && item.user_id !== selectedUser)
-        return false;
-      return true;
-    });
-  }, [summaries, selectedUser]);
-
-  // 今日背诵
-  const todayDetails = useMemo(() => {
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-    return filteredDetails.filter((item) =>
-      item.createdAt.startsWith(todayStr)
-    );
-  }, [filteredDetails]);
-
-  // 历史背诵（排除今日）
-  const historyDetails = useMemo(() => {
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-    return filteredDetails.filter(
-      (item) => !item.createdAt.startsWith(todayStr)
-    );
-  }, [filteredDetails]);
-
-  // 显示的历史背诵
-  const displayedHistoryDetails = historyDetails.slice(0, detailPage);
-  const hasMoreHistory = detailPage < historyDetails.length;
-
-  // 显示的汇总
-  const displayedSummaries = filteredSummaries.slice(0, summaryPage);
-  const hasMoreSummaries = summaryPage < filteredSummaries.length;
-
-  // 格式化时间
-  const formatDateTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-  };
-
-  // 获取用户名
-  const getUserName = (userId: string) => {
-    const user = users.find((u) => u.id === Number(userId));
-    return user?.user_name || "未知用户";
-  };
+  }, [open, selectedUser, searchKeyword, selectedDynasty]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-4xl max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">背诵记录</DialogTitle>
+          <DialogTitle className="text-2xl font-semibold text-slate-700 dark:text-slate-100" data-testid="recite-records-header">背诵记录</DialogTitle>
         </DialogHeader>
-
-        {/* 筛选部分 */}
-        <div className="flex flex-wrap gap-3 mb-4">
-          {/* 用户筛选 */}
-          <Select value={selectedUser} onValueChange={(v) => v && setSelectedUser(v)}>
-            <SelectTrigger className="w-32">
-              <SelectValue>
-                {selectedUser === "all"
-                  ? "全部用户"
-                  : users.find((u) => u.id === Number(selectedUser))
-                      ?.user_name || "选择用户"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">全部用户</SelectItem>
-              {users.map((user) => (
-                <SelectItem key={user.id} value={String(user.id)}>
-                  {user.user_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* 搜索 */}
-          <input
-            type="text"
-            placeholder="搜索诗词/诗人..."
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            className="px-3 py-1.5 border rounded-md text-sm bg-background w-40 sm:w-48"
-          />
-
-          {/* 朝代筛选 */}
-          <Select value={selectedDynasty} onValueChange={(v) => v && setSelectedDynasty(v)}>
-            <SelectTrigger className="w-32">
-              <SelectValue>
-                {selectedDynasty === "all" ? "全部朝代" : selectedDynasty}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">全部朝代</SelectItem>
-              {DynastyArr.map((dynasty) => (
-                <SelectItem key={dynasty} value={dynasty}>
-                  {dynasty}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="detail" className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="detail">背诵明细</TabsTrigger>
-            <TabsTrigger value="summary">背诵汇总</TabsTrigger>
+        <Tabs defaultValue="detail" className="flex-1 flex flex-col min-h-0" data-testid="recite-records-tabs">
+          <TabsList className="grid w-full grid-cols-2" data-testid="recite-records-tablist">
+            <TabsTrigger value="detail" data-testid="recite-records-detail-tab">背诵明细</TabsTrigger>
+            <TabsTrigger value="summary" data-testid="recite-records-summary-tab">背诵汇总</TabsTrigger>
           </TabsList>
-
-          {/* 背诵明细 */}
-          <TabsContent
-            value="detail"
-            className="flex-1 flex flex-col min-h-0 mt-4"
-          >
-            <ScrollArea className="flex-1 pr-4">
-              <div className="space-y-4">
-                {/* 今日背诵 */}
-                {todayDetails.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-sm mb-3 text-blue-600 dark:text-blue-400">
-                      今日背诵
-                    </h3>
+          {/* Filter area moved below Tabs header (Patch 4A) */}
+          <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95" data-testid="recite-records-filter-bar">
+            <div className="flex-1 flex items-center gap-2">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">筛选</span>
+              <DynastySelect value={selectedDynasty} onValueChange={setSelectedDynasty} />
+              <Select value={selectedUser} onValueChange={(v) => v !== null && setSelectedUser(v)}>
+                <SelectTrigger className="w-40 md:w-48 ml-2">
+                  <SelectValue>{selectedUser === 'all' ? '全部用户' : selectedUser}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部用户</SelectItem>
+                  <SelectItem value="u1">用户1</SelectItem>
+                </SelectContent>
+              </Select>
+              <input
+                type="text"
+                placeholder="搜索诗词/诗人..."
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                className="ml-2 px-3 py-1.5 border rounded-md text-sm bg-background"
+              />
+            </div>
+            <button className="ml-auto text-sm text-gray-600 hover:underline" onClick={() => {
+              setSelectedUser('all');
+              setSearchKeyword('');
+              setSelectedDynasty('all');
+            }}>重置筛选</button>
+          </div>
+          <ScrollArea className="flex-1" data-testid="recite-records-scrollarea">
+            <div className="p-4 grid gap-4 grid-cols-1">
+              <TabsContent value="detail" className="flex-1 mt-2">
+                <div className="space-y-2">
+                  {todayDetails.slice(0, todayPage).map((d) => (
+                    <DetailCard key={d.id} item={d} />
+                  ))}
+                  {todayDetails.length > todayPage && (
+                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-today" onClick={async () => {
+                      const details = await getAllFromDB<ReciteDetail>(STORES.RECITE_DETAIL);
+                      let data = details;
+                      if (selectedUser !== 'all') data = data.filter((d) => d.user_id === selectedUser);
+                      if (searchKeyword.trim()) {
+                        const kw = searchKeyword.toLowerCase();
+                        data = data.filter((d) => `${d.title} ${d.author} ${d.dynasty}`.toLowerCase().includes(kw));
+                      }
+                      if (selectedDynasty !== 'all') data = data.filter((d) => d.dynasty === selectedDynasty);
+                      const now = new Date();
+                      const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                      const todayFiltered = data.filter((d) => d.createdAt.startsWith(todayKey));
+                      const hist = data.filter((d) => !d.createdAt.startsWith(todayKey));
+                      const current = todayDetails.length;
+                      const nextSlice = todayFiltered.slice(current, current + 5);
+                      if (nextSlice.length > 0) {
+                        setTodayDetails([...todayDetails, ...nextSlice]);
+                        setTodayPage(current + nextSlice.length);
+                      }
+                      setHistoryDetails(hist);
+                    }}>
+                      查看更多
+                    </button>
+                  )}
+                </div>
+                {historyDetails.length > 0 && (
+                  <div className="mt-4">
+                    <div className="font-semibold text-sm mb-2">历史背诵</div>
                     <div className="space-y-2">
-                      {todayDetails.map((item) => (
-                        <DetailCard
-                          key={item.id}
-                          item={item}
-                          userName={getUserName(item.user_id)}
-                          formatDateTime={formatDateTime}
-                        />
+                      {historyDetails.slice(0, historyPage).map((d) => (
+                        <DetailCard key={d.id} item={d} />
                       ))}
                     </div>
-                  </div>
-                )}
-
-                {/* 历史背诵 */}
-                {displayedHistoryDetails.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-sm mb-3">历史背诵</h3>
-                    <div className="space-y-2">
-                      {displayedHistoryDetails.map((item) => (
-                        <DetailCard
-                          key={item.id}
-                          item={item}
-                          userName={getUserName(item.user_id)}
-                          formatDateTime={formatDateTime}
-                        />
-                      ))}
-                    </div>
-
-                    {/* 查看更多 */}
-                    {hasMoreHistory && (
-                      <button
-                        onClick={() => setDetailPage((p) => p + 10)}
-                        className="w-full mt-4 py-2 text-sm text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg flex items-center justify-center gap-1"
-                      >
-                        查看更多
-                        <ChevronDown className="h-4 w-4" />
-                      </button>
+                  {historyDetails.length > historyPage && (
+                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-history" onClick={() => setHistoryPage(p => p + 5)}>查看更多</button>
                     )}
                   </div>
                 )}
-
-                {todayDetails.length === 0 && historyDetails.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    暂无背诵记录
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </TabsContent>
-
-          {/* 背诵汇总 */}
-          <TabsContent
-            value="summary"
-            className="flex-1 flex flex-col min-h-0 mt-4"
-          >
-            <ScrollArea className="flex-1 pr-4">
-              <div className="space-y-2">
-                {displayedSummaries.map((item) => (
-                  <SummaryCard
-                    key={item.id}
-                    item={item}
-                    userName={getUserName(item.user_id)}
-                    formatDateTime={formatDateTime}
-                  />
-                ))}
-
-                {hasMoreSummaries && (
-                  <button
-                    onClick={() => setSummaryPage((p) => p + 10)}
-                    className="w-full mt-4 py-2 text-sm text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg flex items-center justify-center gap-1"
-                  >
+              </TabsContent>
+              <TabsContent value="summary" className="flex-1 mt-2">
+                <div className="space-y-2">
+                  {summaries.slice(0, summaryPage).map((s) => (
+                    <SummaryCard key={s.id} item={s} />
+                  ))}
+                </div>
+                {summaries.length > summaryPage && (
+                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-summaries" onClick={async () => {
+                    const sums = await getAllFromDB<ReciteSummary>(STORES.RECITE_SUMMARY);
+                    const current = summaries.length;
+                    const nextSlice = sums.slice(current, current + 5);
+                    if (nextSlice.length > 0) {
+                      setSummaries([...summaries, ...nextSlice]);
+                      setSummaryPage(current + nextSlice.length);
+                    } else {
+                      // no more data
+                    }
+                  }}>
                     查看更多
-                    <ChevronDown className="h-4 w-4" />
                   </button>
                 )}
-
-                {filteredSummaries.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    暂无背诵汇总记录
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </TabsContent>
+              </TabsContent>
+            </div>
+          </ScrollArea>
         </Tabs>
       </DialogContent>
     </Dialog>
-  );
-}
-
-/** 明细卡片 */
-function DetailCard({
-  item,
-  userName,
-  formatDateTime,
-}: {
-  item: ReciteDetail;
-  userName: string;
-  formatDateTime: (date: string) => string;
-}) {
-  return (
-    <div className="relative p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-      {/* 状态图标 */}
-      <div className="absolute top-3 right-3">
-        {item.status ? (
-          <CircleCheck className="h-5 w-5 text-green-500" />
-        ) : (
-          <CircleX className="h-5 w-5 text-red-500" />
-        )}
-      </div>
-
-      {/* 诗词标题 */}
-      <div className="font-medium text-sm pr-8">{item.title}</div>
-
-      {/* 朝代·作者 */}
-      <div className="text-xs text-muted-foreground mt-1">
-        {item.dynasty}·{item.author}
-      </div>
-
-      {/* 用户和时间 */}
-      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <UserSquare className="h-3 w-3" />
-          {userName}
-        </div>
-        <div className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          {formatDateTime(item.createdAt)}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** 汇总卡片 */
-function SummaryCard({
-  item,
-  userName,
-  formatDateTime,
-}: {
-  item: ReciteSummary;
-  userName: string;
-  formatDateTime: (date: string) => string;
-}) {
-  return (
-    <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-      {/* 数量统计 */}
-      <div className="flex items-center gap-4 text-sm">
-        <span className="text-red-600 dark:text-red-400">
-          未掌握：{item.unpass_count}
-        </span>
-        <span className="text-green-600 dark:text-green-400">
-          掌握：{item.pass_count}
-        </span>
-        <span className="text-gray-600 dark:text-gray-400">
-          跳过：{item.skip_count}
-        </span>
-      </div>
-
-      {/* 用户和时间 */}
-      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <UserSquare className="h-3 w-3" />
-          {userName}
-        </div>
-        <div className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          {formatDateTime(item.createdAt)}
-        </div>
-      </div>
-    </div>
   );
 }

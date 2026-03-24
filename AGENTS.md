@@ -170,3 +170,26 @@ src/
 - 新增 shadcn/ui 组件使用 `components.json` 配置
 - 移动端适配使用 Tailwind 响应式类（`md:hidden`, `hidden md:block`）
 - 使用 `dangerouslySetInnerHTML` 渲染 HTML 内容时确保内容安全
+
+## 背诵记录文档
+- 背诵记录功能包含：ReciteRecordsDialog、DynastySelect、DetailCard、SummaryCard、数据表 recite_detail/recite_summary。
+- 数据流与接口：数据来自 IndexedDB，recite_detail 为明细，recite_summary 为汇总，前端通过 todayDetails/historyDetails/summaries 渲染，分页变量 todayPage/historyPage/summaryPage 控制“查看更多”。
+- 测试策略：基础 UI 渲染测试、筛选、分页行为的测试、以及端到端的浏览体验测试。依赖环境安装后执行测试命令。
+- PR 规范：统一使用 Patch 4D/4E/4F/4G 的风格，提供清晰的变更点、为什么改动、测试步骤。
+
+### PR Body 模板
+```
+## Summary
+- <简要描述变更的目的>
+
+## Changes
+- 修改的文件及要点
+
+## Why
+- 变更的动机与业务价值
+
+## Testing
+- 本地测试步骤
+- 依赖与环境要求
+- 注意事项
+```
