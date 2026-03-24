@@ -366,7 +366,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   </div>
                   {todayDetails.length > todayPage && (
                     <div className="flex justify-center mt-2">
-                      <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-today" onClick={() => setTodayPage(p => p + 5)}>
+                      <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-today" onClick={() => setTodayPage(p => p + 9)}>
                         查看更多
                       </Button>
                     </div>
@@ -383,7 +383,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   </div>
                   {historyDetails.length > historyPage && (
                     <div className="flex justify-center mt-2">
-                      <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-history" onClick={() => setHistoryPage(p => p + 5)}>查看更多</Button>
+                      <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-history" onClick={() => setHistoryPage(p => p + 9)}>查看更多</Button>
                     </div>
                   )}
                 </div>
@@ -428,7 +428,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               ))}
               {summaries.length > summaryPage && (
                 <div className="flex justify-center mt-2">
-                  <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-summaries" onClick={() => setSummaryPage(p => p + 5)}>
+                  <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-summaries" onClick={() => setSummaryPage(p => p + 9)}>
                     查看更多
                   </Button>
                 </div>

@@ -36,9 +36,9 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
   const [todayDetails, setTodayDetails] = useState<ReciteDetail[]>([]);
   const [historyDetails, setHistoryDetails] = useState<ReciteDetail[]>([]);
   const [summaries, setSummaries] = useState<ReciteSummary[]>([]);
-  const [todayPage, setTodayPage] = useState(5);
-  const [historyPage, setHistoryPage] = useState(5);
-  const [summaryPage, setSummaryPage] = useState(5);
+  const [todayPage, setTodayPage] = useState(9);
+  const [historyPage, setHistoryPage] = useState(9);
+  const [summaryPage, setSummaryPage] = useState(9);
 
   const loadUsers = useCallback(async () => {
     const userList = await getAllFromDB<DBUser>(STORES.USERS);
