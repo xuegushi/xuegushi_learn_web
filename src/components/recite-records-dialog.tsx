@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DynastySelect } from "@/components/ui/dynasty-select";
-import { UserSquare, Clock } from "lucide-react";
+import { UserSquare, Clock, CircleCheck, CircleX } from "lucide-react";
 import { getAllFromDB, STORES, exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 
 export interface ReciteDetail {
@@ -41,21 +41,10 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedDynasty, setSelectedDynasty] = useState<string>("all");
 
-  // Data sources (initial UI scaffolding with local state)
-  const [todayDetails, setTodayDetails] = useState<ReciteDetail[]>([
-    { id: 1, user_id: 'u1', poem_id: 'p1', title: '静夜思', author: '李白', dynasty: '唐', status: true, createdAt: new Date().toISOString() },
-    { id: 2, user_id: 'u1', poem_id: 'p2', title: '静夜思 2', author: '李白', dynasty: '宋', status: true, createdAt: new Date().toISOString() },
-    { id: 3, user_id: 'u1', poem_id: 'p3', title: '静夜思 3', author: '李白', dynasty: '唐', status: true, createdAt: new Date().toISOString() },
-    { id: 4, user_id: 'u1', poem_id: 'p4', title: '静夜思 4', author: '李白', dynasty: '宋', status: true, createdAt: new Date().toISOString() },
-    { id: 5, user_id: 'u1', poem_id: 'p5', title: '静夜思 5', author: '李白', dynasty: '唐', status: true, createdAt: new Date().toISOString() },
-    { id: 6, user_id: 'u1', poem_id: 'p6', title: '静夜思 6', author: '李白', dynasty: '宋', status: true, createdAt: new Date().toISOString() },
-  ]);
-  const [historyDetails, setHistoryDetails] = useState<ReciteDetail[]>([
-    { id: 2, user_id: 'u2', poem_id: 'p2', title: '登鹳雀楼', author: '王之', dynasty: '唐', status: false, createdAt: new Date().toISOString() },
-  ]);
-  const [summaries, setSummaries] = useState<ReciteSummary[]>([
-    { id: 1, user_id: 'u1', poem_ids: [{ poem_id: 'p1', title: '静夜思', status: true }], pass_count: 1, unpass_count: 0, skip_count: 0, createdAt: new Date().toISOString() },
-  ]);
+  // Data sources (loaded from IndexedDB)
+  const [todayDetails, setTodayDetails] = useState<ReciteDetail[]>([]);
+  const [historyDetails, setHistoryDetails] = useState<ReciteDetail[]>([]);
+  const [summaries, setSummaries] = useState<ReciteSummary[]>([]);
   const [todayPage, setTodayPage] = useState<number>(5);
   const [historyPage, setHistoryPage] = useState<number>(5);
   const [summaryPage, setSummaryPage] = useState<number>(5);
@@ -64,13 +53,24 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     const date = new Date(item.createdAt);
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
     return (
-      <div className="p-3 border rounded-lg bg-white">
-        <div className="flex items-center justify-between mb-1">
+      <div className="p-3 border rounded-lg bg-white relative">
+        <div className="flex items-center justify-between mb-1 pr-8">
           <span className="text-sm font-semibold">{item.title}</span>
           <span className="text-xs text-muted-foreground">{item.dynasty} · {item.author}</span>
         </div>
-        <div className="text-xs text-muted-foreground">{dateStr}</div>
-        <div className="mt-1 text-xs">状态: {item.status ? '已掌握' : '未掌握'}</div>
+        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+          <UserSquare className="h-3 w-3" />
+          {item.user_id}
+          <Clock className="h-3 w-3 ml-2" />
+          {dateStr}
+        </div>
+        <div className="absolute top-2 right-2">
+          {item.status ? (
+            <CircleCheck className="h-5 w-5 text-green-500" />
+          ) : (
+            <CircleX className="h-5 w-5 text-red-500" />
+          )}
+        </div>
       </div>
     );
   }
@@ -80,14 +80,13 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
     return (
       <div className="p-3 border rounded-lg bg-white">
-        <div className="flex items-center justify-between text-sm mb-1">
-          <span>背诵汇总</span>
+        <div className="text-xs text-muted-foreground">
+          未掌握：{item.unpass_count} &nbsp; 掌握：{item.pass_count} &nbsp; 跳过：{item.skip_count}
         </div>
-        <div className="text-xs text-muted-foreground">未掌握: {item.unpass_count}  掌握: {item.pass_count}  跳过: {item.skip_count}</div>
         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
           <UserSquare className="h-3 w-3" />
-          当前用户
-          <Clock className="h-3 w-3" />
+          {item.user_id}
+          <Clock className="h-3 w-3 ml-2" />
           {dateStr}
         </div>
       </div>
