@@ -151,6 +151,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-slate-700 dark:text-slate-100" data-testid="recite-records-header">背诵记录</DialogTitle>
         </DialogHeader>
+        <div className="border-b border-gray-200 dark:border-gray-700" />
         {!loading && (stats.totalCount > 0 || stats.summaryCount > 0) && (
           <div className="flex flex-wrap gap-4 px-4 py-3 bg-muted/30 rounded-lg mb-2">
             <div className="flex items-center gap-1.5 text-sm">
