@@ -185,7 +185,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
           </div>
           {item.poem_ids.length > 0 && (
             <button
-              className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+              className="text-sm text-blue-600 hover:underline flex items-center gap-1 px-2 py-1 cursor-pointer"
               onClick={() => {
                 const id = item.id || 0;
                 setExpandedSummaries(prev => {
@@ -196,7 +196,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 });
               }}
             >
-              {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               {item.poem_ids.length}首
             </button>
           )}
