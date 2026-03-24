@@ -194,7 +194,6 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               <TabsTrigger value="summary" data-testid="recite-records-summary-tab">背诵汇总</TabsTrigger>
             </TabsList>
             <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 overflow-x-auto" data-testid="recite-records-filter-bar">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap shrink-0">筛选</span>
               <input
                 type="text"
                 aria-label="搜索诗词/诗人"
@@ -230,25 +229,6 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 onChange={(e) => setDateTo(e.target.value)}
                 className="px-2 py-1.5 border rounded-md text-sm bg-background shrink-0"
               />
-              <Select value={detailSort} onValueChange={(v) => v && setDetailSort(v)}>
-                <SelectTrigger className="w-24 text-xs py-1 shrink-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">最新</SelectItem>
-                  <SelectItem value="oldest">最早</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={summarySort} onValueChange={(v) => v && setSummarySort(v)}>
-                <SelectTrigger className="w-24 text-xs py-1 shrink-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">最新</SelectItem>
-                  <SelectItem value="oldest">最早</SelectItem>
-                  <SelectItem value="pass-rate">掌握率</SelectItem>
-                </SelectContent>
-              </Select>
               <button className="ml-auto text-sm text-gray-600 hover:underline shrink-0" onClick={resetFilters}>重置</button>
               <button className="text-sm text-green-600 hover:underline shrink-0" data-testid="recite-records-export" onClick={() => exportReciteRecordsJson()}>导出</button>
               <button className="text-sm text-red-600 hover:underline shrink-0" data-testid="recite-records-clear" onClick={async () => {
@@ -260,6 +240,18 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               }}>清空</button>
             </div>
             <TabsContent value="detail" className="p-4 space-y-2">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-muted-foreground">排序</span>
+                <Select value={detailSort} onValueChange={(v) => v && setDetailSort(v)}>
+                  <SelectTrigger className="w-24 text-xs shrink-0">
+                    <SelectValue placeholder="最新" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">最新</SelectItem>
+                    <SelectItem value="oldest">最早</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
               {!loading && todayDetails.length === 0 && historyDetails.length === 0 && (
                 <div className="text-center text-muted-foreground py-8">暂无背诵明细</div>
@@ -287,6 +279,19 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               )}
             </TabsContent>
             <TabsContent value="summary" className="p-4 space-y-2">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-muted-foreground">排序</span>
+                <Select value={summarySort} onValueChange={(v) => v && setSummarySort(v)}>
+                  <SelectTrigger className="w-24 text-xs shrink-0">
+                    <SelectValue placeholder="最新" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">最新</SelectItem>
+                    <SelectItem value="oldest">最早</SelectItem>
+                    <SelectItem value="pass-rate">掌握率</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
               {!loading && summaries.length === 0 && (
                 <div className="text-center text-muted-foreground py-8">暂无背诵汇总</div>
