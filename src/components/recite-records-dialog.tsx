@@ -9,6 +9,11 @@ import { DynastySelect } from "@/components/ui/dynasty-select";
 import { UserSquare, Clock, CircleCheck, CircleX } from "lucide-react";
 import { getAllFromDB, STORES, exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 
+export interface DBUser {
+  id: string;
+  user_name: string;
+}
+
 export interface ReciteDetail {
   id?: number;
   user_id: string;
@@ -40,6 +45,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedDynasty, setSelectedDynasty] = useState<string>("all");
+  const [users, setUsers] = useState<DBUser[]>([]);
 
   // Data sources (loaded from IndexedDB)
   const [todayDetails, setTodayDetails] = useState<ReciteDetail[]>([]);
@@ -95,9 +101,20 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
 
   // 审美布局：Tabs 顶部、筛选区在其下、内容区在 ScrollArea 中
 
-  // Data binding: load data when dialog opens (Patch 4B groundwork)
+  // Load users list
+  React.useEffect(() => {
+    (async () => {
+      const userList = await getAllFromDB<DBUser>(STORES.USERS);
+      setUsers(userList);
+    })();
+  }, []);
+
+  // Data binding: load data when dialog opens or filters change
   React.useEffect(() => {
     if (open) {
+      setTodayPage(5);
+      setHistoryPage(5);
+      setSummaryPage(5);
       (async () => {
         try {
           const details = await getAllFromDB<ReciteDetail>(STORES.RECITE_DETAIL);
@@ -143,11 +160,13 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               <DynastySelect value={selectedDynasty} onValueChange={setSelectedDynasty} />
               <Select value={selectedUser} onValueChange={(v) => v !== null && setSelectedUser(v)}>
                 <SelectTrigger className="w-40 md:w-48 ml-2">
-                  <SelectValue>{selectedUser === 'all' ? '全部用户' : selectedUser}</SelectValue>
+                  <SelectValue>{selectedUser === 'all' ? '全部用户' : users.find(u => u.id === selectedUser)?.user_name || selectedUser}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部用户</SelectItem>
-                  <SelectItem value="u1">用户1</SelectItem>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>{u.user_name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <input
@@ -183,26 +202,8 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                     <DetailCard key={d.id} item={d} />
                   ))}
                   {todayDetails.length > todayPage && (
-                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-today" onClick={async () => {
-                      const details = await getAllFromDB<ReciteDetail>(STORES.RECITE_DETAIL);
-                      let data = details;
-                      if (selectedUser !== 'all') data = data.filter((d) => d.user_id === selectedUser);
-                      if (searchKeyword.trim()) {
-                        const kw = searchKeyword.toLowerCase();
-                        data = data.filter((d) => `${d.title} ${d.author} ${d.dynasty}`.toLowerCase().includes(kw));
-                      }
-                      if (selectedDynasty !== 'all') data = data.filter((d) => d.dynasty === selectedDynasty);
-                      const now = new Date();
-                      const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-                      const todayFiltered = data.filter((d) => d.createdAt.startsWith(todayKey));
-                      const hist = data.filter((d) => !d.createdAt.startsWith(todayKey));
-                      const current = todayDetails.length;
-                      const nextSlice = todayFiltered.slice(current, current + 5);
-                      if (nextSlice.length > 0) {
-                        setTodayDetails([...todayDetails, ...nextSlice]);
-                        setTodayPage(current + nextSlice.length);
-                      }
-                      setHistoryDetails(hist);
+                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-today" onClick={() => {
+                      setTodayPage(p => p + 5);
                     }}>
                       查看更多
                     </button>
@@ -229,16 +230,8 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   ))}
                 </div>
                 {summaries.length > summaryPage && (
-                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-summaries" onClick={async () => {
-                    const sums = await getAllFromDB<ReciteSummary>(STORES.RECITE_SUMMARY);
-                    const current = summaries.length;
-                    const nextSlice = sums.slice(current, current + 5);
-                    if (nextSlice.length > 0) {
-                      setSummaries([...summaries, ...nextSlice]);
-                      setSummaryPage(current + nextSlice.length);
-                    } else {
-                      // no more data
-                    }
+                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-summaries" onClick={() => {
+                    setSummaryPage(p => p + 5);
                   }}>
                     查看更多
                   </button>
