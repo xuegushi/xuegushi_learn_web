@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, startTransition } from "react";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -124,22 +124,29 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   const [summarySort, setSummarySort] = useState<string>("newest");
   const [expandedSummaries, setExpandedSummaries] = useState<Set<number>>(new Set());
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const defaultUserSet = React.useRef(false);
 
   const filters = useMemo(() => ({ selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort, summarySort }), [selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort, summarySort]);
   const { loading, users, todayDetails, historyDetails, summaries, stats, todayPage, historyPage, summaryPage, setTodayPage, setHistoryPage, setSummaryPage } = useReciteRecords(open, filters);
 
   useEffect(() => {
-    if (open && users.length > 0) {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        try {
-          const user = JSON.parse(stored);
-          if (user?.user_id && users.some(u => u.id === user.user_id)) {
-            setSelectedUser(user.user_id.toString());
-          }
-        } catch { /* ignore */ }
-      }
+    if (!open) {
+      defaultUserSet.current = false;
+      return;
     }
+    if (defaultUserSet.current) return;
+    if (users.length === 0) return;
+    defaultUserSet.current = true;
+    const stored = localStorage.getItem("user");
+    if (!stored) return;
+    try {
+      const user = JSON.parse(stored);
+      if (user?.user_id && users.some(u => u.id === user.user_id)) {
+        startTransition(() => {
+          setSelectedUser(user.user_id.toString());
+        });
+      }
+    } catch { /* ignore */ }
   }, [open, users]);
 
   function DetailCard({ item }: { item: ReciteDetail }) {
