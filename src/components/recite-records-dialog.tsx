@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DynastySelect } from "@/components/ui/dynasty-select";
 import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, ChevronDown, ChevronUp } from "lucide-react";
-import { getAllFromDB, STORES, exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
+import { exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
+import { useReciteRecords } from "@/hooks/use-recite-records";
 
 export interface DBUser {
   id: number;
@@ -41,25 +42,17 @@ export interface ReciteRecordsDialogProps {
 }
 
 export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogProps) {
-  // UI skeleton states (Patch 4A)
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedDynasty, setSelectedDynasty] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
-  const [expandedSummaries, setExpandedSummaries] = useState<Set<number>>(new Set());
-  const [users, setUsers] = useState<DBUser[]>([]);
-
-  // Data sources (loaded from IndexedDB)
-  const [loading, setLoading] = useState(false);
-  const [todayDetails, setTodayDetails] = useState<ReciteDetail[]>([]);
-  const [historyDetails, setHistoryDetails] = useState<ReciteDetail[]>([]);
-  const [summaries, setSummaries] = useState<ReciteSummary[]>([]);
-  const [todayPage, setTodayPage] = useState<number>(5);
-  const [historyPage, setHistoryPage] = useState<number>(5);
-  const [summaryPage, setSummaryPage] = useState<number>(5);
   const [detailSort, setDetailSort] = useState<string>("newest");
   const [summarySort, setSummarySort] = useState<string>("newest");
+  const [expandedSummaries, setExpandedSummaries] = useState<Set<number>>(new Set());
+
+  const filters = { selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort, summarySort };
+  const { loading, users, todayDetails, historyDetails, summaries, stats, todayPage, historyPage, summaryPage, setTodayPage, setHistoryPage, setSummaryPage } = useReciteRecords(open, filters);
 
   function DetailCard({ item }: { item: ReciteDetail }) {
     const date = new Date(item.createdAt);
@@ -142,93 +135,15 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     );
   }
 
-  // 审美布局：Tabs 顶部、筛选区在其下、内容区在 ScrollArea 中
-
-  // Load users list
-  React.useEffect(() => {
-    (async () => {
-      const userList = await getAllFromDB<DBUser>(STORES.USERS);
-      setUsers(userList);
-    })();
-  }, []);
-
-  // Data binding: load data when dialog opens or filters change
-  React.useEffect(() => {
-    if (open) {
-      setTodayPage(5);
-      setHistoryPage(5);
-      setSummaryPage(5);
-      setLoading(true);
-      (async () => {
-        try {
-          const details = await getAllFromDB<ReciteDetail>(STORES.RECITE_DETAIL);
-          let data = details;
-          if (selectedUser !== 'all') data = data.filter((d) => d.user_id === selectedUser);
-          if (searchKeyword.trim()) {
-            const kw = searchKeyword.toLowerCase();
-            data = data.filter((d) => `${d.title} ${d.author} ${d.dynasty}`.toLowerCase().includes(kw));
-          }
-          if (selectedDynasty !== 'all') data = data.filter((d) => d.dynasty === selectedDynasty);
-          if (dateFrom) data = data.filter((d) => d.createdAt >= dateFrom);
-          if (dateTo) data = data.filter((d) => d.createdAt <= dateTo + 'T23:59:59.999Z');
-          const now = new Date();
-          const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-          let today = data.filter((d) => d.createdAt.startsWith(todayKey));
-          let hist = data.filter((d) => !d.createdAt.startsWith(todayKey));
-          if (detailSort === 'newest') {
-            today.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-            hist.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-          } else if (detailSort === 'oldest') {
-            today.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-            hist.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-          }
-          setTodayDetails(today);
-          setHistoryDetails(hist);
-          const sums = await getAllFromDB<ReciteSummary>(STORES.RECITE_SUMMARY);
-          let filteredSums = sums;
-          if (selectedUser !== 'all') filteredSums = filteredSums.filter((s) => s.user_id === selectedUser);
-          if (searchKeyword.trim()) {
-            const kw = searchKeyword.toLowerCase();
-            filteredSums = filteredSums.filter((s) =>
-              s.poem_ids.some((p) => p.title.toLowerCase().includes(kw))
-            );
-          }
-          if (dateFrom) filteredSums = filteredSums.filter((s) => s.createdAt >= dateFrom);
-          if (dateTo) filteredSums = filteredSums.filter((s) => s.createdAt <= dateTo + 'T23:59:59.999Z');
-          if (summarySort === 'newest') {
-            filteredSums.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-          } else if (summarySort === 'oldest') {
-            filteredSums.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-          } else if (summarySort === 'pass-rate') {
-            filteredSums.sort((a, b) => {
-              const aTotal = a.pass_count + a.unpass_count;
-              const bTotal = b.pass_count + b.unpass_count;
-              const aRate = aTotal > 0 ? a.pass_count / aTotal : 0;
-              const bRate = bTotal > 0 ? b.pass_count / bTotal : 0;
-              return bRate - aRate;
-            });
-          }
-          setSummaries(filteredSums);
-        } catch {
-          // ignore
-        } finally {
-          setLoading(false);
-        }
-      })();
-    }
-  }, [open, selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort, summarySort]);
-
-  // Compute statistics
-  const stats = useMemo(() => {
-    const allDetails = [...todayDetails, ...historyDetails];
-    const totalCount = allDetails.length;
-    const passCount = allDetails.filter(d => d.status).length;
-    const unpassCount = totalCount - passCount;
-    const passRate = totalCount > 0 ? Math.round((passCount / totalCount) * 100) : 0;
-    const summaryCount = summaries.length;
-    const totalSummaryPoems = summaries.reduce((acc, s) => acc + s.poem_ids.length, 0);
-    return { totalCount, passCount, unpassCount, passRate, summaryCount, totalSummaryPoems };
-  }, [todayDetails, historyDetails, summaries]);
+  function resetFilters() {
+    setSelectedUser('all');
+    setSearchKeyword('');
+    setSelectedDynasty('all');
+    setDateFrom('');
+    setDateTo('');
+    setDetailSort('newest');
+    setSummarySort('newest');
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -236,7 +151,6 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-slate-700 dark:text-slate-100" data-testid="recite-records-header">背诵记录</DialogTitle>
         </DialogHeader>
-        {/* Statistics overview */}
         {!loading && (stats.totalCount > 0 || stats.summaryCount > 0) && (
           <div className="flex flex-wrap gap-4 px-4 py-3 bg-muted/30 rounded-lg mb-2">
             <div className="flex items-center gap-1.5 text-sm">
@@ -278,7 +192,6 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
             <TabsTrigger value="detail" data-testid="recite-records-detail-tab">背诵明细</TabsTrigger>
             <TabsTrigger value="summary" data-testid="recite-records-summary-tab">背诵汇总</TabsTrigger>
           </TabsList>
-          {/* Filter area moved below Tabs header (Patch 4A) */}
           <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95" data-testid="recite-records-filter-bar">
             <div className="flex-1 flex items-center gap-2">
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">筛选</span>
@@ -340,24 +253,13 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 </SelectContent>
               </Select>
             </div>
-            <button className="ml-auto text-sm text-gray-600 hover:underline" onClick={() => {
-              setSelectedUser('all');
-              setSearchKeyword('');
-              setSelectedDynasty('all');
-              setDateFrom('');
-              setDateTo('');
-              setDetailSort('newest');
-              setSummarySort('newest');
-            }}>重置筛选</button>
-            <button className="ml-2 text-sm text-green-600 hover:underline" data-testid="recite-records-export" onClick={async () => {
-              await exportReciteRecordsJson();
-            }}>导出</button>
+            <button className="ml-auto text-sm text-gray-600 hover:underline" onClick={resetFilters}>重置筛选</button>
+            <button className="ml-2 text-sm text-green-600 hover:underline" data-testid="recite-records-export" onClick={() => exportReciteRecordsJson()}>导出</button>
             <button className="ml-2 text-sm text-red-600 hover:underline" data-testid="recite-records-clear" onClick={async () => {
               if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
                 await clearReciteRecords();
-                setTodayDetails([]);
-                setHistoryDetails([]);
-                setSummaries([]);
+                onOpenChange(false);
+                setTimeout(() => onOpenChange(true), 0);
               }
             }}>清空</button>
           </div>
@@ -373,9 +275,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                     <DetailCard key={d.id} item={d} />
                   ))}
                   {todayDetails.length > todayPage && (
-                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-today" onClick={() => {
-                      setTodayPage(p => p + 5);
-                    }}>
+                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-today" onClick={() => setTodayPage(p => p + 5)}>
                       查看更多
                     </button>
                   )}
@@ -405,9 +305,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   ))}
                 </div>
                 {summaries.length > summaryPage && (
-                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-summaries" onClick={() => {
-                    setSummaryPage(p => p + 5);
-                  }}>
+                    <button className="mt-2 text-sm text-blue-600 hover:underline" data-testid="recite-records-load-more-summaries" onClick={() => setSummaryPage(p => p + 5)}>
                     查看更多
                   </button>
                 )}
