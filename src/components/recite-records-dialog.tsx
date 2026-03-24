@@ -243,15 +243,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 onChange={(e) => setDateTo(e.target.value)}
                 className="px-2 py-1.5 border rounded-md text-sm bg-background shrink-0"
               />
-              <button className="ml-auto text-sm text-gray-600 hover:underline shrink-0" onClick={resetFilters}>重置</button>
-              <button className="text-sm text-green-600 hover:underline shrink-0" data-testid="recite-records-export" onClick={() => exportReciteRecordsJson()}>导出</button>
-              <button className="text-sm text-red-600 hover:underline shrink-0" data-testid="recite-records-clear" onClick={async () => {
-                if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
-                  await clearReciteRecords();
-                  onOpenChange(false);
-                  setTimeout(() => onOpenChange(true), 0);
-                }
-              }}>清空</button>
+              <button className="text-sm text-gray-600 hover:underline shrink-0" onClick={resetFilters}>重置</button>
             </div>
             <TabsContent value="detail" className="p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -265,6 +257,16 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                     <SelectItem value="oldest">最早</SelectItem>
                   </SelectContent>
                 </Select>
+                <div className="ml-auto flex gap-3">
+                  <button className="text-sm text-green-600 hover:underline" data-testid="recite-records-export" onClick={() => exportReciteRecordsJson()}>导出</button>
+                  <button className="text-sm text-red-600 hover:underline" data-testid="recite-records-clear" onClick={async () => {
+                    if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
+                      await clearReciteRecords();
+                      onOpenChange(false);
+                      setTimeout(() => onOpenChange(true), 0);
+                    }
+                  }}>清空</button>
+                </div>
               </div>
               {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
               {!loading && todayDetails.length === 0 && historyDetails.length === 0 && (
@@ -311,6 +313,16 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                     <SelectItem value="pass-rate">掌握率</SelectItem>
                   </SelectContent>
                 </Select>
+                <div className="ml-auto flex gap-3">
+                  <button className="text-sm text-green-600 hover:underline" onClick={() => exportReciteRecordsJson()}>导出</button>
+                  <button className="text-sm text-red-600 hover:underline" onClick={async () => {
+                    if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
+                      await clearReciteRecords();
+                      onOpenChange(false);
+                      setTimeout(() => onOpenChange(true), 0);
+                    }
+                  }}>清空</button>
+                </div>
               </div>
               {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
               {!loading && summaries.length === 0 && (
