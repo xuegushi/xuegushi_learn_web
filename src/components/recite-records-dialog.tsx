@@ -135,6 +135,9 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     );
   }
 
+  const detailSortLabel = detailSort === 'newest' ? '最新' : '最早';
+  const summarySortLabel = summarySort === 'newest' ? '最新' : summarySort === 'oldest' ? '最早' : '掌握率';
+
   function resetFilters() {
     setSelectedUser('all');
     setSearchKeyword('');
@@ -255,7 +258,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 <span className="text-xs text-muted-foreground">排序</span>
                 <Select value={detailSort} onValueChange={(v) => v && setDetailSort(v)}>
                   <SelectTrigger className="w-24 text-xs shrink-0">
-                    <SelectValue placeholder="最新" />
+                    <SelectValue>{detailSortLabel}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="newest">最新</SelectItem>
@@ -300,7 +303,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 <span className="text-xs text-muted-foreground">排序</span>
                 <Select value={summarySort} onValueChange={(v) => v && setSummarySort(v)}>
                   <SelectTrigger className="w-24 text-xs shrink-0">
-                    <SelectValue placeholder="最新" />
+                    <SelectValue>{summarySortLabel}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="newest">最新</SelectItem>
