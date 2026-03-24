@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, ChevronDown, ChevronUp, Calendar as CalendarIcon } from "lucide-react";
+import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, ChevronDown, ChevronUp, Calendar as CalendarIcon, RotateCcw, Download, Trash2 } from "lucide-react";
 import { exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 import { useReciteRecords } from "@/hooks/use-recite-records";
 import { DynastyArr } from "@/config/poem";
@@ -319,7 +319,10 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 onDateFromChange={setDateFrom}
                 onDateToChange={setDateTo}
               />
-              <button className="text-sm text-gray-600 hover:underline shrink-0" onClick={resetFilters}>重置</button>
+              <Button variant="ghost" size="sm" className="shrink-0 text-gray-600" onClick={resetFilters}>
+                <RotateCcw className="h-3 w-3 mr-1" />
+                重置
+              </Button>
             </div>
             <TabsContent value="detail" className="p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -333,15 +336,21 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                     <SelectItem value="oldest">最早</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className="ml-auto flex gap-3">
-                  <button className="text-sm text-green-600 hover:underline" data-testid="recite-records-export" onClick={() => exportReciteRecordsJson()}>导出</button>
-                  <button className="text-sm text-red-600 hover:underline" data-testid="recite-records-clear" onClick={async () => {
+                <div className="ml-auto flex gap-2">
+                  <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50" data-testid="recite-records-export" onClick={() => exportReciteRecordsJson()}>
+                    <Download className="h-3 w-3 mr-1" />
+                    导出
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" data-testid="recite-records-clear" onClick={async () => {
                     if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
                       await clearReciteRecords();
                       onOpenChange(false);
                       setTimeout(() => onOpenChange(true), 0);
                     }
-                  }}>清空</button>
+                  }}>
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    清空
+                  </Button>
                 </div>
               </div>
               {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
@@ -389,15 +398,21 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                     <SelectItem value="pass-rate">掌握率</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className="ml-auto flex gap-3">
-                  <button className="text-sm text-green-600 hover:underline" onClick={() => exportReciteRecordsJson()}>导出</button>
-                  <button className="text-sm text-red-600 hover:underline" onClick={async () => {
+                <div className="ml-auto flex gap-2">
+                  <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => exportReciteRecordsJson()}>
+                    <Download className="h-3 w-3 mr-1" />
+                    导出
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={async () => {
                     if (confirm('确定要清空所有背诵记录吗？此操作不可恢复。')) {
                       await clearReciteRecords();
                       onOpenChange(false);
                       setTimeout(() => onOpenChange(true), 0);
                     }
-                  }}>清空</button>
+                  }}>
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    清空
+                  </Button>
                 </div>
               </div>
               {loading && <div className="text-center text-muted-foreground py-8">加载中...</div>}
