@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { PanelLeftOpen } from "lucide-react";
-import { getAllFromDB, getFromDB, setToDB, STORES } from "@/lib/db";
+import { getAllFromDB, getFromDB, setToDB, STORES, updateLearningProgress } from "@/lib/db";
 import { LocalDataManager } from "@/components/local-data-manager";
 import { CheckInRecordsDialog } from "@/components/check-in-records-dialog";
 import {
@@ -261,19 +261,36 @@ export default function LearnPage() {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : poems.length - 1));
   }, [poems.length]);
 
+  const getCurrentUser = () => {
+    if (typeof window === "undefined") return null;
+    try {
+      const userStr = localStorage.getItem("user");
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  };
+
   const handleNotMastered = useCallback(
     (key: string) => {
       const isAllDone =
         masteredPoems.size + notMasteredPoems.size + 1 >= poems.length;
       setNotMasteredPoems((prev) => new Set(prev).add(key));
       setErrorCount((prev) => prev + 1);
+
+      const user = getCurrentUser();
+      const poemId = poems[currentIndex]?.targetId?.toString();
+      if (user?.id && poemId) {
+        updateLearningProgress(user.id, poemId, false);
+      }
+
       if (isAllDone) {
         setShowResult(true);
       } else {
         setTimeout(() => nextPoem(), 100);
       }
     },
-    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem],
+    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem, currentIndex],
   );
 
   const handleMastered = useCallback(
@@ -282,13 +299,20 @@ export default function LearnPage() {
         masteredPoems.size + notMasteredPoems.size + 1 >= poems.length;
       setMasteredPoems((prev) => new Set(prev).add(key));
       setCorrectCount((prev) => prev + 1);
+
+      const user = getCurrentUser();
+      const poemId = poems[currentIndex]?.targetId?.toString();
+      if (user?.id && poemId) {
+        updateLearningProgress(user.id, poemId, true);
+      }
+
       if (isAllDone) {
         setShowResult(true);
       } else {
         setTimeout(() => nextPoem(), 100);
       }
     },
-    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem],
+    [masteredPoems.size, notMasteredPoems.size, poems.length, nextPoem, currentIndex],
   );
 
   // 提前结束
