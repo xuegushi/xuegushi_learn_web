@@ -419,7 +419,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 )}
               {!loading && (
                 <>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     {todayDetails.slice(0, todayPage).map((d) => (
                       <DetailCard key={d.id} item={d} />
                     ))}
@@ -441,7 +441,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               {historyDetails.length > 0 && (
                 <div className="mt-4">
                   <div className="font-semibold text-sm mb-2">历史背诵</div>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     {historyDetails.slice(0, historyPage).map((d) => (
                       <DetailCard key={d.id} item={d} />
                     ))}
@@ -506,7 +506,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 </div>
               )}
               {!loading && (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {summaries.slice(0, summaryPage).map((s) => (
                     <SummaryCard key={s.id} item={s} />
                   ))}
