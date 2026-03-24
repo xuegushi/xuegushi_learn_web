@@ -7,6 +7,7 @@ export function MobileButtons({
   mode,
   showEarlyEnd,
   onSidebarToggle,
+  onReciteRecordsClick,
 }: {
   allCompleted: boolean;
   onReset: () => void;
@@ -15,6 +16,7 @@ export function MobileButtons({
   mode: string;
   showEarlyEnd: boolean;
   onSidebarToggle: () => void;
+  onReciteRecordsClick?: () => void;
 }) {
   return (
     <>
@@ -31,6 +33,14 @@ export function MobileButtons({
 
       {/* 重新开始/继续学习 */}
       <div className="md:hidden fixed bottom-20 right-4 z-30 flex gap-2">
+        {onReciteRecordsClick && (
+          <button
+            onClick={onReciteRecordsClick}
+            className="p-2 bg-blue-500/80 text-white rounded-full shadow-lg text-sm"
+          >
+            背诵记录
+          </button>
+        )}
         <button
           onClick={onReset}
           className="p-2 bg-gray-500/80 text-white rounded-full shadow-lg text-sm"
@@ -67,6 +77,7 @@ export function PcButtons({
   mode,
   showEarlyEnd,
   showReset = true,
+  onReciteRecordsClick,
 }: {
   allCompleted: boolean;
   onReset: () => void;
@@ -75,9 +86,18 @@ export function PcButtons({
   mode: string;
   showEarlyEnd: boolean;
   showReset?: boolean;
+  onReciteRecordsClick?: () => void;
 }) {
   return (
     <div className="hidden md:flex absolute bottom-8 right-8 gap-2 z-10">
+      {onReciteRecordsClick && (
+        <button
+          onClick={onReciteRecordsClick}
+          className="px-4 py-2 bg-blue-500/90 text-white rounded-lg shadow-lg text-sm hover:bg-blue-600 transition-colors cursor-pointer"
+        >
+          背诵记录
+        </button>
+      )}
       {showReset && (
         <button
           onClick={onReset}

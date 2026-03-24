@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const DB_NAME = 'poem_learn_db';
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 
 export const STORES = {
   POEMS: 'poems',
@@ -11,6 +11,7 @@ export const STORES = {
   USERS: 'users',
   RECITE_DETAIL: 'recite_detail',
   RECITE_SUMMARY: 'recite_summary',
+  LEARNING_PROGRESS: 'learning_progress',
 } as const;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -157,6 +158,14 @@ function openDB(): Promise<IDBDatabase> {
           const summaryStore = db.createObjectStore(STORES.RECITE_SUMMARY, { keyPath: 'id', autoIncrement: true });
           summaryStore.createIndex('userId', 'user_id', { unique: false });
           summaryStore.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+
+        // 学习进度表
+        if (!db.objectStoreNames.contains(STORES.LEARNING_PROGRESS)) {
+          const progressStore = db.createObjectStore(STORES.LEARNING_PROGRESS, { keyPath: 'id', autoIncrement: true });
+          progressStore.createIndex('userId', 'user_id', { unique: false });
+          progressStore.createIndex('poemId', 'poem_id', { unique: false });
+          progressStore.createIndex('userPoem', ['user_id', 'poem_id'], { unique: true });
         }
       }
     };
@@ -352,5 +361,90 @@ export async function getDBSize(): Promise<{ bytes: number; mb: string }> {
     return { bytes: totalBytes, mb };
   } catch {
     return { bytes: 0, mb: '0.00' };
+  }
+}
+
+// Learning Progress interfaces and functions
+export interface LearningProgress {
+  id?: number;
+  user_id: string;
+  poem_id: string;
+  learn_count: number;
+  correct_count: number;
+  wrong_count: number;
+  mastery_level: number;
+  last_learned_at: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getLearningProgress(userId: string, poemId: string): Promise<LearningProgress | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORES.LEARNING_PROGRESS, 'readonly');
+      const store = tx.objectStore(STORES.LEARNING_PROGRESS);
+      const index = store.index('userPoem');
+      const request = index.get([userId, poemId]);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function getAllLearningProgress(userId: string): Promise<LearningProgress[]> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORES.LEARNING_PROGRESS, 'readonly');
+      const store = tx.objectStore(STORES.LEARNING_PROGRESS);
+      const index = store.index('userId');
+      const request = index.getAll(userId);
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+  } catch {
+    return [];
+  }
+}
+
+export async function updateLearningProgress(
+  userId: string,
+  poemId: string,
+  isCorrect: boolean
+): Promise<void> {
+  try {
+    const existing = await getLearningProgress(userId, poemId);
+    const now = new Date().toISOString();
+
+    if (existing) {
+      const updated: LearningProgress = {
+        ...existing,
+        learn_count: existing.learn_count + 1,
+        correct_count: isCorrect ? existing.correct_count + 1 : existing.correct_count,
+        wrong_count: !isCorrect ? existing.wrong_count + 1 : existing.wrong_count,
+        mastery_level: Math.min(100, Math.round(((existing.correct_count + (isCorrect ? 1 : 0)) / (existing.learn_count + 1)) * 100)),
+        last_learned_at: now,
+        updatedAt: now,
+      };
+      await setToDB(STORES.LEARNING_PROGRESS, updated);
+    } else {
+      const newProgress: LearningProgress = {
+        user_id: userId,
+        poem_id: poemId,
+        learn_count: 1,
+        correct_count: isCorrect ? 1 : 0,
+        wrong_count: isCorrect ? 0 : 1,
+        mastery_level: isCorrect ? 100 : 0,
+        last_learned_at: now,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await setToDB(STORES.LEARNING_PROGRESS, newProgress);
+    }
+  } catch {
+    // ignore
   }
 }
