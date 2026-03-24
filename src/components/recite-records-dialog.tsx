@@ -428,9 +428,13 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               {!loading && summaries.length === 0 && (
                 <div className="text-center text-muted-foreground py-8">暂无背诵汇总</div>
               )}
-              {!loading && summaries.slice(0, summaryPage).map((s) => (
-                <SummaryCard key={s.id} item={s} />
-              ))}
+              {!loading && (
+                <div className="grid grid-cols-2 gap-2">
+                  {summaries.slice(0, summaryPage).map((s) => (
+                    <SummaryCard key={s.id} item={s} />
+                  ))}
+                </div>
+              )}
               {summaries.length > summaryPage && (
                 <div className="flex justify-center mt-2">
                   <Button variant="link" size="sm" className="text-blue-600 cursor-pointer" data-testid="recite-records-load-more-summaries" onClick={() => setSummaryPage(p => p + 9)}>
