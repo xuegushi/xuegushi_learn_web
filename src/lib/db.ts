@@ -276,6 +276,45 @@ export async function clearDB(): Promise<void> {
   }
 }
 
+// Patch 4H: Clear all recite-related records (recite_detail and recite_summary)
+export async function clearReciteRecords(): Promise<void> {
+  try {
+    const db = await openDB();
+    if (!db) return;
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction([STORES.RECITE_DETAIL, STORES.RECITE_SUMMARY], 'readwrite');
+      tx.objectStore(STORES.RECITE_DETAIL).clear();
+      tx.objectStore(STORES.RECITE_SUMMARY).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch {
+    // ignore
+  }
+}
+
+// Patch 4H: Export recite records as JSON for download
+export async function exportReciteRecordsJson(): Promise<void> {
+  try {
+    const details = await getAllFromDB<any>(STORES.RECITE_DETAIL);
+    const summaries = await getAllFromDB<any>(STORES.RECITE_SUMMARY);
+    const payload = { recite_detail: details, recite_summary: summaries };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'recite_records.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch {
+    // ignore
+  }
+}
+
+ // Patch 4H duplicates removed
+
 // Patch 3: 背诵记录写入接口
 export async function addReciteDetail(detail: any): Promise<void> {
   try {
