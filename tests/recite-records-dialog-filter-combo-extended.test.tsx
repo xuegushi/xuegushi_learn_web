@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-describe('ReciteRecordsDialog UI final skeleton', () => {
+describe('ReciteRecordsDialog filter combo extended skeleton', () => {
   it('placeholder test', () => {
     expect(true).toBe(true);
   });
