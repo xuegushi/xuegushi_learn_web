@@ -31,21 +31,10 @@ export function HomeModeCard({
   // 左右分布：奇数卡片（reverse=false）左侧为标题+图标，右侧为内容；偶数卡片（reverse=true）左侧为内容，右侧为标题+图标
   const headerBlock = (
     <div className="w-full flex flex-col items-center gap-3">
-      <div className="text-3xl font-semibold">{title}</div>
+      <div className="text-3xl font-semibold text-slate-900 dark:text-accent-foreground">{title}</div>
       {icon && (
-        <div
-          className="w-28 h-28 flex items-center justify-center"
-          aria-label="card-icon">
-          <span
-            style={{
-              display: "inline-flex",
-              width: "100%",
-              height: "100%",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-            {icon}
-          </span>
+        <div className="w-28 h-28 flex items-center justify-center text-slate-600 dark:text-slate-300" aria-label="card-icon">
+          {icon}
         </div>
       )}
     </div>
@@ -106,7 +95,7 @@ export function HomeModeCard({
   return (
     <section
       className={cn(
-        `rounded-xl border p-8 px-12 bg-white hover:shadow-lg transform transition-all duration-300 w-full ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`,
+        `bg-card rounded-xl border p-8 px-12 hover:shadow-lg transform transition-all duration-300 w-full ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`,
         className,
       )}
       role="article"
