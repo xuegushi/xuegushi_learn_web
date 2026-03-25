@@ -8,7 +8,26 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CatalogItem, CatalogDetail, PoemDetail } from "@/types/poem";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Play, Pause, SkipBack, SkipForward, Volume2, User } from "lucide-react";
+
+const RATE_OPTIONS = [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.15, 1.2, 1.3, 1.4, 1.5, 2];
+
+function formatRate(rate: number): string {
+  if (rate < 1) {
+    return `${rate}x 降速`;
+  } else if (rate === 1) {
+    return "1.0x (默认语速)";
+  } else {
+    return `${rate}x 加速`;
+  }
+}
 
 interface VoiceOption {
   name: string;
@@ -397,6 +416,29 @@ export default function ListenPage() {
                       )}
                     </div>
                   </ScrollArea>
+                </div>
+
+                {/* 调节语速 */}
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Volume2 className="h-4 w-4" />
+                    调节语速
+                  </div>
+                  <Select
+                    value={speechSettings.rate.toString()}
+                    onValueChange={(v) => v && saveSpeechSettings({ ...speechSettings, rate: parseFloat(v) })}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RATE_OPTIONS.map((rate) => (
+                        <SelectItem key={rate} value={rate.toString()}>
+                          {formatRate(rate)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
