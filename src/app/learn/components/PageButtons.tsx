@@ -1,3 +1,5 @@
+import { Badge } from "@/components/ui/badge";
+
 /** 移动端浮动按钮 */
 export function MobileButtons({
   allCompleted,
@@ -8,6 +10,7 @@ export function MobileButtons({
   showEarlyEnd,
   onSidebarToggle,
   onReciteRecordsClick,
+  masteredCount = 0,
 }: {
   allCompleted: boolean;
   onReset: () => void;
@@ -17,6 +20,7 @@ export function MobileButtons({
   showEarlyEnd: boolean;
   onSidebarToggle: () => void;
   onReciteRecordsClick?: () => void;
+  masteredCount?: number;
 }) {
   return (
     <>
@@ -47,13 +51,20 @@ export function MobileButtons({
 
       {/* 重新开始/继续学习 */}
       <div className="md:hidden fixed items-center bottom-14 right-4 z-30 flex gap-2">
-        <div className="flex-1">
+        <div className="flex-1 relative">
           {onReciteRecordsClick && (
-            <button
-              onClick={onReciteRecordsClick}
-              className="p-2 bg-blue-500/80 text-white rounded-full shadow-lg text-sm">
-              背诵记录
-            </button>
+            <>
+              <button
+                onClick={onReciteRecordsClick}
+                className="p-2 bg-blue-500/80 text-white rounded-full shadow-lg text-sm">
+                背诵记录
+              </button>
+              {masteredCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 px-1.5 bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 text-xs">
+                  掌握{masteredCount}
+                </Badge>
+              )}
+            </>
           )}
         </div>
 
@@ -91,6 +102,7 @@ export function PcButtons({
   showEarlyEnd,
   showReset = true,
   onReciteRecordsClick,
+  masteredCount = 0,
 }: {
   allCompleted: boolean;
   onReset: () => void;
@@ -100,16 +112,24 @@ export function PcButtons({
   showEarlyEnd: boolean;
   showReset?: boolean;
   onReciteRecordsClick?: () => void;
+  masteredCount?: number;
 }) {
   return (
     <div className="hidden md:flex left-8 absolute bottom-4 right-8 gap-2 z-10">
-      <div className="flex-1">
+      <div className="flex-1 relative">
         {onReciteRecordsClick && (
-          <button
-            onClick={onReciteRecordsClick}
-            className="px-4 py-2 bg-blue-500/90 text-white rounded-lg shadow-lg text-sm hover:bg-blue-600 transition-colors cursor-pointer">
-            背诵记录
-          </button>
+          <>
+            <button
+              onClick={onReciteRecordsClick}
+              className="px-4 py-2 bg-blue-500/90 text-white rounded-lg shadow-lg text-sm hover:bg-blue-600 transition-colors cursor-pointer">
+              背诵记录
+            </button>
+            {masteredCount > 0 && (
+              <Badge className="absolute -top-2 -right-2 h-5 px-1.5 bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 text-xs">
+                掌握{masteredCount}
+              </Badge>
+            )}
+          </>
         )}
       </div>
       {showReset && (

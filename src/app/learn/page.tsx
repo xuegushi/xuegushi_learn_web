@@ -703,6 +703,7 @@ export default function LearnPage() {
               onReciteRecordsClick={
                 mode === "recite" ? () => setReciteRecordsOpen(true) : undefined
               }
+              masteredCount={dbMasteredPoems.size}
             />
 
             {/* PC端按钮 */}
@@ -717,6 +718,7 @@ export default function LearnPage() {
               onReciteRecordsClick={
                 mode === "recite" ? () => setReciteRecordsOpen(true) : undefined
               }
+              masteredCount={dbMasteredPoems.size}
             />
           </div>
         </div>
