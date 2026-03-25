@@ -335,6 +335,7 @@ export default function LearnPage() {
       const isAllDone =
         masteredPoems.size + notMasteredPoems.size + 1 >= poems.length;
       setNotMasteredPoems((prev) => new Set(prev).add(key));
+      setDbNotMasteredPoems((prev) => new Set(prev).add(key));
       setErrorCount((prev) => prev + 1);
 
       const user = currentUser;
@@ -392,6 +393,7 @@ export default function LearnPage() {
       const isAllDone =
         masteredPoems.size + notMasteredPoems.size + 1 >= poems.length;
       setMasteredPoems((prev) => new Set(prev).add(key));
+      setDbMasteredPoems((prev) => new Set(prev).add(key));
       setCorrectCount((prev) => prev + 1);
 
       const user = currentUser;
