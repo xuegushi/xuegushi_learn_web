@@ -16,6 +16,46 @@ interface VoiceOption {
   voiceURI: string;
 }
 
+interface SpeechSettings {
+  voiceURI: string;
+  rate: number;
+  pitch: number;
+  volume: number;
+}
+
+const DEFAULT_SPEECH_SETTINGS: SpeechSettings = {
+  voiceURI: "",
+  rate: 1,
+  pitch: 1,
+  volume: 1,
+};
+
+// 朗读函数
+function speak(text: string, settings: SpeechSettings) {
+  if (typeof window === "undefined") return;
+  
+  const synth = window.speechSynthesis;
+  synth.cancel();
+  
+  const utterance = new SpeechSynthesisUtterance(text);
+  
+  // 设置声音
+  if (settings.voiceURI) {
+    const allVoices = synth.getVoices();
+    const voiceObj = allVoices.find(v => v.voiceURI === settings.voiceURI);
+    if (voiceObj) {
+      utterance.voice = voiceObj;
+    }
+  }
+  
+  utterance.lang = "zh-CN";
+  utterance.rate = settings.rate;
+  utterance.pitch = settings.pitch;
+  utterance.volume = settings.volume;
+  
+  synth.speak(utterance);
+}
+
 export default function ListenPage() {
   const { initialize } = useUserStore();
 
@@ -36,7 +76,34 @@ export default function ListenPage() {
 
   // 声音设置
   const [voices, setVoices] = useState<VoiceOption[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState<VoiceOption | null>(null);
+  const [speechSettings, setSpeechSettings] = useState<SpeechSettings>(DEFAULT_SPEECH_SETTINGS);
+
+  // 从 localStorage 加载设置
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("speechSettings");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setSpeechSettings({ ...DEFAULT_SPEECH_SETTINGS, ...parsed });
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
+  // 保存设置到 localStorage
+  const saveSpeechSettings = (newSettings: SpeechSettings) => {
+    setSpeechSettings(newSettings);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("speechSettings", JSON.stringify(newSettings));
+    }
+  };
+
+  // 选择声音时保存设置
+  const handleVoiceSelect = (voice: VoiceOption) => {
+    saveSpeechSettings({ ...speechSettings, voiceURI: voice.voiceURI });
+  };
 
   useEffect(() => {
     const loadVoices = () => {
@@ -56,7 +123,10 @@ export default function ListenPage() {
       
       if (zhVoices.length > 0) {
         setVoices(zhVoices);
-        setSelectedVoice(zhVoices[0]);
+        // 如果没有保存的设置，默认选择第一个
+        if (!speechSettings.voiceURI) {
+          saveSpeechSettings({ ...speechSettings, voiceURI: zhVoices[0].voiceURI });
+        }
       } else {
         // 如果没有符合条件的本地声音，使用所有本地服务的中文声音
         const allZhVoices = loadedVoices
@@ -68,7 +138,9 @@ export default function ListenPage() {
           }));
         if (allZhVoices.length > 0) {
           setVoices(allZhVoices);
-          setSelectedVoice(allZhVoices[0]);
+          if (!speechSettings.voiceURI) {
+            saveSpeechSettings({ ...speechSettings, voiceURI: allZhVoices[0].voiceURI });
+          }
         } else {
           // 如果还是没有，使用所有可用声音
           const allVoices = loadedVoices.map(v => ({
@@ -77,7 +149,9 @@ export default function ListenPage() {
             voiceURI: v.voiceURI,
           }));
           setVoices(allVoices);
-          setSelectedVoice(allVoices[0] || null);
+          if (!speechSettings.voiceURI && allVoices.length > 0) {
+            saveSpeechSettings({ ...speechSettings, voiceURI: allVoices[0].voiceURI });
+          }
         }
       }
     };
@@ -92,23 +166,10 @@ export default function ListenPage() {
 
   // 试听音色
   const handlePreviewVoice = () => {
-    if (typeof window === "undefined" || !selectedVoice) return;
-    
-    const synth = window.speechSynthesis;
-    synth.cancel(); // 停止当前朗读
-    
-    const utterance = new SpeechSynthesisUtterance("鹅，鹅，鹅，曲项向天歌。白毛浮绿水，红掌拨清波。");
-    
-    // 找到对应的 voice 对象
-    const allVoices = synth.getVoices();
-    const voiceObj = allVoices.find(v => v.voiceURI === selectedVoice.voiceURI);
-    if (voiceObj) {
-      utterance.voice = voiceObj;
-    }
-    utterance.lang = "zh-CN";
-    utterance.rate = 0.8; // 语速稍慢
-    
-    synth.speak(utterance);
+    speak("鹅，鹅，鹅，曲项向天歌。白毛浮绿水，红掌拨清波。", {
+      ...speechSettings,
+      rate: 0.8,
+    });
   };
 
   const fetchCatalogDetail = useCallback((catalogId: string) => {
@@ -307,9 +368,9 @@ export default function ListenPage() {
                         voices.map((voice, idx) => (
                           <div
                             key={voice.voiceURI}
-                            onClick={() => setSelectedVoice(voice)}
+                            onClick={() => handleVoiceSelect(voice)}
                             className={`p-2 rounded-lg cursor-pointer text-sm transition-colors ${
-                              selectedVoice?.voiceURI === voice.voiceURI
+                              speechSettings.voiceURI === voice.voiceURI
                                 ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
                                 : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
                             }`}
@@ -321,15 +382,11 @@ export default function ListenPage() {
                               className="mt-1 h-7 text-xs"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const synth = window.speechSynthesis;
-                                synth.cancel();
-                                const utterance = new SpeechSynthesisUtterance("鹅，鹅，鹅，曲项向天歌。白毛浮绿水，红掌拨清波。");
-                                const allVoices = synth.getVoices();
-                                const voiceObj = allVoices.find(v => v.voiceURI === voice.voiceURI);
-                                if (voiceObj) utterance.voice = voiceObj;
-                                utterance.lang = "zh-CN";
-                                utterance.rate = 0.8;
-                                synth.speak(utterance);
+                                speak("鹅，鹅，鹅，曲项向天歌。白毛浮绿水，红掌拨清波。", {
+                                  ...speechSettings,
+                                  voiceURI: voice.voiceURI,
+                                  rate: 0.8,
+                                });
                               }}
                             >
                               <Play className="h-3 w-3 mr-1" />
