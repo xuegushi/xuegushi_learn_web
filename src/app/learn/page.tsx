@@ -245,13 +245,15 @@ export default function LearnPage() {
   // ==================== 事件处理 ====================
   const [skippedCount, setSkippedCount] = useState(0);
 
-  const resetProgress = useCallback(() => {
+  const resetProgress = useCallback((keepMasteredState = false) => {
     setCurrentIndex(0);
     setErrorCount(0);
     setCorrectCount(0);
     setSkippedCount(0);
-    setMasteredPoems(new Set());
-    setNotMasteredPoems(new Set());
+    if (!keepMasteredState) {
+      setMasteredPoems(new Set());
+      setNotMasteredPoems(new Set());
+    }
     setShowResult(false);
   }, []);
 
@@ -662,7 +664,7 @@ export default function LearnPage() {
             {/* 移动端按钮 */}
             <MobileButtons
               allCompleted={allCompleted}
-              onReset={resetProgress}
+              onReset={() => resetProgress(mode === "recite")}
               onContinue={handleContinueLearning}
               onEarlyEnd={handleEarlyEnd}
               mode={mode}
@@ -676,7 +678,7 @@ export default function LearnPage() {
             {/* PC端按钮 */}
             <PcButtons
               allCompleted={allCompleted}
-              onReset={resetProgress}
+              onReset={() => resetProgress(mode === "recite")}
               onContinue={handleContinueLearning}
               onEarlyEnd={handleEarlyEnd}
               mode={mode}
