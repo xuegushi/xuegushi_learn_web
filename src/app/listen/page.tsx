@@ -417,9 +417,10 @@ export default function ListenPage() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 speak("鹅，鹅，鹅，曲项向天歌。白毛浮绿水，红掌拨清波。", {
-                                  ...speechSettings,
                                   voiceURI: voice.voiceURI,
-                                  rate: 0.8,
+                                  rate: speechSettings.rate,
+                                  pitch: speechSettings.pitch,
+                                  volume: speechSettings.volume,
                                 });
                               }}
                             >
