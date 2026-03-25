@@ -61,14 +61,12 @@ function RangeCalendarSelect({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger>
-        <Button variant="outline" size="sm" className="w-56 md:w-64 text-xs justify-start font-normal">
-          <CalendarIcon className="mr-1 h-3 w-3" />
-          {dateFrom || dateTo
-            ? `${formatDateDisplay(dateFrom)}${dateTo ? ` - ${formatDateDisplay(dateTo)}` : ""}`
-            : "选择日期区间"}
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger render={<Button variant="outline" size="sm" className="w-56 md:w-64 text-xs justify-start font-normal">
+        <CalendarIcon className="mr-1 h-3 w-3" />
+        {dateFrom || dateTo
+          ? `${formatDateDisplay(dateFrom)}${dateTo ? ` - ${formatDateDisplay(dateTo)}` : ""}`
+          : "选择日期区间"}
+      </Button>} />
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="range"
