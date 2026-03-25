@@ -21,7 +21,14 @@ interface LearnCardProps {
   onCheckInSuccess?: () => void;
 }
 
-export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext, onCheckInSuccess }: LearnCardProps) {
+export function LearnCard({
+  poemDetail,
+  pinyinData,
+  currentIndex,
+  onPrev,
+  onNext,
+  onCheckInSuccess,
+}: LearnCardProps) {
   const [showPinyin, setShowPinyin] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
@@ -48,9 +55,16 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
     }
 
     const today = new Date().toISOString().split("T")[0];
-    const allRecords = await getAllFromDB<{ user_id: number; poem_id: number; check_in_time: string }>(STORES.POEM_STUDY);
+    const allRecords = await getAllFromDB<{
+      user_id: number;
+      poem_id: number;
+      check_in_time: string;
+    }>(STORES.POEM_STUDY);
     const hasCheckedInToday = allRecords.some(
-      (r) => r.user_id === currentUser.user_id && r.poem_id === poemId && r.check_in_time.startsWith(today)
+      (r) =>
+        r.user_id === currentUser.user_id &&
+        r.poem_id === poemId &&
+        r.check_in_time.startsWith(today),
     );
     setCheckedInToday(hasCheckedInToday);
   }, [currentUser, poemDetail?.poem?.id]);
@@ -64,11 +78,17 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
     const newUser = await addUser(userName);
     if (newUser) {
       await switchUser(newUser);
-      await handleCheckIn({ user_id: newUser.id, user_name: newUser.user_name });
+      await handleCheckIn({
+        user_id: newUser.id,
+        user_name: newUser.user_name,
+      });
     }
   };
 
-  const handleCheckIn = async (user?: { user_id: number; user_name: string }) => {
+  const handleCheckIn = async (user?: {
+    user_id: number;
+    user_name: string;
+  }) => {
     if (checkingIn || checkedInToday) return;
 
     const userToUse = user || currentUser;
@@ -93,9 +113,16 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
       check_in_time: now,
     });
 
-    const allSummary = await getAllFromDB<{ id: number; user_id: number; poem_id: number; count: number; created_at: string; updated_at: string }>(STORES.POEM_STUDY_SUMMARY);
+    const allSummary = await getAllFromDB<{
+      id: number;
+      user_id: number;
+      poem_id: number;
+      count: number;
+      created_at: string;
+      updated_at: string;
+    }>(STORES.POEM_STUDY_SUMMARY);
     const existingSummary = allSummary.find(
-      (s) => s.user_id === userToUse.user_id && s.poem_id === poem.id
+      (s) => s.user_id === userToUse.user_id && s.poem_id === poem.id,
     );
 
     let finalCount = 1;
@@ -257,7 +284,11 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
               )}
 
               {poemDetail.detail?.yi?.content && (
-                <Section title="译文" content={poemDetail.detail.yi.content} />
+                <Section
+                  title="译文"
+                  content={poemDetail.detail.yi.content}
+                  isHtml
+                />
               )}
 
               {poemDetail.poem?.background && (
@@ -332,7 +363,17 @@ export function LearnCard({ poemDetail, pinyinData, currentIndex, onPrev, onNext
   );
 }
 
-function Section({ title, content, isHtml, className }: { title: string; content: string[]; isHtml?: boolean; className?: string }) {
+function Section({
+  title,
+  content,
+  isHtml,
+  className,
+}: {
+  title: string;
+  content: string[];
+  isHtml?: boolean;
+  className?: string;
+}) {
   return (
     <div className={`mt-4 ${className || ""}`}>
       <div className="flex items-center gap-4 mb-2">
@@ -347,7 +388,9 @@ function Section({ title, content, isHtml, className }: { title: string; content
         />
       ) : (
         content.map((text, idx) => (
-          <p key={idx} className="text-muted-foreground text-base leading-relaxed whitespace-pre-wrap">
+          <p
+            key={idx}
+            className="text-muted-foreground text-base leading-relaxed whitespace-pre-wrap">
             {text}
           </p>
         ))

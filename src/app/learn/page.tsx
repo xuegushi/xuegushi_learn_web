@@ -22,6 +22,8 @@ import {
   PoemDetail,
   PinyinData,
 } from "@/types/poem";
+import { Badge } from "@/components/ui/badge";
+import { CheckCheck } from "lucide-react";
 import { MobileButtons, PcButtons } from "./components/PageButtons";
 
 /** 页面主组件 */
@@ -577,23 +579,45 @@ export default function LearnPage() {
             <div className="hidden sm:block w-46 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
               <ScrollArea className="h-full">
                 <div className="p-4 space-y-2">
-                  {poems.map((poem, idx) => (
-                    <div
-                      key={poem.targetId}
-                      onClick={() => setCurrentIndex(idx)}
-                      className={`p-1.5 rounded-lg cursor-pointer transition-colors ${
-                        idx === currentIndex
-                          ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
-                          : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      }`}>
-                      <div className="font-medium text-xs truncate">
-                        {poem.title}
+                  {poems.map((poem, idx) => {
+                    const key = poem.targetId.toString();
+                    const isMastered = masteredPoems.has(key);
+                    const isNotMastered = notMasteredPoems.has(key);
+                    const isCheckedInToday = todayCheckedPoemIds.has(poem.targetId);
+                    return (
+                      <div
+                        key={poem.targetId}
+                        onClick={() => setCurrentIndex(idx)}
+                        className={`p-1.5 rounded-lg cursor-pointer transition-colors relative ${
+                          idx === currentIndex
+                            ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
+                            : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        }`}>
+                        {mode === "recite" ? (
+                          isMastered || isNotMastered ? (
+                            <Badge
+                              className={`absolute -top-1 -right-1 h-4 px-1 text-[10px] ${
+                                isMastered
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"
+                                  : "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
+                              }`}>
+                              {isMastered ? "掌握" : "未掌握"}
+                            </Badge>
+                          ) : null
+                        ) : isCheckedInToday ? (
+                          <Badge className="absolute -top-1 -right-1 h-4 px-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                            <CheckCheck className="h-3 w-3 mr-0.5" />
+                          </Badge>
+                        ) : null}
+                        <div className="font-medium text-xs truncate pr-4">
+                          {poem.title}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                          {poem.author} [{poem.dynasty}]
+                        </div>
                       </div>
-                      <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                        {poem.author} [{poem.dynasty}]
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </div>
