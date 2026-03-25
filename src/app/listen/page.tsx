@@ -8,7 +8,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CatalogItem, CatalogDetail, PoemDetail } from "@/types/poem";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, SkipBack, SkipForward, Volume2 } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, User } from "lucide-react";
+
+interface VoiceOption {
+  name: string;
+  lang: string;
+  voiceURI: string;
+}
 
 export default function ListenPage() {
   const { initialize } = useUserStore();
@@ -27,6 +33,47 @@ export default function ListenPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentPoemDetail, setCurrentPoemDetail] = useState<PoemDetail | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // 声音设置
+  const [voices, setVoices] = useState<VoiceOption[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<VoiceOption | null>(null);
+
+  useEffect(() => {
+    const loadVoices = () => {
+      if (typeof window === "undefined") return;
+      
+      const synth = window.speechSynthesis;
+      const loadedVoices = synth.getVoices();
+      const zhVoices = loadedVoices
+        .filter(v => v.lang.startsWith("zh-CN"))
+        .map(v => ({
+          name: v.name,
+          lang: v.lang,
+          voiceURI: v.voiceURI,
+        }));
+      
+      if (zhVoices.length > 0) {
+        setVoices(zhVoices);
+        setSelectedVoice(zhVoices[0]);
+      } else {
+        // 如果没有中文声音，使用所有可用声音
+        const allVoices = loadedVoices.map(v => ({
+          name: v.name,
+          lang: v.lang,
+          voiceURI: v.voiceURI,
+        }));
+        setVoices(allVoices);
+        setSelectedVoice(allVoices[0] || null);
+      }
+    };
+
+    loadVoices();
+    
+    // 某些浏览器需要等待 voiceschanged 事件
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
 
   const fetchCatalogDetail = useCallback((catalogId: string) => {
     fetch(
@@ -118,7 +165,7 @@ export default function ListenPage() {
         <div className="flex h-full">
           {/* 左侧诗词列表 */}
           {poems.length > 0 && (
-            <div className="hidden md:block w-56 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
+            <div className="hidden md:block w-48 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
               <ScrollArea className="h-full">
                 <div className="p-4 space-y-2">
                   {poems.map((poem, idx) => (
@@ -141,7 +188,7 @@ export default function ListenPage() {
             </div>
           )}
 
-          {/* 右侧主内容 */}
+          {/* 中间主内容 */}
           <div className="flex-1 overflow-hidden flex items-center justify-center p-4">
             {poems.length === 0 ? (
               <div className="text-muted-foreground">请选择分册</div>
@@ -200,6 +247,46 @@ export default function ListenPage() {
                 </CardContent>
               </Card>
             )}
+          </div>
+
+          {/* 右侧设置卡片 */}
+          <div className="w-64 border-l bg-gray-50 dark:bg-gray-800/50 flex-shrink-0 p-4">
+            <Card>
+              <CardContent className="p-4 space-y-4">
+                <div className="font-semibold text-sm">朗读设置</div>
+                
+                {/* 选择声音 */}
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    选择您喜欢的声音
+                  </div>
+                  <ScrollArea className="h-40">
+                    <div className="space-y-2">
+                      {voices.length === 0 ? (
+                        <div className="text-xs text-muted-foreground p-2">
+                          加载中...
+                        </div>
+                      ) : (
+                        voices.map((voice, idx) => (
+                          <div
+                            key={voice.voiceURI}
+                            onClick={() => setSelectedVoice(voice)}
+                            className={`p-2 rounded-lg cursor-pointer text-sm transition-colors ${
+                              selectedVoice?.voiceURI === voice.voiceURI
+                                ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
+                                : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            }`}
+                          >
+                            {voice.name}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
