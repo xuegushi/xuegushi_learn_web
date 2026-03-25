@@ -87,22 +87,30 @@ export default function LearnPage() {
   const [dbNotMasteredPoems, setDbNotMasteredPoems] = useState<Set<string>>(new Set());
 
   const loadDbReciteRecords = useCallback(async () => {
+    if (!currentUser?.user_id) {
+      setDbMasteredPoems(new Set());
+      setDbNotMasteredPoems(new Set());
+      return;
+    }
     const details = await getAllFromDB<{
+      user_id: number;
       poem_id: string;
       status: boolean;
     }>(STORES.RECITE_DETAIL);
     const mastered = new Set<string>();
     const notMastered = new Set<string>();
     details.forEach((d) => {
-      if (d.status) {
-        mastered.add(d.poem_id);
-      } else {
-        notMastered.add(d.poem_id);
+      if (d.user_id === currentUser.user_id) {
+        if (d.status) {
+          mastered.add(d.poem_id);
+        } else {
+          notMastered.add(d.poem_id);
+        }
       }
     });
     setDbMasteredPoems(mastered);
     setDbNotMasteredPoems(notMastered);
-  }, []);
+  }, [currentUser]);
 
   const loadTodayCheckInData = useCallback(async () => {
     const today = new Date();
