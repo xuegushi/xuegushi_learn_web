@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Shuffle, CircleX, CheckCircle2 } from "lucide-react";
+import { CircleX, CheckCircle2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ReciteRecordsDialog } from "@/components/recite-records-dialog";
 import { CreateUserDialog } from "@/components/create-user-dialog";
@@ -24,6 +24,9 @@ interface ReciteCardProps {
   onSkip: () => void;
   onViewDetail: () => void;
   onRandomHint: () => void;
+  onShowFirstCharChange: (show: boolean) => void;
+  onShowLastCharChange: (show: boolean) => void;
+  onShowRandomCharChange: (show: boolean) => void;
   targetId: number;
 }
 
@@ -41,6 +44,9 @@ export function ReciteCard({
   onSkip,
   onViewDetail,
   onRandomHint,
+  onShowFirstCharChange,
+  onShowLastCharChange,
+  onShowRandomCharChange,
   targetId,
 }: ReciteCardProps) {
   const key = targetId?.toString();
@@ -69,8 +75,6 @@ export function ReciteCard({
     setPendingAction(null);
     setShowCreateUser(false);
   };
-
-  const statusColor = isMastered ? "bg-green-500" : isNotMastered ? "bg-red-500" : "bg-gray-300";
 
   if (!poemDetail) {
     return (
@@ -132,16 +136,46 @@ export function ReciteCard({
         <Card className="shadow-lg w-full h-full  flex flex-col relative overflow-visible">
           <CardContent className="px-4 md:px-5 md:py-2 space-y-3 md:space-y-4 flex flex-col flex-1 overflow-hidden">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-4 h-4 rounded ${statusColor} transition-colors`}
-                />
+              <div className="flex items-center gap-1">
                 <button
-                  onClick={onRandomHint}
-                  className="flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer"
-                  title="点击随机显示每行一个汉字">
-                  <Shuffle className="h-3 w-3" />
-                  随机提示
+                  onClick={() => { onShowRandomCharChange(true); onShowFirstCharChange(false); onShowLastCharChange(false); }}
+                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded cursor-pointer transition-colors ${
+                    showRandomChar && !showFirstChar && !showLastChar
+                      ? "bg-blue-500 text-white"
+                      : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                  }`}
+                  title="随机显示每行一个汉字">
+                  随机
+                </button>
+                <button
+                  onClick={() => { onShowFirstCharChange(true); onShowLastCharChange(false); onShowRandomCharChange(false); }}
+                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded cursor-pointer transition-colors ${
+                    showFirstChar && !showLastChar
+                      ? "bg-blue-500 text-white"
+                      : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                  }`}
+                  title="显示每行首字">
+                  首字
+                </button>
+                <button
+                  onClick={() => { onShowLastCharChange(true); onShowFirstCharChange(false); onShowRandomCharChange(false); }}
+                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded cursor-pointer transition-colors ${
+                    showLastChar && !showFirstChar
+                      ? "bg-blue-500 text-white"
+                      : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                  }`}
+                  title="显示每行尾字">
+                  尾字
+                </button>
+                <button
+                  onClick={() => { onShowFirstCharChange(false); onShowLastCharChange(false); onShowRandomCharChange(false); }}
+                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded cursor-pointer transition-colors ${
+                    !showFirstChar && !showLastChar && !showRandomChar
+                      ? "bg-blue-500 text-white"
+                      : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                  }`}
+                  title="隐藏文字">
+                  隐藏
                 </button>
               </div>
               <button

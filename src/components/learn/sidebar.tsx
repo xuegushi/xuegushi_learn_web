@@ -17,14 +17,8 @@ interface SidebarProps {
   catalogDetail: CatalogDetail | null;
   system: string;
   selectedFascicule: string;
-  showFirstChar: boolean;
-  showLastChar: boolean;
-  showRandomChar: boolean;
   onSystemChange: (catalogId: string | null) => void;
   onFasciculeChange: (fasciculeId: string | null) => void;
-  onShowFirstCharChange: (value: boolean) => void;
-  onShowLastCharChange: (value: boolean) => void;
-  onShowRandomCharChange: (value: boolean) => void;
   onLocalDataClick: () => void;
   sidebarOpen: boolean;
   onSidebarClose: () => void;
@@ -39,14 +33,8 @@ export function Sidebar({
   catalogDetail,
   system,
   selectedFascicule,
-  showFirstChar,
-  showLastChar,
-  showRandomChar,
   onSystemChange,
   onFasciculeChange,
-  onShowFirstCharChange,
-  onShowLastCharChange,
-  onShowRandomCharChange,
   onLocalDataClick,
   sidebarOpen,
   onSidebarClose,
@@ -171,75 +159,6 @@ export function Sidebar({
               </AccordionContent>
             </AccordionItem>
           </Accordion>
-
-          {/* 背诵设置 - 仅背诵模式显示 */}
-          {mode === "recite" && (
-            <div>
-              <h2 className="font-semibold mb-3">背诵设置</h2>
-              <div className="grid grid-cols-2 gap-2">
-                <label
-                  className={`flex items-center justify-center gap-1 text-xs cursor-pointer py-1.5 px-1.5 rounded border ${showRandomChar && !showFirstChar && !showLastChar ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" : "border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100"}`}>
-                  <input
-                    type="radio"
-                    name="reciteSetting"
-                    checked={showRandomChar && !showFirstChar && !showLastChar}
-                    onChange={() => {
-                      onShowRandomCharChange(true);
-                      onShowFirstCharChange(false);
-                      onShowLastCharChange(false);
-                    }}
-                    className="w-3 h-3"
-                  />
-                  随机显示
-                </label>
-                <label
-                  className={`flex items-center justify-center gap-1 text-xs cursor-pointer py-1.5 px-1.5 rounded border ${showFirstChar && !showLastChar ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" : "border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100"}`}>
-                  <input
-                    type="radio"
-                    name="reciteSetting"
-                    checked={showFirstChar && !showLastChar}
-                    onChange={() => {
-                      onShowFirstCharChange(true);
-                      onShowLastCharChange(false);
-                      onShowRandomCharChange(false);
-                    }}
-                    className="w-3 h-3"
-                  />
-                  显示首字
-                </label>
-                <label
-                  className={`flex items-center justify-center gap-1 text-xs cursor-pointer py-1.5 px-1.5 rounded border ${showLastChar && !showFirstChar ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" : "border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100"}`}>
-                  <input
-                    type="radio"
-                    name="reciteSetting"
-                    checked={showLastChar && !showFirstChar}
-                    onChange={() => {
-                      onShowLastCharChange(true);
-                      onShowFirstCharChange(false);
-                      onShowRandomCharChange(false);
-                    }}
-                    className="w-3 h-3"
-                  />
-                  显示尾字
-                </label>
-                <label
-                  className={`flex items-center justify-center gap-1 text-xs cursor-pointer py-1.5 px-1.5 rounded border ${!showFirstChar && !showLastChar && !showRandomChar ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" : "border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100"}`}>
-                  <input
-                    type="radio"
-                    name="reciteSetting"
-                    checked={!showFirstChar && !showLastChar && !showRandomChar}
-                    onChange={() => {
-                      onShowFirstCharChange(false);
-                      onShowLastCharChange(false);
-                      onShowRandomCharChange(false);
-                    }}
-                    className="w-3 h-3"
-                  />
-                  隐藏文字
-                </label>
-              </div>
-            </div>
-          )}
         </ScrollArea>
 
         {/* 本地数据管理 - 固定到底部 */}

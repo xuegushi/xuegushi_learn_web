@@ -540,14 +540,8 @@ export default function LearnPage() {
         catalogDetail={catalogDetail}
         system={system}
         selectedFascicule={selectedFascicule}
-        showFirstChar={showFirstChar}
-        showLastChar={showLastChar}
-        showRandomChar={showRandomChar}
         onSystemChange={handleSystemChange}
         onFasciculeChange={(id) => id && setSelectedFascicule(id)}
-        onShowFirstCharChange={setShowFirstChar}
-        onShowLastCharChange={setShowLastChar}
-        onShowRandomCharChange={setShowRandomChar}
         onLocalDataClick={() => setLocalDataOpen(true)}
         sidebarOpen={sidebarOpen}
         onSidebarClose={() => setSidebarOpen(false)}
@@ -695,6 +689,9 @@ export default function LearnPage() {
                   setSelectedPoem(currentPoemDetail as unknown as PoemDetail)
                 }
                 onRandomHint={handleRandomHint}
+                onShowFirstCharChange={setShowFirstChar}
+                onShowLastCharChange={setShowLastChar}
+                onShowRandomCharChange={setShowRandomChar}
                 targetId={poems[currentIndex]?.targetId || 0}
               />
             )}
