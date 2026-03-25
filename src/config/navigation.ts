@@ -5,6 +5,7 @@ export interface NavItem {
 
 export const headerNav: NavItem[] = [
   { label: "古诗学习", href: "/learn" },
+  { label: "听诗", href: "/listen" },
   { label: "关于", href: "/about" },
 ];
 
