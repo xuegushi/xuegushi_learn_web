@@ -19,6 +19,8 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, User } from "lucide-react"
 
 const RATE_OPTIONS = [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.15, 1.2, 1.3, 1.4, 1.5, 2];
 
+const VOLUME_OPTIONS = [0.1, 0.3, 0.5, 0.8, 1, 1.2, 1.5, 1.8, 2];
+
 function formatRate(rate: number): string {
   if (rate < 1) {
     return `${rate}x 降速`;
@@ -26,6 +28,19 @@ function formatRate(rate: number): string {
     return "1.0x (默认语速)";
   } else {
     return `${rate}x 加速`;
+  }
+}
+
+function formatVolume(volume: number): string {
+  const percent = Math.round(volume * 100);
+  if (volume < 1) {
+    return `${percent}% 降低音量`;
+  } else if (volume === 1) {
+    return "100% (默认音量)";
+  } else if (volume === 2) {
+    return "200% 提升音量 (可能破音)";
+  } else {
+    return `${percent}% 提升音量`;
   }
 }
 
@@ -435,6 +450,28 @@ export default function ListenPage() {
                       {RATE_OPTIONS.map((rate) => (
                         <SelectItem key={rate} value={rate.toString()}>
                           {formatRate(rate)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* 调节音量 */}
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                    调节音量
+                  </div>
+                  <Select
+                    value={speechSettings.volume.toString()}
+                    onValueChange={(v) => v && saveSpeechSettings({ ...speechSettings, volume: parseFloat(v) })}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {VOLUME_OPTIONS.map((vol) => (
+                        <SelectItem key={vol} value={vol.toString()}>
+                          {formatVolume(vol)}
                         </SelectItem>
                       ))}
                     </SelectContent>
