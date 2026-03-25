@@ -82,6 +82,28 @@ export default function LearnPage() {
     new Set(),
   );
 
+  // 背诵记录（从 IndexedDB 加载）
+  const [dbMasteredPoems, setDbMasteredPoems] = useState<Set<string>>(new Set());
+  const [dbNotMasteredPoems, setDbNotMasteredPoems] = useState<Set<string>>(new Set());
+
+  const loadDbReciteRecords = useCallback(async () => {
+    const details = await getAllFromDB<{
+      poem_id: string;
+      status: boolean;
+    }>(STORES.RECITE_DETAIL);
+    const mastered = new Set<string>();
+    const notMastered = new Set<string>();
+    details.forEach((d) => {
+      if (d.status) {
+        mastered.add(d.poem_id);
+      } else {
+        notMastered.add(d.poem_id);
+      }
+    });
+    setDbMasteredPoems(mastered);
+    setDbNotMasteredPoems(notMastered);
+  }, []);
+
   const loadTodayCheckInData = useCallback(async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -165,6 +187,12 @@ export default function LearnPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadTodayCheckInData();
   }, [loadTodayCheckInData, selectedFascicule]);
+
+  // 加载背诵记录（从 IndexedDB）
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadDbReciteRecords();
+  }, [loadDbReciteRecords]);
 
   // 获取诗词详情和拼音
   useEffect(() => {
@@ -583,8 +611,8 @@ export default function LearnPage() {
                 <div className="p-4 space-y-2">
                   {poems.map((poem, idx) => {
                     const key = poem.targetId.toString();
-                    const isMastered = masteredPoems.has(key);
-                    const isNotMastered = notMasteredPoems.has(key);
+                    const isMastered = dbMasteredPoems.has(key);
+                    const isNotMastered = dbNotMasteredPoems.has(key);
                     const isCheckedInToday = todayCheckedPoemIds.has(poem.targetId);
                     return (
                       <div
