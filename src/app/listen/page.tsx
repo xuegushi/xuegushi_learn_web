@@ -44,8 +44,10 @@ export default function ListenPage() {
       
       const synth = window.speechSynthesis;
       const loadedVoices = synth.getVoices();
+      
+      // 筛选 localService 为 true 的中文声音
       const zhVoices = loadedVoices
-        .filter(v => v.lang.startsWith("zh-CN"))
+        .filter(v => v.lang.startsWith("zh-CN") && v.localService)
         .map(v => ({
           name: v.name,
           lang: v.lang,
@@ -56,14 +58,27 @@ export default function ListenPage() {
         setVoices(zhVoices);
         setSelectedVoice(zhVoices[0]);
       } else {
-        // 如果没有中文声音，使用所有可用声音
-        const allVoices = loadedVoices.map(v => ({
-          name: v.name,
-          lang: v.lang,
-          voiceURI: v.voiceURI,
-        }));
-        setVoices(allVoices);
-        setSelectedVoice(allVoices[0] || null);
+        // 如果没有符合条件的本地声音，使用所有本地服务的中文声音
+        const allZhVoices = loadedVoices
+          .filter(v => v.lang.startsWith("zh-CN"))
+          .map(v => ({
+            name: v.name,
+            lang: v.lang,
+            voiceURI: v.voiceURI,
+          }));
+        if (allZhVoices.length > 0) {
+          setVoices(allZhVoices);
+          setSelectedVoice(allZhVoices[0]);
+        } else {
+          // 如果还是没有，使用所有可用声音
+          const allVoices = loadedVoices.map(v => ({
+            name: v.name,
+            lang: v.lang,
+            voiceURI: v.voiceURI,
+          }));
+          setVoices(allVoices);
+          setSelectedVoice(allVoices[0] || null);
+        }
       }
     };
 
@@ -74,6 +89,27 @@ export default function ListenPage() {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
   }, []);
+
+  // 试听音色
+  const handlePreviewVoice = () => {
+    if (typeof window === "undefined" || !selectedVoice) return;
+    
+    const synth = window.speechSynthesis;
+    synth.cancel(); // 停止当前朗读
+    
+    const utterance = new SpeechSynthesisUtterance("鹅，鹅，鹅，曲项向天歌。白毛浮绿水，红掌拨清波。");
+    
+    // 找到对应的 voice 对象
+    const allVoices = synth.getVoices();
+    const voiceObj = allVoices.find(v => v.voiceURI === selectedVoice.voiceURI);
+    if (voiceObj) {
+      utterance.voice = voiceObj;
+    }
+    utterance.lang = "zh-CN";
+    utterance.rate = 0.8; // 语速稍慢
+    
+    synth.speak(utterance);
+  };
 
   const fetchCatalogDetail = useCallback((catalogId: string) => {
     fetch(
@@ -278,7 +314,27 @@ export default function ListenPage() {
                                 : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
                             }`}
                           >
-                            {voice.name}
+                            <div className="font-medium">{voice.name}</div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="mt-1 h-7 text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const synth = window.speechSynthesis;
+                                synth.cancel();
+                                const utterance = new SpeechSynthesisUtterance("鹅，鹅，鹅，曲项向天歌。白毛浮绿水，红掌拨清波。");
+                                const allVoices = synth.getVoices();
+                                const voiceObj = allVoices.find(v => v.voiceURI === voice.voiceURI);
+                                if (voiceObj) utterance.voice = voiceObj;
+                                utterance.lang = "zh-CN";
+                                utterance.rate = 0.8;
+                                synth.speak(utterance);
+                              }}
+                            >
+                              <Play className="h-3 w-3 mr-1" />
+                              试听音色
+                            </Button>
                           </div>
                         ))
                       )}
