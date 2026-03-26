@@ -519,7 +519,7 @@ export default function ListenPage() {
                     onValueChange={(v) => v && saveSpeechSettings({ ...speechSettings, rate: parseFloat(v) })}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={formatRate(speechSettings.rate)} />
+                      <SelectValue>{formatRate(speechSettings.rate)}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {RATE_OPTIONS.map((rate) => (
@@ -541,7 +541,7 @@ export default function ListenPage() {
                     onValueChange={(v) => v && saveSpeechSettings({ ...speechSettings, volume: parseFloat(v) })}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={formatVolume(speechSettings.volume)} />
+                      <SelectValue>{formatVolume(speechSettings.volume)}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {VOLUME_OPTIONS.map((vol) => (
