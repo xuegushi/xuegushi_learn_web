@@ -5,12 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail, PinyinData } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect, useCallback } from "react";
-import { CheckCheck } from "lucide-react";
+import { CheckCheck, Headphones, HeadphoneOff } from "lucide-react";
 import { CreateUserDialog } from "@/components/create-user-dialog";
 import { CheckInSuccessDialog } from "@/components/check-in-success-dialog";
 import { setToDB, getAllFromDB, STORES } from "@/lib/db";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUserStore } from "@/lib/api/user-store";
+import { speak, stopSpeech, loadSpeechSettings } from "@/lib/speech";
 
 interface LearnCardProps {
   poemDetail: PoemDetail | null;
@@ -36,12 +37,51 @@ export function LearnCard({
   const [checkInCount, setCheckInCount] = useState(1);
   const [checkedInToday, setCheckedInToday] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const { currentUser, addUser, switchUser, initialize } = useUserStore();
 
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // 加载本地语音设置
+  const speechSettings = loadSpeechSettings();
+
+  // 播放/停止语音
+  const handlePlaySpeech = () => {
+    if (isPlaying) {
+      stopSpeech();
+      setIsPlaying(false);
+      return;
+    }
+
+    const poem = poemDetail?.poem;
+    if (!poem) return;
+
+    // 组合诗词内容：标题 + 作者 + 朝代 + 正文
+    let text = "";
+    if (poem.title) text += poem.title + "，";
+    if (poem.author) text += poem.author + "，";
+    if (poem.dynasty) text += poem.dynasty + "，";
+    if (poem.xu) text += poem.xu + "，";
+    if (poem.content?.content) {
+      text += poem.content.content.join("，");
+    }
+
+    if (text) {
+      speak(text, speechSettings, () => {
+        setIsPlaying(false);
+      });
+      setIsPlaying(true);
+    }
+  };
+
+  // 切换诗词时停止播放
+  useEffect(() => {
+    stopSpeech();
+    setIsPlaying(false);
+  }, [poemDetail?.poem?.id]);
 
   const checkIfCheckedInToday = useCallback(async () => {
     if (!currentUser) {
@@ -193,6 +233,16 @@ export function LearnCard({
         <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg z-10">
           {currentIndex + 1}
         </div>
+        <button
+          onClick={handlePlaySpeech}
+          className="absolute -top-3 left-8 z-10 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer"
+          title="播放语音">
+          {isPlaying ? (
+            <HeadphoneOff className="h-4 w-4" />
+          ) : (
+            <Headphones className="h-4 w-4" />
+          )}
+        </button>
         <button
           onClick={() => setShowTranslation(!showTranslation)}
           className={`absolute top-7 right-20 z-9 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showTranslation ? "bg-primary text-primary-foreground" : "bg-primary-foreground text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showTranslation ? "primary/50" : "primary/20"}`}

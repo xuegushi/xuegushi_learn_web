@@ -1,14 +1,17 @@
 import Head from "next/head";
 import { HomeModeCard } from "@/components/home/home-mode-card";
 import { HomeGuide } from "@/components/home/home-guide";
-import { BookOpen, Key } from "lucide-react";
+import { BookOpen, Timer } from "lucide-react";
 
 export default function Home() {
   return (
     <main className="container mx-auto py-8 px-4 space-y-8">
       <Head>
         <title>学古诗 - 首页</title>
-        <meta name="description" content="学习模式与背诵模式，助力掌握与记忆的有效融合。" />
+        <meta
+          name="description"
+          content="学习模式与背诵模式，助力掌握与记忆的有效融合。"
+        />
       </Head>
       <header className="text-center">
         <p className="text-muted-foreground">
@@ -32,7 +35,7 @@ export default function Home() {
         />
         <HomeModeCard
           title="背诵模式"
-          icon={<Key className="h-14 w-14" />}
+          icon={<Timer className="h-14 w-14" />}
           description="把诗词带进记忆，系统记录掌握情况，并进行定期回顾。"
           bullets={[
             "记录“掌握/未掌握/跳过”状态",
