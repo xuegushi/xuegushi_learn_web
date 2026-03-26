@@ -59,7 +59,7 @@ interface SpeechSettings {
 
 const DEFAULT_SPEECH_SETTINGS: SpeechSettings = {
   voiceURI: "",
-  rate: 1,
+  rate: 0.5,
   pitch: 1,
   volume: 1,
 };
@@ -519,7 +519,7 @@ export default function ListenPage() {
                     onValueChange={(v) => v && saveSpeechSettings({ ...speechSettings, rate: parseFloat(v) })}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue />
+                      <SelectValue placeholder={formatRate(speechSettings.rate)} />
                     </SelectTrigger>
                     <SelectContent>
                       {RATE_OPTIONS.map((rate) => (
@@ -541,7 +541,7 @@ export default function ListenPage() {
                     onValueChange={(v) => v && saveSpeechSettings({ ...speechSettings, volume: parseFloat(v) })}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue />
+                      <SelectValue placeholder={formatVolume(speechSettings.volume)} />
                     </SelectTrigger>
                     <SelectContent>
                       {VOLUME_OPTIONS.map((vol) => (
