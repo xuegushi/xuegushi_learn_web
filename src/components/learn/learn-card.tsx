@@ -50,21 +50,23 @@ export function LearnCard({
 
   // 记录当前朗读的文本
   const [currentSpeechText, setCurrentSpeechText] = useState("");
+  // 标记是否暂停了
+  const [isPaused, setIsPaused] = useState(false);
 
   // 播放/暂停语音
   const handlePlaySpeech = () => {
     if (isPlaying) {
       pauseSpeech();
       setIsPlaying(false);
+      setIsPaused(true);
       return;
     }
 
-    // 如果已暂停（但没有在播放），恢复播放
-    if (currentSpeechText) {
-      speak(currentSpeechText, speechSettings, () => {
-        setIsPlaying(false);
-      });
+    // 如果已暂停，恢复播放
+    if (isPaused && currentSpeechText) {
+      resumeSpeech();
       setIsPlaying(true);
+      setIsPaused(false);
       return;
     }
 
@@ -84,9 +86,11 @@ export function LearnCard({
 
     if (text) {
       setCurrentSpeechText(text);
+      setIsPaused(false);
       speak(text, speechSettings, () => {
         setIsPlaying(false);
         setCurrentSpeechText("");
+        setIsPaused(false);
       });
       setIsPlaying(true);
     }
@@ -97,6 +101,7 @@ export function LearnCard({
     stopSpeech();
     setIsPlaying(false);
     setCurrentSpeechText("");
+    setIsPaused(false);
   }, [poemDetail?.poem?.id]);
 
   const checkIfCheckedInToday = useCallback(async () => {
