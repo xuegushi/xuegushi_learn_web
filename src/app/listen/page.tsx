@@ -16,115 +16,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Play, Pause, SkipBack, SkipForward, Volume2, User } from "lucide-react";
-
-const RATE_OPTIONS = [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.15, 1.2, 1.3, 1.4, 1.5, 2];
-
-const VOLUME_OPTIONS = [0.1, 0.3, 0.5, 0.8, 1, 1.2, 1.5, 1.8, 2];
-
-function formatRate(rate: number): string {
-  if (rate < 1) {
-    return `${rate}x 降速`;
-  } else if (rate === 1) {
-    return "1.0x (默认语速)";
-  } else {
-    return `${rate}x 加速`;
-  }
-}
-
-function formatVolume(volume: number): string {
-  const percent = Math.round(volume * 100);
-  if (volume < 1) {
-    return `${percent}% 降低音量`;
-  } else if (volume === 1) {
-    return "100% (默认音量)";
-  } else if (volume === 2) {
-    return "200% 提升音量 (可能破音)";
-  } else {
-    return `${percent}% 提升音量`;
-  }
-}
+import {
+  RATE_OPTIONS,
+  VOLUME_OPTIONS,
+  formatRate,
+  formatVolume,
+  speak,
+  pauseSpeech,
+  stopSpeech,
+  loadSpeechSettings,
+  saveSpeechSettings,
+  SpeechSettings,
+} from "@/lib/speech";
 
 interface VoiceOption {
   name: string;
   lang: string;
   voiceURI: string;
-}
-
-interface SpeechSettings {
-  voiceURI: string;
-  rate: number;
-  pitch: number;
-  volume: number;
-}
-
-const DEFAULT_SPEECH_SETTINGS: SpeechSettings = {
-  voiceURI: "",
-  rate: 0.5,
-  pitch: 1,
-  volume: 1,
-};
-
-// 朗读函数
-let onSpeechEnd: (() => void) | null = null;
-
-function speak(text: string, settings: SpeechSettings, onEnd?: () => void) {
-  if (typeof window === "undefined") return;
-  
-  const synth = window.speechSynthesis;
-  synth.cancel();
-  
-  const utterance = new SpeechSynthesisUtterance(text);
-  
-  // 设置声音
-  if (settings.voiceURI) {
-    const allVoices = synth.getVoices();
-    const voiceObj = allVoices.find(v => v.voiceURI === settings.voiceURI);
-    if (voiceObj) {
-      utterance.voice = voiceObj;
-    }
-  }
-  
-  utterance.lang = "zh-CN";
-  utterance.rate = settings.rate;
-  utterance.pitch = settings.pitch;
-  utterance.volume = settings.volume;
-  
-  if (onEnd) {
-    onSpeechEnd = onEnd;
-    utterance.onend = () => {
-      if (onSpeechEnd) {
-        onSpeechEnd();
-        onSpeechEnd = null;
-      }
-    };
-  }
-  
-  synth.speak(utterance);
-}
-
-// 暂停朗读
-function pauseSpeech() {
-  if (typeof window === "undefined") return;
-  const synth = window.speechSynthesis;
-  if (synth.speaking) {
-    synth.pause();
-  }
-}
-
-// 恢复朗读
-function resumeSpeech() {
-  if (typeof window === "undefined") return;
-  const synth = window.speechSynthesis;
-  if (synth.paused) {
-    synth.resume();
-  }
-}
-
-// 停止朗读
-function stopSpeech() {
-  if (typeof window === "undefined") return;
-  const synth = window.speechSynthesis;
-  synth.cancel();
 }
 
 export default function ListenPage() {
@@ -147,33 +55,22 @@ export default function ListenPage() {
 
   // 声音设置
   const [voices, setVoices] = useState<VoiceOption[]>([]);
-  const [speechSettings, setSpeechSettings] = useState<SpeechSettings>(DEFAULT_SPEECH_SETTINGS);
+  const [speechSettings, setSpeechSettings] = useState<SpeechSettings>(loadSpeechSettings());
 
   // 从 localStorage 加载设置
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("speechSettings");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setSpeechSettings({ ...DEFAULT_SPEECH_SETTINGS, ...parsed });
-      } catch {
-        // ignore
-      }
-    }
+    setSpeechSettings(loadSpeechSettings());
   }, []);
 
   // 保存设置到 localStorage
-  const saveSpeechSettings = (newSettings: SpeechSettings) => {
+  const handleSaveSpeechSettings = (newSettings: SpeechSettings) => {
     setSpeechSettings(newSettings);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("speechSettings", JSON.stringify(newSettings));
-    }
+    saveSpeechSettings(newSettings);
   };
 
   // 选择声音时保存设置
   const handleVoiceSelect = (voice: VoiceOption) => {
-    saveSpeechSettings({ ...speechSettings, voiceURI: voice.voiceURI });
+    handleSaveSpeechSettings({ ...speechSettings, voiceURI: voice.voiceURI });
   };
 
   useEffect(() => {
@@ -196,7 +93,7 @@ export default function ListenPage() {
         setVoices(zhVoices);
         // 如果没有保存的设置，默认选择第一个
         if (!speechSettings.voiceURI) {
-          saveSpeechSettings({ ...speechSettings, voiceURI: zhVoices[0].voiceURI });
+          handleSaveSpeechSettings({ ...speechSettings, voiceURI: zhVoices[0].voiceURI });
         }
       } else {
         // 如果没有符合条件的本地声音，使用所有本地服务的中文声音
@@ -210,7 +107,7 @@ export default function ListenPage() {
         if (allZhVoices.length > 0) {
           setVoices(allZhVoices);
           if (!speechSettings.voiceURI) {
-            saveSpeechSettings({ ...speechSettings, voiceURI: allZhVoices[0].voiceURI });
+            handleSaveSpeechSettings({ ...speechSettings, voiceURI: allZhVoices[0].voiceURI });
           }
         } else {
           // 如果还是没有，使用所有可用声音
@@ -221,7 +118,7 @@ export default function ListenPage() {
           }));
           setVoices(allVoices);
           if (!speechSettings.voiceURI && allVoices.length > 0) {
-            saveSpeechSettings({ ...speechSettings, voiceURI: allVoices[0].voiceURI });
+            handleSaveSpeechSettings({ ...speechSettings, voiceURI: allVoices[0].voiceURI });
           }
         }
       }
@@ -233,15 +130,7 @@ export default function ListenPage() {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
-  }, []);
-
-  // 试听音色
-  const handlePreviewVoice = () => {
-    speak("鹅，鹅，鹅，曲项向天歌。白毛浮绿水，红掌拨清波。", {
-      ...speechSettings,
-      rate: 0.8,
-    });
-  };
+  }, [speechSettings.voiceURI]);
 
   const fetchCatalogDetail = useCallback((catalogId: string) => {
     fetch(
@@ -516,7 +405,7 @@ export default function ListenPage() {
                   </div>
                   <Select
                     value={speechSettings.rate.toString()}
-                    onValueChange={(v) => v && saveSpeechSettings({ ...speechSettings, rate: parseFloat(v) })}
+                    onValueChange={(v) => v && handleSaveSpeechSettings({ ...speechSettings, rate: parseFloat(v) })}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue>{formatRate(speechSettings.rate)}</SelectValue>
@@ -538,7 +427,7 @@ export default function ListenPage() {
                   </div>
                   <Select
                     value={speechSettings.volume.toString()}
-                    onValueChange={(v) => v && saveSpeechSettings({ ...speechSettings, volume: parseFloat(v) })}
+                    onValueChange={(v) => v && handleSaveSpeechSettings({ ...speechSettings, volume: parseFloat(v) })}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue>{formatVolume(speechSettings.volume)}</SelectValue>
