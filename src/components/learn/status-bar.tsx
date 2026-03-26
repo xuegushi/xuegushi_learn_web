@@ -2,6 +2,13 @@
 
 import { PanelLeft, CheckCheck } from "lucide-react";
 import { Poem } from "@/types/poem";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /** 状态栏属性 */
 interface StatusBarProps {
@@ -18,6 +25,9 @@ interface StatusBarProps {
   onToggleSidebar: () => void;
   onCheckInRecordsClick: () => void;
   checkedPoemIds?: Set<number>;
+  selectedFascicule: string;
+  fasciculeList: { _id: string; fascicule_name: string }[];
+  onFasciculeChange: (fasciculeId: string) => void;
 }
 
 /** 导航按钮 */
@@ -155,6 +165,9 @@ export function StatusBar({
   onToggleSidebar,
   onCheckInRecordsClick,
   checkedPoemIds = new Set(),
+  selectedFascicule,
+  fasciculeList,
+  onFasciculeChange,
 }: StatusBarProps) {
   const accuracy = errorCount + correctCount > 0
     ? Math.round((correctCount / (errorCount + correctCount)) * 100)
@@ -182,9 +195,20 @@ export function StatusBar({
               {currentIndex + 1} / {poems.length}
             </span>
             <NavButton onClick={onNext} direction="next" />
-            <span className="text-sm text-muted-foreground">
-              {poems[currentIndex]?.grade}
-            </span>
+            {fasciculeList.length > 0 && (
+              <Select value={selectedFascicule} onValueChange={(v) => v && onFasciculeChange(v)}>
+                <SelectTrigger className="w-32 h-7 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {fasciculeList.map((fasc) => (
+                    <SelectItem key={fasc._id} value={fasc._id}>
+                      {fasc.fascicule_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <ReciteStatusDots
               poems={poems}
               currentIndex={currentIndex}
@@ -208,9 +232,20 @@ export function StatusBar({
               {currentIndex + 1} / {poems.length}
             </span>
             <NavButton onClick={onNext} direction="next" />
-            <span className="text-sm text-muted-foreground">
-              {poems[currentIndex]?.grade}
-            </span>
+            {fasciculeList.length > 0 && (
+              <Select value={selectedFascicule} onValueChange={(v) => v && onFasciculeChange(v)}>
+                <SelectTrigger className="w-32 h-7 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {fasciculeList.map((fasc) => (
+                    <SelectItem key={fasc._id} value={fasc._id}>
+                      {fasc.fascicule_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <CheckInBlocks
               poems={poems}
               currentIndex={currentIndex}
@@ -280,9 +315,20 @@ export function StatusBar({
         {/* 移动端方块组单独一行 */}
         {mode === "learn" && poems.length > 0 && (
           <div className="flex items-center gap-2 mt-2 pb-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
-              {poems[currentIndex]?.grade}
-            </span>
+            {fasciculeList.length > 0 && (
+              <Select value={selectedFascicule} onValueChange={(v) => v && onFasciculeChange(v)}>
+                <SelectTrigger className="w-24 h-7 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {fasciculeList.map((fasc) => (
+                    <SelectItem key={fasc._id} value={fasc._id}>
+                      {fasc.fascicule_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <div className="flex flex-wrap items-center gap-1 flex-1 justify-center">
               {poems.map((poem, idx) => {
                 const isChecked = checkedPoemIds.has(poem.targetId);

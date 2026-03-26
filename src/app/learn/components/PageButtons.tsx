@@ -27,7 +27,7 @@ export function MobileButtons({
       {/* 设置按钮 */}
       <button
         onClick={onSidebarToggle}
-        className="md:hidden fixed bottom-14 left-4 z-50 p-2 bg-primary/80 text-primary-foreground rounded-full shadow-lg">
+        className="md:hidden fixed bottom-4 sm:bottom-14 left-4 z-50 p-2 bg-primary/80 text-primary-foreground rounded-full shadow-lg">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="h-5 w-5"
@@ -50,7 +50,7 @@ export function MobileButtons({
       </button>
 
       {/* 重新开始/继续学习 */}
-      <div className="md:hidden fixed items-center bottom-14 right-4 z-30 flex gap-2">
+      <div className="md:hidden fixed items-center bottom-4 sm:bottom-14 right-4 z-30 flex gap-2">
         <div className="flex-1">
           {onReciteRecordsClick && (
             <button

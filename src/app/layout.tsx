@@ -42,7 +42,7 @@ export default function RootLayout({
         >
           <div className="flex flex-col min-h-screen">
             <Header />
-            <main className="flex-1 overflow-y-auto pt-14 md:pt-16 pb-10 md:pb-12">
+            <main className="flex-1 overflow-y-auto pt-14 md:pt-16 pb-0 md:pb-12">
               {children}
             </main>
             <Footer />

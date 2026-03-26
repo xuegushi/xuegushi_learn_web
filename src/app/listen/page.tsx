@@ -345,7 +345,7 @@ export default function ListenPage() {
 
           {/* 右侧设置卡片 */}
           <div className="w-64 border-l bg-gray-50 dark:bg-gray-800/50 flex-shrink-0 p-4">
-            <Card>
+            <Card className="h-full">
               <CardContent className="p-4 space-y-4">
                 <div className="font-semibold text-sm">朗读设置</div>
                 
@@ -355,7 +355,7 @@ export default function ListenPage() {
                     <User className="h-4 w-4" />
                     选择您喜欢的声音
                   </div>
-                  <ScrollArea className="h-40">
+                  <ScrollArea className="h-50">
                     <div className="space-y-2">
                       {voices.length === 0 ? (
                         <div className="text-xs text-muted-foreground p-2">
@@ -375,8 +375,8 @@ export default function ListenPage() {
                             <div className="font-medium">{voice.name}</div>
                             <Button
                               size="sm"
-                              variant="outline"
-                              className="mt-1 h-7 text-xs"
+                              variant="ghost"
+                              className="mt-1 h-7 text-xs text-blue-500"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 speak("鹅，鹅，鹅，曲项向天歌。白毛浮绿水，红掌拨清波。", {

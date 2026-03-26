@@ -531,7 +531,7 @@ export default function LearnPage() {
     masteredPoems.size + notMasteredPoems.size === poems.length;
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-56px-40px)] md:h-[calc(100vh-64px-48px)] transition-all duration-300">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-56px)] md:h-[calc(100vh-64px-48px)] transition-all duration-300">
       {/* 侧边栏 */}
       <Sidebar
         collapsed={sidebarCollapsed}
@@ -604,6 +604,12 @@ export default function LearnPage() {
           }}
           onCheckInRecordsClick={() => setCheckInRecordsOpen(true)}
           checkedPoemIds={todayCheckedPoemIds}
+          selectedFascicule={selectedFascicule}
+          fasciculeList={catalogDetail?.fasciculeList || []}
+          onFasciculeChange={(fasciculeId) => {
+            setSelectedFascicule(fasciculeId);
+            setCurrentIndex(0);
+          }}
         />
 
         {/* 内容区 */}
