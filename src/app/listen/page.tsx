@@ -257,6 +257,58 @@ export default function ListenPage() {
     <div className="flex flex-col h-[calc(100vh-56px)] md:h-[calc(100vh-64px)]">
       <div className="flex-1 overflow-hidden">
         <div className="flex h-full">
+          {/* 选集和分册选择 */}
+          {catalogList.length > 0 && (
+            <div className="hidden md:block w-48 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0 p-4 overflow-y-auto">
+              <div className="space-y-4">
+                {/* 选集 */}
+                <div>
+                  <div className="text-sm font-semibold mb-2">选集</div>
+                  <div className="space-y-1">
+                    {catalogList.map((item) => (
+                      <button
+                        key={item.catalog}
+                        onClick={() => handleSystemChange(item.catalog)}
+                        className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
+                          system === item.catalog
+                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium"
+                            : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                        }`}
+                      >
+                        {item.catalog_name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 分册 */}
+                {catalogDetail?.fasciculeList && catalogDetail.fasciculeList.length > 0 && (
+                  <div>
+                    <div className="text-sm font-semibold mb-2">分册</div>
+                    <div className="space-y-1">
+                      {catalogDetail.fasciculeList.map((fasc) => (
+                        <button
+                          key={fasc._id}
+                          onClick={() => {
+                            setSelectedFascicule(fasc._id);
+                            setCurrentIndex(0);
+                          }}
+                          className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
+                            selectedFascicule === fasc._id
+                              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium"
+                              : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {fasc.fascicule_name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* 左侧诗词列表 */}
           {poems.length > 0 && (
             <div className="hidden md:block w-36 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
