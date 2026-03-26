@@ -198,7 +198,9 @@ export function StatusBar({
             {fasciculeList.length > 0 && (
               <Select value={selectedFascicule} onValueChange={(v) => v && onFasciculeChange(v)}>
                 <SelectTrigger className="w-32 h-7 text-sm">
-                  <SelectValue />
+                  <SelectValue>
+                    {fasciculeList.find(f => f._id === selectedFascicule)?.fascicule_name || selectedFascicule}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {fasciculeList.map((fasc) => (
@@ -235,7 +237,9 @@ export function StatusBar({
             {fasciculeList.length > 0 && (
               <Select value={selectedFascicule} onValueChange={(v) => v && onFasciculeChange(v)}>
                 <SelectTrigger className="w-32 h-7 text-sm">
-                  <SelectValue />
+                  <SelectValue>
+                    {fasciculeList.find(f => f._id === selectedFascicule)?.fascicule_name || selectedFascicule}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {fasciculeList.map((fasc) => (
@@ -318,7 +322,9 @@ export function StatusBar({
             {fasciculeList.length > 0 && (
               <Select value={selectedFascicule} onValueChange={(v) => v && onFasciculeChange(v)}>
                 <SelectTrigger className="w-24 h-7 text-xs">
-                  <SelectValue />
+                  <SelectValue>
+                    {fasciculeList.find(f => f._id === selectedFascicule)?.fascicule_name || selectedFascicule}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {fasciculeList.map((fasc) => (
