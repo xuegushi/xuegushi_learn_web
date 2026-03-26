@@ -265,6 +265,14 @@ export function LearnCard({
           )}
           语音播放
         </button>
+        {isPlaying && (
+          <div className="absolute top-7 left-[72px] z-10 flex items-end h-5 gap-0.5">
+            <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-1" style={{ height: '40%' }} />
+            <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-2" style={{ height: '60%' }} />
+            <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-3" style={{ height: '80%' }} />
+            <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-4" style={{ height: '50%' }} />
+          </div>
+        )}
         <button
           onClick={() => setShowTranslation(!showTranslation)}
           className={`absolute top-7 right-20 z-9 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showTranslation ? "bg-primary text-primary-foreground" : "bg-primary-foreground text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showTranslation ? "primary/50" : "primary/20"}`}
