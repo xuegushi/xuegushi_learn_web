@@ -65,7 +65,9 @@ const DEFAULT_SPEECH_SETTINGS: SpeechSettings = {
 };
 
 // 朗读函数
-function speak(text: string, settings: SpeechSettings) {
+let onSpeechEnd: (() => void) | null = null;
+
+function speak(text: string, settings: SpeechSettings, onEnd?: () => void) {
   if (typeof window === "undefined") return;
   
   const synth = window.speechSynthesis;
@@ -87,7 +89,42 @@ function speak(text: string, settings: SpeechSettings) {
   utterance.pitch = settings.pitch;
   utterance.volume = settings.volume;
   
+  if (onEnd) {
+    onSpeechEnd = onEnd;
+    utterance.onend = () => {
+      if (onSpeechEnd) {
+        onSpeechEnd();
+        onSpeechEnd = null;
+      }
+    };
+  }
+  
   synth.speak(utterance);
+}
+
+// 暂停朗读
+function pauseSpeech() {
+  if (typeof window === "undefined") return;
+  const synth = window.speechSynthesis;
+  if (synth.speaking) {
+    synth.pause();
+  }
+}
+
+// 恢复朗读
+function resumeSpeech() {
+  if (typeof window === "undefined") return;
+  const synth = window.speechSynthesis;
+  if (synth.paused) {
+    synth.resume();
+  }
+}
+
+// 停止朗读
+function stopSpeech() {
+  if (typeof window === "undefined") return;
+  const synth = window.speechSynthesis;
+  synth.cancel();
 }
 
 export default function ListenPage() {
@@ -272,6 +309,10 @@ export default function ListenPage() {
     const loadPoemDetail = async () => {
       if (poems.length === 0 || currentIndex >= poems.length) return;
 
+      // 停止当前朗读
+      stopSpeech();
+      setIsPlaying(false);
+
       const targetId = poems[currentIndex].targetId;
       const cached = await getFromDB<PoemDetail>(STORES.POEMS, targetId);
       if (cached) {
@@ -283,11 +324,41 @@ export default function ListenPage() {
   }, [poems, currentIndex]);
 
   const handlePrev = () => {
+    stopSpeech();
+    setIsPlaying(false);
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : poems.length - 1));
   };
 
   const handleNext = () => {
+    stopSpeech();
+    setIsPlaying(false);
     setCurrentIndex((prev) => (prev < poems.length - 1 ? prev + 1 : 0));
+  };
+
+  // 播放/暂停处理
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      pauseSpeech();
+      setIsPlaying(false);
+    } else {
+      // 开始朗读当前诗词
+      const poem = currentPoemDetail?.poem;
+      if (!poem) return;
+      
+      // 组合诗词内容
+      let text = "";
+      if (poem.xu) text += poem.xu + "，";
+      if (poem.content?.content) {
+        text += poem.content.content.join("，");
+      }
+      
+      if (text) {
+        speak(text, speechSettings, () => {
+          setIsPlaying(false);
+        });
+        setIsPlaying(true);
+      }
+    }
   };
 
   return (
@@ -341,7 +412,7 @@ export default function ListenPage() {
                     <Button
                       size="icon"
                       className="h-12 w-12 rounded-full"
-                      onClick={() => setIsPlaying(!isPlaying)}
+                      onClick={handlePlayPause}
                     >
                       {isPlaying ? (
                         <Pause className="h-5 w-5" />
