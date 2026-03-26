@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { getFromDB, STORES } from "@/lib/db";
 import { useUserStore } from "@/lib/api/user-store";
 import { LocalDataManager } from "@/components/local-data-manager";
@@ -48,19 +48,12 @@ export default function ListenPage() {
   const [selectedFascicule, setSelectedFascicule] = useState("");
   const [localDataOpen, setLocalDataOpen] = useState(false);
 
-  const [poems, setPoems] = useState<{ targetId: number; title: string; author: string; dynasty: string }[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [currentPoemDetail, setCurrentPoemDetail] = useState<PoemDetail | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // 声音设置
   const [voices, setVoices] = useState<VoiceOption[]>([]);
   const [speechSettings, setSpeechSettings] = useState<SpeechSettings>(loadSpeechSettings());
 
-  // 从 localStorage 加载设置
-  useEffect(() => {
-    setSpeechSettings(loadSpeechSettings());
-  }, []);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentPoemDetail, setCurrentPoemDetail] = useState<PoemDetail | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // 保存设置到 localStorage
   const handleSaveSpeechSettings = (newSettings: SpeechSettings) => {
@@ -80,7 +73,6 @@ export default function ListenPage() {
       const synth = window.speechSynthesis;
       const loadedVoices = synth.getVoices();
       
-      // 筛选 localService 为 true 的中文声音
       const zhVoices = loadedVoices
         .filter(v => v.lang.startsWith("zh-CN") && v.localService)
         .map(v => ({
@@ -91,12 +83,10 @@ export default function ListenPage() {
       
       if (zhVoices.length > 0) {
         setVoices(zhVoices);
-        // 如果没有保存的设置，默认选择第一个
         if (!speechSettings.voiceURI) {
           handleSaveSpeechSettings({ ...speechSettings, voiceURI: zhVoices[0].voiceURI });
         }
       } else {
-        // 如果没有符合条件的本地声音，使用所有本地服务的中文声音
         const allZhVoices = loadedVoices
           .filter(v => v.lang.startsWith("zh-CN"))
           .map(v => ({
@@ -110,7 +100,6 @@ export default function ListenPage() {
             handleSaveSpeechSettings({ ...speechSettings, voiceURI: allZhVoices[0].voiceURI });
           }
         } else {
-          // 如果还是没有，使用所有可用声音
           const allVoices = loadedVoices.map(v => ({
             name: v.name,
             lang: v.lang,
@@ -126,7 +115,6 @@ export default function ListenPage() {
 
     loadVoices();
     
-    // 某些浏览器需要等待 voiceschanged 事件
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
@@ -169,40 +157,36 @@ export default function ListenPage() {
     if (selected) fetchCatalogDetail(selected._id);
   };
 
-  useEffect(() => {
+  // 使用 useMemo 计算诗词列表
+  const poemsList = useMemo(() => {
     if (!selectedFascicule || !catalogDetail?.fasciculeList) {
-      setPoems([]);
-      return;
+      return [];
     }
 
     const fascData = catalogDetail.fasciculeList.find(
       (f) => f._id === selectedFascicule,
     );
     if (!fascData || !fascData.doc_list) {
-      setPoems([]);
-      return;
+      return [];
     }
 
-    setPoems(
-      fascData.doc_list.map((poem: { target_id: number; title: string; author: string; dynasty: string }) => ({
-        targetId: poem.target_id,
-        title: poem.title || "",
-        author: poem.author || "",
-        dynasty: poem.dynasty || "",
-      })),
-    );
-    setCurrentIndex(0);
+    return fascData.doc_list.map((poem: { target_id: number; title: string; author: string; dynasty: string }) => ({
+      targetId: poem.target_id,
+      title: poem.title || "",
+      author: poem.author || "",
+      dynasty: poem.dynasty || "",
+    }));
   }, [selectedFascicule, catalogDetail]);
 
   useEffect(() => {
     const loadPoemDetail = async () => {
-      if (poems.length === 0 || currentIndex >= poems.length) return;
+      if (poemsList.length === 0 || currentIndex >= poemsList.length) return;
 
       // 停止当前朗读
       stopSpeech();
       setIsPlaying(false);
 
-      const targetId = poems[currentIndex].targetId;
+      const targetId = poemsList[currentIndex].targetId;
       const cached = await getFromDB<PoemDetail>(STORES.POEMS, targetId);
       if (cached) {
         setCurrentPoemDetail(cached);
@@ -210,18 +194,18 @@ export default function ListenPage() {
     };
 
     loadPoemDetail();
-  }, [poems, currentIndex]);
+  }, [poemsList, currentIndex]);
 
   const handlePrev = () => {
     stopSpeech();
     setIsPlaying(false);
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : poems.length - 1));
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : poemsList.length - 1));
   };
 
   const handleNext = () => {
     stopSpeech();
     setIsPlaying(false);
-    setCurrentIndex((prev) => (prev < poems.length - 1 ? prev + 1 : 0));
+    setCurrentIndex((prev) => (prev < poemsList.length - 1 ? prev + 1 : 0));
   };
 
   // 播放/暂停处理
@@ -254,22 +238,22 @@ export default function ListenPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px)] md:h-[calc(100vh-64px)]">
+    <div className="flex flex-col h-[calc(100vh-56px)] md:h-[calc(100vh-64px-48px)]">
       <div className="flex-1 overflow-hidden">
         <div className="flex h-full">
           {/* 选集和分册选择 */}
           {catalogList.length > 0 && (
-            <div className="hidden md:block w-48 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0 p-4 overflow-y-auto">
+            <div className="hidden md:block w-52 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0 p-4 overflow-y-auto">
               <div className="space-y-4">
                 {/* 选集 */}
                 <div>
-                  <div className="text-sm font-semibold mb-2">选集</div>
+                  <div className="text-sm font-semibold mb-3">选集</div>
                   <div className="grid grid-cols-2 gap-2">
                     {catalogList.map((item) => (
                       <button
                         key={item.catalog}
                         onClick={() => handleSystemChange(item.catalog)}
-                        className={`p-2 rounded-lg border text-xs text-center transition-colors ${
+                        className={`p-2 py-1.5 rounded-lg border text-xs text-center transition-colors ${
                           system === item.catalog
                             ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                             : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
@@ -284,7 +268,7 @@ export default function ListenPage() {
                 {/* 分册 */}
                 {catalogDetail?.fasciculeList && catalogDetail.fasciculeList.length > 0 && (
                   <div>
-                    <div className="text-sm font-semibold mb-2">分册</div>
+                    <div className="text-sm font-semibold mb-3">分册</div>
                     <div className="grid grid-cols-2 gap-2">
                       {catalogDetail.fasciculeList.map((fasc) => (
                         <button
@@ -293,7 +277,7 @@ export default function ListenPage() {
                             setSelectedFascicule(fasc._id);
                             setCurrentIndex(0);
                           }}
-                          className={`p-2 rounded-lg border text-xs text-center transition-colors ${
+                          className={`p-2 py-1.5 rounded-lg border text-xs text-center transition-colors ${
                             selectedFascicule === fasc._id
                               ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                               : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
@@ -310,11 +294,11 @@ export default function ListenPage() {
           )}
 
           {/* 左侧诗词列表 */}
-          {poems.length > 0 && (
+          {poemsList.length > 0 && (
             <div className="hidden md:block w-36 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
               <ScrollArea className="h-full">
                 <div className="p-4 space-y-2">
-                  {poems.map((poem, idx) => (
+                  {poemsList.map((poem, idx) => (
                     <div
                       key={poem.targetId}
                       onClick={() => setCurrentIndex(idx)}
@@ -334,64 +318,12 @@ export default function ListenPage() {
             </div>
           )}
 
-          {/* 选集和分册选择 */}
-          {catalogList.length > 0 && (
-            <div className="hidden md:block w-48 border-r bg-gray-50 dark:bg-gray-800/50 flex-shrink-0 p-4 overflow-y-auto">
-              <div className="space-y-4">
-                {/* 选集 */}
-                <div>
-                  <div className="text-sm font-semibold mb-2">选集</div>
-                  <div className="space-y-1">
-                    {catalogList.map((item) => (
-                      <button
-                        key={item.catalog}
-                        onClick={() => handleSystemChange(item.catalog)}
-                        className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
-                          system === item.catalog
-                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium"
-                            : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                        }`}
-                      >
-                        {item.catalog_name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 分册 */}
-                {catalogDetail?.fasciculeList && catalogDetail.fasciculeList.length > 0 && (
-                  <div>
-                    <div className="text-sm font-semibold mb-2">分册</div>
-                    <div className="space-y-1">
-                      {catalogDetail.fasciculeList.map((fasc) => (
-                        <button
-                          key={fasc._id}
-                          onClick={() => {
-                            setSelectedFascicule(fasc._id);
-                            setCurrentIndex(0);
-                          }}
-                          className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
-                            selectedFascicule === fasc._id
-                              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium"
-                              : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                          }`}
-                        >
-                          {fasc.fascicule_name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* 中间主内容 */}
-          <div className="flex-1 overflow-hidden flex items-center justify-center p-4">
-            {poems.length === 0 ? (
+          <div className="flex-1 overflow-hidden flex items-center justify-center p-6 h-full">
+            {poemsList.length === 0 ? (
               <div className="text-muted-foreground">请选择分册</div>
             ) : (
-              <Card className="w-full max-w-2xl">
+              <Card className="w-full h-full">
                 <CardContent className="p-6 space-y-4">
                   <div className="text-center">
                     <div className="font-bold text-2xl">{currentPoemDetail?.poem?.title}</div>
@@ -436,12 +368,6 @@ export default function ListenPage() {
                       ))}
                     </div>
                   </ScrollArea>
-
-                  {/* 提示信息 */}
-                  <div className="text-center text-sm text-muted-foreground">
-                    <Volume2 className="h-4 w-4 inline mr-1" />
-                    听诗功能开发中...
-                  </div>
                 </CardContent>
               </Card>
             )}
@@ -450,7 +376,7 @@ export default function ListenPage() {
           {/* 右侧设置卡片 */}
           <div className="w-64 border-l bg-gray-50 dark:bg-gray-800/50 flex-shrink-0 p-4">
             <Card className="h-full">
-              <CardContent className="p-4 space-y-4">
+              <CardContent className="px-4 space-y-4">
                 <div className="font-semibold text-sm">朗读设置</div>
                 
                 {/* 选择声音 */}
@@ -459,14 +385,14 @@ export default function ListenPage() {
                     <User className="h-4 w-4" />
                     选择您喜欢的声音
                   </div>
-                  <ScrollArea className="h-50">
+                  <ScrollArea className="h-60">
                     <div className="space-y-2">
                       {voices.length === 0 ? (
                         <div className="text-xs text-muted-foreground p-2">
                           加载中...
                         </div>
                       ) : (
-                        voices.map((voice, idx) => (
+                        voices.map((voice) => (
                           <div
                             key={voice.voiceURI}
                             onClick={() => handleVoiceSelect(voice)}
@@ -479,7 +405,7 @@ export default function ListenPage() {
                             <div className="font-medium">{voice.name}</div>
                             <Button
                               size="sm"
-                              variant="ghost"
+                              variant="outline"
                               className="mt-1 h-7 text-xs text-blue-500"
                               onClick={(e) => {
                                 e.stopPropagation();

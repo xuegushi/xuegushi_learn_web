@@ -99,8 +99,11 @@ export function LearnCard({
   // 切换诗词时停止播放
   useEffect(() => {
     stopSpeech();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsPlaying(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentSpeechText("");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsPaused(false);
   }, [poemDetail?.poem?.id]);
 

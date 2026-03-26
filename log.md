@@ -1,5 +1,21 @@
 # 更新日志
 
+## 2026-03-26 ✅ (已提交)
+
+### Patch 4M - Lint 错误修复
+
+- **修复 setState in effect 错误**
+  - listen/page.tsx：将诗词列表计算从 useEffect 改为 useMemo
+  - 避免在 effect 中同步调用 setState 导致的级联渲染
+
+- **变量声明顺序调整**
+  - 调整 useState 声明顺序，解决变量引用顺序问题
+
+- **变更文件**
+  - src/app/listen/page.tsx
+
+---
+
 ## 2026-03-24 ✅ (已提交)
 
 ### Patch 4H - 背诵记录完整实现
