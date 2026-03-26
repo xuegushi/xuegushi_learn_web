@@ -264,15 +264,15 @@ export default function ListenPage() {
                 {/* 选集 */}
                 <div>
                   <div className="text-sm font-semibold mb-2">选集</div>
-                  <div className="space-y-1">
+                  <div className="grid grid-cols-2 gap-2">
                     {catalogList.map((item) => (
                       <button
                         key={item.catalog}
                         onClick={() => handleSystemChange(item.catalog)}
-                        className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
+                        className={`p-2 rounded-lg border text-xs text-center transition-colors ${
                           system === item.catalog
-                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium"
-                            : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                            : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
                         }`}
                       >
                         {item.catalog_name}
@@ -285,7 +285,7 @@ export default function ListenPage() {
                 {catalogDetail?.fasciculeList && catalogDetail.fasciculeList.length > 0 && (
                   <div>
                     <div className="text-sm font-semibold mb-2">分册</div>
-                    <div className="space-y-1">
+                    <div className="grid grid-cols-2 gap-2">
                       {catalogDetail.fasciculeList.map((fasc) => (
                         <button
                           key={fasc._id}
@@ -293,10 +293,10 @@ export default function ListenPage() {
                             setSelectedFascicule(fasc._id);
                             setCurrentIndex(0);
                           }}
-                          className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
+                          className={`p-2 rounded-lg border text-xs text-center transition-colors ${
                             selectedFascicule === fasc._id
-                              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium"
-                              : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                              : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
                           }`}
                         >
                           {fasc.fascicule_name}
