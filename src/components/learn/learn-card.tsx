@@ -11,7 +11,7 @@ import { CheckInSuccessDialog } from "@/components/check-in-success-dialog";
 import { setToDB, getAllFromDB, STORES } from "@/lib/db";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUserStore } from "@/lib/api/user-store";
-import { speak, stopSpeech, loadSpeechSettings } from "@/lib/speech";
+import { speak, stopSpeech, pauseSpeech, resumeSpeech, loadSpeechSettings } from "@/lib/speech";
 
 interface LearnCardProps {
   poemDetail: PoemDetail | null;
@@ -48,14 +48,27 @@ export function LearnCard({
   // 加载本地语音设置
   const speechSettings = loadSpeechSettings();
 
-  // 播放/停止语音
+  // 记录当前朗读的文本
+  const [currentSpeechText, setCurrentSpeechText] = useState("");
+
+  // 播放/暂停语音
   const handlePlaySpeech = () => {
     if (isPlaying) {
-      stopSpeech();
+      pauseSpeech();
       setIsPlaying(false);
       return;
     }
 
+    // 如果已暂停（但没有在播放），恢复播放
+    if (currentSpeechText) {
+      speak(currentSpeechText, speechSettings, () => {
+        setIsPlaying(false);
+      });
+      setIsPlaying(true);
+      return;
+    }
+
+    // 开始新的朗读
     const poem = poemDetail?.poem;
     if (!poem) return;
 
@@ -70,8 +83,10 @@ export function LearnCard({
     }
 
     if (text) {
+      setCurrentSpeechText(text);
       speak(text, speechSettings, () => {
         setIsPlaying(false);
+        setCurrentSpeechText("");
       });
       setIsPlaying(true);
     }
@@ -81,6 +96,7 @@ export function LearnCard({
   useEffect(() => {
     stopSpeech();
     setIsPlaying(false);
+    setCurrentSpeechText("");
   }, [poemDetail?.poem?.id]);
 
   const checkIfCheckedInToday = useCallback(async () => {
@@ -235,13 +251,14 @@ export function LearnCard({
         </div>
         <button
           onClick={handlePlaySpeech}
-          className="absolute -top-3 left-8 z-10 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer"
-          title="播放语音">
+          className="absolute top-7 left-8 z-10 h-7 px-2 bg-blue-500 text-white rounded-full flex items-center justify-center gap-1 hover:bg-blue-600 transition-colors cursor-pointer text-xs"
+          title="语音播放">
           {isPlaying ? (
-            <HeadphoneOff className="h-4 w-4" />
+            <HeadphoneOff className="h-3 w-3" />
           ) : (
-            <Headphones className="h-4 w-4" />
+            <Headphones className="h-3 w-3" />
           )}
+          语音播放
         </button>
         <button
           onClick={() => setShowTranslation(!showTranslation)}
