@@ -265,14 +265,6 @@ export function LearnCard({
           )}
           语音播放
         </button>
-        {isPlaying && (
-          <div className="absolute top-7 left-[72px] z-10 flex items-end h-5 gap-0.5">
-            <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-1" style={{ height: '40%' }} />
-            <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-2" style={{ height: '60%' }} />
-            <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-3" style={{ height: '80%' }} />
-            <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-4" style={{ height: '50%' }} />
-          </div>
-        )}
         <button
           onClick={() => setShowTranslation(!showTranslation)}
           className={`absolute top-7 right-20 z-9 w-7 h-7 text-sm flex items-center justify-center rounded-full transition-all duration-200 ${showTranslation ? "bg-primary text-primary-foreground" : "bg-primary-foreground text-primary hover:bg-primary/10 hover:text-primary/90 dark:hover:text-primary70 dark:hover:bg-primary/10"} border border-${showTranslation ? "primary/50" : "primary/20"}`}
@@ -289,17 +281,27 @@ export function LearnCard({
           <CardContent className="flex flex-col flex-1 overflow-hidden">
             <ScrollArea className="p-4 py-3 flex-1 h-full max-h-[calc(100%-56px)]">
               <div className="text-center space-y-1 mb-4">
-                <div className="flex justify-center gap-1 flex-wrap">
-                  {poemDetail.poem?.title?.split("").map((char, idx) => (
-                    <div key={idx} className="flex flex-col items-center">
-                      {showPinyin && (
-                        <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
-                          {pinyinData?.title?.[idx] || ""}
-                        </span>
-                      )}
-                      <span className="text-2xl font-bold">{char}</span>
+                <div className="flex justify-center items-start gap-1 flex-wrap">
+                  <div className="flex flex-wrap justify-center gap-1">
+                    {poemDetail.poem?.title?.split("").map((char, idx) => (
+                      <div key={`title-${idx}`} className="flex flex-col items-center">
+                        {showPinyin && (
+                          <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
+                            {pinyinData?.title?.[idx] || ""}
+                          </span>
+                        )}
+                        <span className="text-2xl font-bold">{char}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {isPlaying && (
+                    <div className="flex items-end h-8 gap-0.5 ml-1">
+                      <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-1" style={{ height: '40%' }} />
+                      <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-2" style={{ height: '60%' }} />
+                      <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-3" style={{ height: '80%' }} />
+                      <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-4" style={{ height: '50%' }} />
                     </div>
-                  ))}
+                  )}
                 </div>
                 <div className="text-sm font-medium text-muted-foreground">
                   {poemDetail.poem?.author} [{poemDetail.poem?.dynasty}]
