@@ -347,9 +347,9 @@ export default function ListenPage() {
       
       // 组合诗词内容：标题 + 作者 + 朝代 + 序 + 正文
       let text = "";
-      if (poem.title) text += poem.title + " ";
-      if (poem.author) text += poem.author + " ";
-      if (poem.dynasty) text += poem.dynasty + " ";
+      if (poem.title) text += poem.title + "，";
+      if (poem.author) text += poem.author + "，";
+      if (poem.dynasty) text += poem.dynasty + "，";
       if (poem.xu) text += poem.xu + "，";
       if (poem.content?.content) {
         text += poem.content.content.join("，");
