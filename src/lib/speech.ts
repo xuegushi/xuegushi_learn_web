@@ -55,21 +55,44 @@ export function speak(text: string, settings: SpeechSettings, onEnd?: () => void
     return { success: false, error: "浏览器不支持语音合成" };
   }
   
-  if (synth.getVoices().length === 0) {
-    return { success: false, error: "暂无可用声音，请等待声音加载完成" };
+  // 等待声音加载完成
+  const loadVoices = (): SpeechSynthesisVoice[] => {
+    const voices = synth.getVoices();
+    if (voices.length > 0) return voices;
+    
+    // 某些浏览器需要等待
+    return [];
+  };
+  
+  let availableVoices = loadVoices();
+  
+  // 如果声音未加载，尝试等待一小段时间
+  if (availableVoices.length === 0) {
+    return { success: false, error: "暂无可用声音，请等待或刷新页面后重试" };
   }
   
   synth.cancel();
   
   const utterance = new SpeechSynthesisUtterance(text);
   
+  // 优先使用设置的声音
   if (settings.voiceURI) {
-    const allVoices = synth.getVoices();
-    const voiceObj = allVoices.find(v => v.voiceURI === settings.voiceURI);
-    if (!voiceObj) {
-      return { success: false, error: "选择的声音不可用" };
+    const voiceObj = availableVoices.find(v => v.voiceURI === settings.voiceURI);
+    if (voiceObj) {
+      utterance.voice = voiceObj;
+    } else {
+      // 如果设置的声音不可用，使用第一个可用的中文声音
+      const zhVoice = availableVoices.find(v => v.lang.startsWith("zh-CN"));
+      if (zhVoice) {
+        utterance.voice = zhVoice;
+      }
     }
-    utterance.voice = voiceObj;
+  } else {
+    // 没有设置声音时，使用第一个可用的中文声音
+    const zhVoice = availableVoices.find(v => v.lang.startsWith("zh-CN"));
+    if (zhVoice) {
+      utterance.voice = zhVoice;
+    }
   }
   
   utterance.lang = "zh-CN";
@@ -78,6 +101,9 @@ export function speak(text: string, settings: SpeechSettings, onEnd?: () => void
   utterance.volume = settings.volume;
   
   utterance.onerror = (event) => {
+    // interrupted 是因为调用了 synth.cancel()，这是正常行为，不需要报错
+    if (event.error === "interrupted") return;
+    
     const errorMessages: Record<string, string> = {
       "audio-busy": "音频设备被占用",
       "audio-hardware": "音频硬件不可用",
