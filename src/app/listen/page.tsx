@@ -74,7 +74,7 @@ export default function ListenPage() {
       const loadedVoices = synth.getVoices();
       
       const zhVoices = loadedVoices
-        .filter(v => v.lang.startsWith("zh-CN") && v.localService)
+        .filter(v => v.lang.startsWith("zh-"))
         .map(v => ({
           name: v.name,
           lang: v.lang,
@@ -88,7 +88,7 @@ export default function ListenPage() {
         }
       } else {
         const allZhVoices = loadedVoices
-          .filter(v => v.lang.startsWith("zh-CN"))
+          .filter(v => v.lang.startsWith("zh-"))
           .map(v => ({
             name: v.name,
             lang: v.lang,
@@ -327,7 +327,7 @@ export default function ListenPage() {
                 <CardContent className="p-6 space-y-4">
                   <div className="text-center">
                     <div className="font-bold text-2xl">{currentPoemDetail?.poem?.title}</div>
-                    <div className="text-muted-foreground mt-1">
+                    <div className="text-muted-foreground mt-2">
                       {currentPoemDetail?.poem?.author} [{currentPoemDetail?.poem?.dynasty}]
                     </div>
                   </div>
@@ -409,7 +409,16 @@ export default function ListenPage() {
                               className="mt-1 h-7 text-xs text-blue-500"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                speak("鹅，鹅，鹅，曲项向天歌。白毛浮绿水，红掌拨清波。", {
+                                const poem = currentPoemDetail?.poem;
+                                let previewText = "";
+                                if (poem?.title) previewText += poem.title + "，";
+                                if (poem?.author) previewText += poem.author + "，";
+                                if (poem?.dynasty) previewText += poem.dynasty + "，";
+                                if (poem?.xu) previewText += poem.xu + "，";
+                                if (poem?.content?.content) {
+                                  previewText += poem.content.content.join("，");
+                                }
+                                speak(previewText || "请先选择一首诗词", {
                                   voiceURI: voice.voiceURI,
                                   rate: speechSettings.rate,
                                   pitch: speechSettings.pitch,
