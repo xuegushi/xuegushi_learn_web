@@ -102,17 +102,32 @@ export function LearnCard({
     }
   };
 
+  // 去除 HTML 标签，获取纯文本
+  const stripHtml = (html: string): string => {
+    return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+  };
+
   // 播放指定内容（用于各个章节）
   const handlePlaySection = (sectionName: string, content: string) => {
     if (!content) return;
     
+    // 如果正在播放当前章节，点击则暂停/继续
+    if (playingSection === sectionName) {
+      // 使用 pause/resume 需要保存 utterance，这里简化为直接停止
+      stopSpeech();
+      setPlayingSection(null);
+      return;
+    }
+    
     // 如果正在播放其他内容，先停止
     if (playingSection && playingSection !== sectionName) {
       stopSpeech();
-      setPlayingSection(null);
     }
 
-    const result = speak(content, speechSettings, () => {
+    // 去除 HTML 标签
+    const textContent = stripHtml(content);
+    
+    const result = speak(textContent, speechSettings, () => {
       setPlayingSection(null);
     });
     
