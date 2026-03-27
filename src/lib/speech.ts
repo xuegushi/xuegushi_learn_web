@@ -41,10 +41,24 @@ export function formatVolume(volume: number): string {
 
 let onSpeechEndCallback: (() => void) | null = null;
 
-export function speak(text: string, settings: SpeechSettings, onEnd?: () => void) {
-  if (typeof window === "undefined") return;
+export interface SpeakResult {
+  success: boolean;
+  error?: string;
+}
+
+export function speak(text: string, settings: SpeechSettings, onEnd?: () => void): SpeakResult {
+  if (typeof window === "undefined") return { success: false, error: "浏览器不支持语音合成" };
   
   const synth = window.speechSynthesis;
+  
+  if (!synth) {
+    return { success: false, error: "浏览器不支持语音合成" };
+  }
+  
+  if (synth.getVoices().length === 0) {
+    return { success: false, error: "暂无可用声音，请等待声音加载完成" };
+  }
+  
   synth.cancel();
   
   const utterance = new SpeechSynthesisUtterance(text);
@@ -52,15 +66,29 @@ export function speak(text: string, settings: SpeechSettings, onEnd?: () => void
   if (settings.voiceURI) {
     const allVoices = synth.getVoices();
     const voiceObj = allVoices.find(v => v.voiceURI === settings.voiceURI);
-    if (voiceObj) {
-      utterance.voice = voiceObj;
+    if (!voiceObj) {
+      return { success: false, error: "选择的声音不可用" };
     }
+    utterance.voice = voiceObj;
   }
   
   utterance.lang = "zh-CN";
   utterance.rate = settings.rate;
   utterance.pitch = settings.pitch;
   utterance.volume = settings.volume;
+  
+  utterance.onerror = (event) => {
+    const errorMessages: Record<string, string> = {
+      "audio-busy": "音频设备被占用",
+      "audio-hardware": "音频硬件不可用",
+      "language-unavailable": "语言不支持",
+      "voice-unavailable": "声音不可用",
+      "network": "网络错误",
+      "synthesis-failed": "语音合成失败",
+    };
+    const errorMsg = errorMessages[event.error] || "播放出错";
+    console.warn("Speech synthesis error:", errorMsg);
+  };
   
   if (onEnd) {
     onSpeechEndCallback = onEnd;
@@ -73,6 +101,7 @@ export function speak(text: string, settings: SpeechSettings, onEnd?: () => void
   }
   
   synth.speak(utterance);
+  return { success: true };
 }
 
 export function pauseSpeech() {

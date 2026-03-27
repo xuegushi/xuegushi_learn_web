@@ -12,6 +12,7 @@ import { setToDB, getAllFromDB, STORES } from "@/lib/db";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUserStore } from "@/lib/api/user-store";
 import { speak, stopSpeech, pauseSpeech, resumeSpeech, loadSpeechSettings } from "@/lib/speech";
+import { toast } from "sonner";
 
 interface LearnCardProps {
   poemDetail: PoemDetail | null;
@@ -87,12 +88,16 @@ export function LearnCard({
     if (text) {
       setCurrentSpeechText(text);
       setIsPaused(false);
-      speak(text, speechSettings, () => {
+      const result = speak(text, speechSettings, () => {
         setIsPlaying(false);
         setCurrentSpeechText("");
         setIsPaused(false);
       });
-      setIsPlaying(true);
+      if (result.success) {
+        setIsPlaying(true);
+      } else {
+        toast.error(result.error || "播放失败");
+      }
     }
   };
 

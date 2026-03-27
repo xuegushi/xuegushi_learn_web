@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Play, Pause, SkipBack, SkipForward, Volume2, User } from "lucide-react";
+import { toast, Toaster } from "sonner";
 import {
   RATE_OPTIONS,
   VOLUME_OPTIONS,
@@ -229,10 +230,14 @@ export default function ListenPage() {
       }
       
       if (text) {
-        speak(text, speechSettings, () => {
+        const result = speak(text, speechSettings, () => {
           setIsPlaying(false);
         });
-        setIsPlaying(true);
+        if (result.success) {
+          setIsPlaying(true);
+        } else {
+          toast.error(result.error || "播放失败");
+        }
       }
     }
   };
@@ -418,12 +423,15 @@ export default function ListenPage() {
                                 if (poem?.content?.content) {
                                   previewText += poem.content.content.join("，");
                                 }
-                                speak(previewText || "请先选择一首诗词", {
+                                const result = speak(previewText || "请先选择一首诗词", {
                                   voiceURI: voice.voiceURI,
                                   rate: speechSettings.rate,
                                   pitch: speechSettings.pitch,
                                   volume: speechSettings.volume,
                                 });
+                                if (!result.success) {
+                                  toast.error(result.error || "播放失败");
+                                }
                               }}
                             >
                               <Play className="h-3 w-3 mr-1" />

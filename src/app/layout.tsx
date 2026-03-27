@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ApiErrorDialog } from "@/components/api-error-dialog";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "学古诗",
@@ -48,6 +49,7 @@ export default function RootLayout({
             <Footer />
           </div>
           <ApiErrorDialog />
+          <Toaster position="top-center" />
         </ThemeProvider>
       </body>
     </html>
