@@ -64,7 +64,7 @@ export function speak(text: string, settings: SpeechSettings, onEnd?: () => void
     return [];
   };
   
-  let availableVoices = loadVoices();
+  const availableVoices = loadVoices();
   
   // 如果声音未加载，尝试等待一小段时间
   if (availableVoices.length === 0) {

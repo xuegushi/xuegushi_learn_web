@@ -5,7 +5,7 @@ import { getFromDB, STORES } from "@/lib/db";
 import { useUserStore } from "@/lib/api/user-store";
 import { LocalDataManager } from "@/components/local-data-manager";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CatalogItem, CatalogDetail, PoemDetail } from "@/types/poem";
+import { CatalogItem, CatalogDetail, PoemDetail, PinyinData } from "@/types/poem";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Play, Pause, SkipBack, SkipForward, Volume2, User } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, User, Headphones, HeadphoneOff } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import {
   RATE_OPTIONS,
@@ -54,7 +54,10 @@ export default function ListenPage() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentPoemDetail, setCurrentPoemDetail] = useState<PoemDetail | null>(null);
+  const [pinyinData, setPinyinData] = useState<PinyinData | null>(null);
+  const [showPinyin, setShowPinyin] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playingSection, setPlayingSection] = useState<string | null>(null);
 
   // 保存设置到 localStorage
   const handleSaveSpeechSettings = (newSettings: SpeechSettings) => {
@@ -186,16 +189,65 @@ export default function ListenPage() {
       // 停止当前朗读
       stopSpeech();
       setIsPlaying(false);
+      setPlayingSection(null);
+      setShowPinyin(false);
 
       const targetId = poemsList[currentIndex].targetId;
       const cached = await getFromDB<PoemDetail>(STORES.POEMS, targetId);
       if (cached) {
         setCurrentPoemDetail(cached);
       }
+
+      // 加载拼音
+      const cachedPinyin = await getFromDB<PinyinData>(STORES.PINYIN, targetId);
+      if (cachedPinyin) {
+        setPinyinData(cachedPinyin);
+      } else {
+        setPinyinData(null);
+      }
     };
 
     loadPoemDetail();
   }, [poemsList, currentIndex]);
+
+  // 去除 HTML 标签，获取纯文本
+  const stripHtml = (html: string): string => {
+    return html
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+  };
+
+  // 播放指定内容（用于各个章节）
+  const handlePlaySection = (sectionName: string, content: string) => {
+    if (!content) return;
+    
+    if (playingSection === sectionName) {
+      stopSpeech();
+      setPlayingSection(null);
+      return;
+    }
+    
+    if (playingSection && playingSection !== sectionName) {
+      stopSpeech();
+    }
+
+    const textContent = stripHtml(content);
+    
+    const result = speak(textContent, speechSettings, () => {
+      setPlayingSection(null);
+    });
+    
+    if (result.success) {
+      setPlayingSection(sectionName);
+    } else {
+      toast.error(result.error || "播放失败");
+    }
+  };
 
   const handlePrev = () => {
     stopSpeech();
@@ -328,52 +380,249 @@ export default function ListenPage() {
             {poemsList.length === 0 ? (
               <div className="text-muted-foreground">请选择分册</div>
             ) : (
-              <Card className="w-full h-full">
-                <CardContent className="p-6 space-y-4">
-                  <div className="text-center">
-                    <div className="font-bold text-2xl">{currentPoemDetail?.poem?.title}</div>
-                    <div className="text-muted-foreground mt-2">
-                      {currentPoemDetail?.poem?.author} [{currentPoemDetail?.poem?.dynasty}]
-                    </div>
-                  </div>
-
-                  {/* 播放控制 */}
-                  <div className="flex items-center justify-center gap-4 py-4">
-                    <Button variant="outline" size="icon" onClick={handlePrev}>
-                      <SkipBack className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      className="h-12 w-12 rounded-full"
-                      onClick={handlePlayPause}
-                    >
-                      {isPlaying ? (
-                        <Pause className="h-5 w-5" />
-                      ) : (
-                        <Play className="h-5 w-5 ml-0.5" />
+              <Card className="w-full h-full overflow-hidden">
+                <ScrollArea className="h-full">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="text-center flex-1">
+                        <div className="font-bold text-2xl">{currentPoemDetail?.poem?.title}</div>
+                        <div className="text-muted-foreground mt-2">
+                          {currentPoemDetail?.poem?.author} [{currentPoemDetail?.poem?.dynasty}]
+                        </div>
+                      </div>
+                      {currentPoemDetail && (
+                        <button
+                          onClick={() => setShowPinyin(!showPinyin)}
+                          className={`px-2 py-1 rounded text-xs ${
+                            showPinyin 
+                              ? "bg-blue-500 text-white" 
+                              : "bg-gray-100 dark:bg-gray-700 text-muted-foreground"
+                          }`}
+                        >
+                          拼
+                        </button>
                       )}
-                    </Button>
-                    <Button variant="outline" size="icon" onClick={handleNext}>
-                      <SkipForward className="h-4 w-4" />
-                    </Button>
-                  </div>
+                    </div>
 
-                  {/* 诗词内容（可滚动） */}
-                  <ScrollArea className="h-64">
-                    <div className="text-center space-y-2 py-4">
+                    {/* 播放控制 */}
+                    <div className="flex items-center justify-center gap-4 py-2">
+                      <Button variant="outline" size="icon" onClick={handlePrev}>
+                        <SkipBack className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        className="h-12 w-12 rounded-full"
+                        onClick={handlePlayPause}
+                      >
+                        {isPlaying ? (
+                          <Pause className="h-5 w-5" />
+                        ) : (
+                          <Play className="h-5 w-5 ml-0.5" />
+                        )}
+                      </Button>
+                      <Button variant="outline" size="icon" onClick={handleNext}>
+                        <SkipForward className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* 诗词内容（可滚动） */}
+                    <div className="text-center space-y-2 py-2">
                       {currentPoemDetail?.poem?.xu && (
                         <div className="text-muted-foreground text-sm italic">
                           {currentPoemDetail.poem.xu}
                         </div>
                       )}
-                      {currentPoemDetail?.poem?.content?.content?.map((line, idx) => (
-                        <div key={idx} className="text-lg">
-                          {line}
-                        </div>
-                      ))}
+                      {currentPoemDetail?.poem?.content?.content?.map((line, lineIdx) => {
+                        const chars = line.split("");
+                        const pinyinLine = pinyinData?.content?.[lineIdx] || [];
+                        return (
+                          <div key={lineIdx} className="flex justify-center gap-1 flex-wrap">
+                            {chars.map((char, charIdx) => (
+                              <div key={charIdx} className="flex flex-col items-center">
+                                {showPinyin && (
+                                  <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
+                                    {pinyinLine[charIdx] || ""}
+                                  </span>
+                                )}
+                                <span className="text-lg">{char}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
                     </div>
-                  </ScrollArea>
-                </CardContent>
+
+                    {/* 注释 */}
+                    {currentPoemDetail?.detail?.zhu?.content && (
+                      <div className="mt-4">
+                        <div className="flex items-center gap-4 mb-2">
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+                          <h3 className="text-lg font-semibold flex items-center gap-2">
+                            注释
+                            <button
+                              onClick={() => handlePlaySection("zhu", currentPoemDetail.detail?.zhu?.content?.join("") || "")}
+                              className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+                            >
+                              {playingSection === "zhu" ? (
+                                <>
+                                  <HeadphoneOff className="h-3.5 w-3.5" />
+                                  <span className="flex items-end h-3 gap-0.5 ml-0.5">
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-1" style={{ height: "40%" }} />
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-2" style={{ height: "60%" }} />
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-3" style={{ height: "80%" }} />
+                                  </span>
+                                </>
+                              ) : (
+                                <Headphones className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </h3>
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+                        </div>
+                        <div 
+                          className="text-muted-foreground text-base leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: currentPoemDetail.detail.zhu.content.join("") }}
+                        />
+                      </div>
+                    )}
+
+                    {/* 译文 */}
+                    {currentPoemDetail?.detail?.yi?.content && (
+                      <div className="mt-4">
+                        <div className="flex items-center gap-4 mb-2">
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+                          <h3 className="text-lg font-semibold flex items-center gap-2">
+                            译文
+                            <button
+                              onClick={() => handlePlaySection("yi", currentPoemDetail.detail?.yi?.content?.join("") || "")}
+                              className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+                            >
+                              {playingSection === "yi" ? (
+                                <>
+                                  <HeadphoneOff className="h-3.5 w-3.5" />
+                                  <span className="flex items-end h-3 gap-0.5 ml-0.5">
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-1" style={{ height: "40%" }} />
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-2" style={{ height: "60%" }} />
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-3" style={{ height: "80%" }} />
+                                  </span>
+                                </>
+                              ) : (
+                                <Headphones className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </h3>
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+                        </div>
+                        <div 
+                          className="text-muted-foreground text-base leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: currentPoemDetail.detail.yi.content.join("") }}
+                        />
+                      </div>
+                    )}
+
+                    {/* 创作背景 */}
+                    {currentPoemDetail?.poem?.background && (
+                      <div className="mt-4">
+                        <div className="flex items-center gap-4 mb-2">
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+                          <h3 className="text-lg font-semibold flex items-center gap-2">
+                            创作背景
+                            <button
+                              onClick={() => handlePlaySection("background", currentPoemDetail.poem?.background || "")}
+                              className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+                            >
+                              {playingSection === "background" ? (
+                                <>
+                                  <HeadphoneOff className="h-3.5 w-3.5" />
+                                  <span className="flex items-end h-3 gap-0.5 ml-0.5">
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-1" style={{ height: "40%" }} />
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-2" style={{ height: "60%" }} />
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-3" style={{ height: "80%" }} />
+                                  </span>
+                                </>
+                              ) : (
+                                <Headphones className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </h3>
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+                        </div>
+                        <div 
+                          className="text-muted-foreground text-base leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: currentPoemDetail.poem.background }}
+                        />
+                      </div>
+                    )}
+
+                    {/* 诗人介绍 */}
+                    {currentPoemDetail?.author?.profile && (
+                      <div className="mt-4">
+                        <div className="flex items-center gap-4 mb-2">
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+                          <h3 className="text-lg font-semibold flex items-center gap-2">
+                            诗人介绍
+                            <button
+                              onClick={() => handlePlaySection("author", currentPoemDetail.author?.profile || "")}
+                              className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+                            >
+                              {playingSection === "author" ? (
+                                <>
+                                  <HeadphoneOff className="h-3.5 w-3.5" />
+                                  <span className="flex items-end h-3 gap-0.5 ml-0.5">
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-1" style={{ height: "40%" }} />
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-2" style={{ height: "60%" }} />
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-3" style={{ height: "80%" }} />
+                                  </span>
+                                </>
+                              ) : (
+                                <Headphones className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </h3>
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+                        </div>
+                        <div 
+                          className="text-muted-foreground text-base leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: currentPoemDetail.author.profile }}
+                        />
+                      </div>
+                    )}
+
+                    {/* 赏析 */}
+                    {currentPoemDetail?.detail?.shangxi?.content && (
+                      <div className="mt-4 mb-8">
+                        <div className="flex items-center gap-4 mb-2">
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+                          <h3 className="text-lg font-semibold flex items-center gap-2">
+                            赏析
+                            <button
+                              onClick={() => handlePlaySection("shangxi", currentPoemDetail.detail?.shangxi?.content?.join("") || "")}
+                              className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+                            >
+                              {playingSection === "shangxi" ? (
+                                <>
+                                  <HeadphoneOff className="h-3.5 w-3.5" />
+                                  <span className="flex items-end h-3 gap-0.5 ml-0.5">
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-1" style={{ height: "40%" }} />
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-2" style={{ height: "60%" }} />
+                                    <span className="w-0.5 bg-blue-500 rounded-full animate-equalizer-3" style={{ height: "80%" }} />
+                                  </span>
+                                </>
+                              ) : (
+                                <Headphones className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </h3>
+                          <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
+                        </div>
+                        <div 
+                          className="text-muted-foreground text-base leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: currentPoemDetail.detail.shangxi.content.join("") }}
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </ScrollArea>
               </Card>
             )}
           </div>
