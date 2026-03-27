@@ -1,5 +1,27 @@
 # 更新日志
 
+## 2026-03-27 ✅ (已提交)
+
+### Patch 4N - 语音播放增强
+
+- **Learn 页面各章节添加语音播放**
+  - 注释、译文、创作背景、诗人介绍、赏析标题右侧添加耳机图标按钮
+  - 点击播放对应章节内容
+  - 播放中显示音柱动画
+
+- **语音播放错误处理**
+  - 新增 Sonner 组件用于错误提示
+  - speech.ts 返回 SpeakResult 对象
+  - listen 页面和 learn-card 都添加错误 toast 提示
+
+- **变更文件**
+  - src/components/learn/learn-card.tsx
+  - src/lib/speech.ts
+  - src/components/ui/sonner.tsx (新增)
+  - src/app/layout.tsx
+
+---
+
 ## 2026-03-26 ✅ (已提交)
 
 ### Patch 4M - Lint 错误修复

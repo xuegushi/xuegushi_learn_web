@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail, PinyinData } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect, useCallback } from "react";
-import { CheckCheck, Headphones, HeadphoneOff } from "lucide-react";
+import { CheckCheck, Headphones, HeadphoneOff, Volume2 } from "lucide-react";
 import { CreateUserDialog } from "@/components/create-user-dialog";
 import { CheckInSuccessDialog } from "@/components/check-in-success-dialog";
 import { setToDB, getAllFromDB, STORES } from "@/lib/db";
@@ -39,6 +39,7 @@ export function LearnCard({
   const [checkedInToday, setCheckedInToday] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playingSection, setPlayingSection] = useState<string | null>(null);
 
   const { currentUser, addUser, switchUser, initialize } = useUserStore();
 
@@ -101,6 +102,27 @@ export function LearnCard({
     }
   };
 
+  // 播放指定内容（用于各个章节）
+  const handlePlaySection = (sectionName: string, content: string) => {
+    if (!content) return;
+    
+    // 如果正在播放其他内容，先停止
+    if (playingSection && playingSection !== sectionName) {
+      stopSpeech();
+      setPlayingSection(null);
+    }
+
+    const result = speak(content, speechSettings, () => {
+      setPlayingSection(null);
+    });
+    
+    if (result.success) {
+      setPlayingSection(sectionName);
+    } else {
+      toast.error(result.error || "播放失败");
+    }
+  };
+
   // 切换诗词时停止播放
   useEffect(() => {
     stopSpeech();
@@ -110,6 +132,8 @@ export function LearnCard({
     setCurrentSpeechText("");
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsPaused(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPlayingSection(null);
   }, [poemDetail?.poem?.id]);
 
   const checkIfCheckedInToday = useCallback(async () => {
@@ -384,6 +408,8 @@ export function LearnCard({
                   title="注释"
                   content={poemDetail.detail.zhu.content}
                   isHtml
+                  onPlay={() => handlePlaySection("zhu", poemDetail.detail?.zhu?.content?.join("") || "")}
+                  isPlaying={playingSection === "zhu"}
                 />
               )}
 
@@ -392,6 +418,8 @@ export function LearnCard({
                   title="译文"
                   content={poemDetail.detail.yi.content}
                   isHtml
+                  onPlay={() => handlePlaySection("yi", poemDetail.detail?.yi?.content?.join("") || "")}
+                  isPlaying={playingSection === "yi"}
                 />
               )}
 
@@ -400,6 +428,8 @@ export function LearnCard({
                   title="创作背景"
                   content={[poemDetail.poem.background]}
                   isHtml
+                  onPlay={() => handlePlaySection("background", poemDetail.poem?.background || "")}
+                  isPlaying={playingSection === "background"}
                 />
               )}
 
@@ -408,6 +438,8 @@ export function LearnCard({
                   title="诗人介绍"
                   content={[poemDetail.author.profile]}
                   isHtml
+                  onPlay={() => handlePlaySection("author", poemDetail.author?.profile || "")}
+                  isPlaying={playingSection === "author"}
                 />
               )}
 
@@ -416,6 +448,8 @@ export function LearnCard({
                   title="赏析"
                   content={poemDetail.detail.shangxi.content}
                   isHtml
+                  onPlay={() => handlePlaySection("shangxi", poemDetail.detail?.shangxi?.content?.join("") || "")}
+                  isPlaying={playingSection === "shangxi"}
                   className="mb-8"
                 />
               )}
@@ -472,17 +506,53 @@ function Section({
   content,
   isHtml,
   className,
+  onPlay,
+  isPlaying,
 }: {
   title: string;
   content: string[];
   isHtml?: boolean;
   className?: string;
+  onPlay?: () => void;
+  isPlaying?: boolean;
 }) {
+  const hasContent = content && content.length > 0;
+  
   return (
     <div className={`mt-4 ${className || ""}`}>
       <div className="flex items-center gap-4 mb-2">
         <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
-        <h3 className="text-lg font-semibold">{title}</h3>
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          {title}
+          {hasContent && onPlay && (
+            <button
+              onClick={onPlay}
+              className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+              title="语音播放">
+              {isPlaying ? (
+                <>
+                  <HeadphoneOff className="h-3.5 w-3.5" />
+                  <span className="flex items-end h-3 gap-0.5 ml-0.5">
+                    <span
+                      className="w-0.5 bg-blue-500 rounded-full animate-equalizer-1"
+                      style={{ height: "40%" }}
+                    />
+                    <span
+                      className="w-0.5 bg-blue-500 rounded-full animate-equalizer-2"
+                      style={{ height: "60%" }}
+                    />
+                    <span
+                      className="w-0.5 bg-blue-500 rounded-full animate-equalizer-3"
+                      style={{ height: "80%" }}
+                    />
+                  </span>
+                </>
+              ) : (
+                <Headphones className="h-3.5 w-3.5" />
+              )}
+            </button>
+          )}
+        </h3>
         <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600" />
       </div>
       {isHtml ? (
