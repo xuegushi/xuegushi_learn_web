@@ -710,6 +710,7 @@ export default function LearnPage() {
               onEarlyEnd={handleEarlyEnd}
               mode={mode}
               showEarlyEnd={mode === "recite" && !allCompleted}
+              showReset={false}
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
               onReciteRecordsClick={
                 mode === "recite" ? () => setReciteRecordsOpen(true) : undefined
@@ -725,7 +726,7 @@ export default function LearnPage() {
               onEarlyEnd={handleEarlyEnd}
               mode={mode}
               showEarlyEnd={mode === "recite" && !allCompleted}
-              showReset={mode !== "learn"}
+              showReset={false}
               onReciteRecordsClick={
                 mode === "recite" ? () => setReciteRecordsOpen(true) : undefined
               }

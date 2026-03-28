@@ -8,6 +8,7 @@ export function MobileButtons({
   onEarlyEnd,
   mode,
   showEarlyEnd,
+  showReset = true,
   onSidebarToggle,
   onReciteRecordsClick,
   masteredCount = 0,
@@ -18,6 +19,7 @@ export function MobileButtons({
   onEarlyEnd: () => void;
   mode: string;
   showEarlyEnd: boolean;
+  showReset?: boolean;
   onSidebarToggle: () => void;
   onReciteRecordsClick?: () => void;
   masteredCount?: number;
@@ -66,11 +68,13 @@ export function MobileButtons({
           )}
         </div>
 
-        <button
-          onClick={onReset}
-          className="p-2 bg-gray-500/80 text-white rounded-full shadow-lg text-sm">
-          重新开始
-        </button>
+        {showReset && (
+          <button
+            onClick={onReset}
+            className="p-2 bg-gray-500/80 text-white rounded-full shadow-lg text-sm">
+            重新开始
+          </button>
+        )}
         {showEarlyEnd && (
           <button
             onClick={onEarlyEnd}
