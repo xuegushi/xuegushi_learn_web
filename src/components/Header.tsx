@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { headerNav } from "@/config/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserMenu } from "@/components/user-menu";
 
 export default function Header() {
+  const pathname = usePathname();
+  
   return (
     <header className="fixed top-0 left-0 right-0 h-14 md:h-16 border-b bg-white dark:bg-gray-900 z-50">
       <div className="mx-auto h-full flex items-center justify-between px-4 md:px-6" style={{ maxWidth: 'var(--ui-container-max)' }}>
@@ -16,7 +21,9 @@ export default function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm hover:text-primary transition-colors"
+              className={`text-sm hover:text-primary transition-colors ${
+                pathname === item.href ? "text-primary font-medium underline" : ""
+              }`}
             >
               {item.label}
             </Link>

@@ -78,7 +78,7 @@ export default function ListenPage() {
       const loadedVoices = synth.getVoices();
       
       const zhVoices = loadedVoices
-        .filter(v => v.lang.startsWith("zh-"))
+        .filter(v => v.lang.startsWith("zh-") && v.localService)
         .map(v => ({
           name: v.name,
           lang: v.lang,
