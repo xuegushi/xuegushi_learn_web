@@ -58,6 +58,7 @@ export default function ListenPage() {
   const [showPinyin, setShowPinyin] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playingSection, setPlayingSection] = useState<string | null>(null);
+  const [currentCharIndex, setCurrentCharIndex] = useState(0);
 
   // 保存设置到 localStorage
   const handleSaveSpeechSettings = (newSettings: SpeechSettings) => {
@@ -240,6 +241,9 @@ export default function ListenPage() {
     
     const result = speak(textContent, speechSettings, () => {
       setPlayingSection(null);
+      setCurrentCharIndex(0);
+    }, (charIndex) => {
+      setCurrentCharIndex(charIndex);
     });
     
     if (result.success) {
@@ -282,8 +286,12 @@ export default function ListenPage() {
       }
       
       if (text) {
+        setCurrentCharIndex(0);
         const result = speak(text, speechSettings, () => {
           setIsPlaying(false);
+          setCurrentCharIndex(0);
+        }, (charIndex) => {
+          setCurrentCharIndex(charIndex);
         });
         if (result.success) {
           setIsPlaying(true);
@@ -435,18 +443,33 @@ export default function ListenPage() {
                       {currentPoemDetail?.poem?.content?.content?.map((line, lineIdx) => {
                         const chars = line.split("");
                         const pinyinLine = pinyinData?.content?.[lineIdx] || [];
+                        // 计算当前行在完整文本中的起始位置（不包括标题、作者、朝代、序）
+                        let lineStartOffset = 0;
+                        if (currentPoemDetail?.poem?.title) lineStartOffset += currentPoemDetail.poem.title.length + 1;
+                        if (currentPoemDetail?.poem?.author) lineStartOffset += currentPoemDetail.poem.author.length + 1;
+                        if (currentPoemDetail?.poem?.dynasty) lineStartOffset += currentPoemDetail.poem.dynasty.length + 1;
+                        if (currentPoemDetail?.poem?.xu) lineStartOffset += currentPoemDetail.poem.xu.length + 1;
+                        for (let i = 0; i < lineIdx; i++) {
+                          const prevLine = currentPoemDetail.poem?.content?.content?.[i];
+                          lineStartOffset += (prevLine?.length || 0) + 1;
+                        }
+                        
                         return (
                           <div key={lineIdx} className="flex justify-center gap-1 flex-wrap">
-                            {chars.map((char, charIdx) => (
-                              <div key={charIdx} className="flex flex-col items-center">
-                                {showPinyin && (
-                                  <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
-                                    {pinyinLine[charIdx] || ""}
-                                  </span>
-                                )}
-                                <span className="text-lg">{char}</span>
-                              </div>
-                            ))}
+                            {chars.map((char, charIdx) => {
+                              const globalCharIdx = lineStartOffset + charIdx;
+                              const isHighlighted = isPlaying && currentCharIndex > lineStartOffset && globalCharIdx <= currentCharIndex;
+                              return (
+                                <div key={charIdx} className="flex flex-col items-center">
+                                  {showPinyin && (
+                                    <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
+                                      {pinyinLine[charIdx] || ""}
+                                    </span>
+                                  )}
+                                  <span className={`text-lg ${isHighlighted ? "text-blue-500 dark:text-blue-400 font-bold" : ""}`}>{char}</span>
+                                </div>
+                              );
+                            })}
                           </div>
                         );
                       })}

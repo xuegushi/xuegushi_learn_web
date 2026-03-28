@@ -22,7 +22,7 @@ export default function Header() {
               key={item.href}
               href={item.href}
               className={`text-sm hover:text-primary transition-colors ${
-                pathname === item.href ? "text-primary font-medium underline" : ""
+                pathname === item.href ? "text-blue-500 font-medium" : ""
               }`}
             >
               {item.label}

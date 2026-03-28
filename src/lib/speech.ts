@@ -42,6 +42,7 @@ export function formatVolume(volume: number): string {
 }
 
 let onSpeechEndCallback: (() => void) | null = null;
+let onBoundaryCallback: ((charIndex: number) => void) | null = null;
 
 export interface SpeakResult {
   success: boolean;
@@ -52,6 +53,7 @@ export function speak(
   text: string,
   settings: SpeechSettings,
   onEnd?: () => void,
+  onBoundary?: (charIndex: number) => void,
 ): SpeakResult {
   if (typeof window === "undefined")
     return { success: false, error: "浏览器不支持语音合成" };
@@ -136,9 +138,9 @@ export function speak(
   };
 
   utterance.onboundary = (event) => {
-    console.log(
-      `${event.name} boundary reached after ${event.elapsedTime} seconds.`,
-    );
+    if (onBoundaryCallback) {
+      onBoundaryCallback(event.charIndex);
+    }
   };
 
   if (onEnd) {
@@ -148,6 +150,8 @@ export function speak(
         onSpeechEndCallback();
         onSpeechEndCallback = null;
       }
+      // 结束时重置边界回调
+      onBoundaryCallback = null;
     };
   }
 

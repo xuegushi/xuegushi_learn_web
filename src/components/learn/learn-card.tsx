@@ -40,6 +40,9 @@ export function LearnCard({
   const [checkingIn, setCheckingIn] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playingSection, setPlayingSection] = useState<string | null>(null);
+  const [currentSpeechText, setCurrentSpeechText] = useState("");
+  const [isPaused, setIsPaused] = useState(false);
+  const [currentCharIndex, setCurrentCharIndex] = useState(0);
 
   const { currentUser, addUser, switchUser, initialize } = useUserStore();
 
@@ -49,11 +52,6 @@ export function LearnCard({
 
   // 加载本地语音设置
   const speechSettings = loadSpeechSettings();
-
-  // 记录当前朗读的文本
-  const [currentSpeechText, setCurrentSpeechText] = useState("");
-  // 标记是否暂停了
-  const [isPaused, setIsPaused] = useState(false);
 
   // 播放/暂停语音
   const handlePlaySpeech = () => {
@@ -89,10 +87,14 @@ export function LearnCard({
     if (text) {
       setCurrentSpeechText(text);
       setIsPaused(false);
+      setCurrentCharIndex(0);
       const result = speak(text, speechSettings, () => {
         setIsPlaying(false);
         setCurrentSpeechText("");
         setIsPaused(false);
+        setCurrentCharIndex(0);
+      }, (charIndex) => {
+        setCurrentCharIndex(charIndex);
       });
       if (result.success) {
         setIsPlaying(true);
@@ -136,6 +138,9 @@ export function LearnCard({
     
     const result = speak(textContent, speechSettings, () => {
       setPlayingSection(null);
+      setCurrentCharIndex(0);
+    }, (charIndex) => {
+      setCurrentCharIndex(charIndex);
     });
     
     if (result.success) {
@@ -388,25 +393,37 @@ export function LearnCard({
                     {poemDetail.poem.content.content.map((line, lineIdx) => {
                       const chars = line.split("");
                       const pinyinLine = pinyinData?.content?.[lineIdx] || [];
+                      // 计算当前行在完整文本中的起始位置
+                      let lineStartOffset = 0;
+                      for (let i = 0; i < lineIdx; i++) {
+                        const prevLine = poemDetail.poem?.content?.content?.[i];
+                        lineStartOffset += (prevLine?.length || 0) + 1; // +1 for the "，" separator
+                      }
+                      const lineEndOffset = lineStartOffset + chars.length;
+                      
                       return (
                         <React.Fragment key={`${lineIdx}-fragment`}>
                           <div
                             key={`${lineIdx}-original`}
                             className="flex justify-center gap-1 flex-wrap mb-1">
-                            {chars.map((char, charIdx) => (
-                              <div
-                                key={charIdx}
-                                className="flex flex-col items-center">
-                                {showPinyin && (
-                                  <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
-                                    {pinyinLine[charIdx] || ""}
+                            {chars.map((char, charIdx) => {
+                              const globalCharIdx = lineStartOffset + charIdx;
+                              const isHighlighted = isPlaying && currentCharIndex > lineStartOffset && globalCharIdx <= currentCharIndex;
+                              return (
+                                <div
+                                  key={charIdx}
+                                  className="flex flex-col items-center">
+                                  {showPinyin && (
+                                    <span className="text-xs text-blue-500 dark:text-blue-400 leading-tight h-4">
+                                      {pinyinLine[charIdx] || ""}
+                                    </span>
+                                  )}
+                                  <span className={`text-base md:text-lg ${isHighlighted ? "text-blue-500 dark:text-blue-400 font-bold" : ""}`}>
+                                    {char}
                                   </span>
-                                )}
-                                <span className="text-base md:text-lg">
-                                  {char}
-                                </span>
-                              </div>
-                            ))}
+                                </div>
+                              );
+                            })}
                           </div>
                           {showTranslation &&
                             poemDetail.detail?.yi?.content?.[lineIdx] && (
