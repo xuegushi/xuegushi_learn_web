@@ -395,13 +395,21 @@ export function LearnCard({
                     {poemDetail.poem.content.content.map((line, lineIdx) => {
                       const chars = line.split("");
                       const pinyinLine = pinyinData?.content?.[lineIdx] || [];
-                      // 计算当前行在完整文本中的起始位置
+                      // 计算当前行在完整文本中的起始位置（需要加上标题、作者、朝代、序的偏移）
                       let lineStartOffset = 0;
+                      // 添加标题偏移
+                      if (poemDetail.poem?.title) lineStartOffset += poemDetail.poem.title.length + 1;
+                      // 添加作者偏移
+                      if (poemDetail.poem?.author) lineStartOffset += poemDetail.poem.author.length + 1;
+                      // 添加朝代偏移
+                      if (poemDetail.poem?.dynasty) lineStartOffset += poemDetail.poem.dynasty.length + 1;
+                      // 添加序偏移
+                      if (poemDetail.poem?.xu) lineStartOffset += poemDetail.poem.xu.length + 1;
+                      // 累加前面行的长度
                       for (let i = 0; i < lineIdx; i++) {
                         const prevLine = poemDetail.poem?.content?.content?.[i];
                         lineStartOffset += (prevLine?.length || 0) + 1; // +1 for the "，" separator
                       }
-                      const lineEndOffset = lineStartOffset + chars.length;
                       
                       return (
                         <React.Fragment key={`${lineIdx}-fragment`}>
