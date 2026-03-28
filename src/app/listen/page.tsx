@@ -192,6 +192,7 @@ export default function ListenPage() {
       setIsPlaying(false);
       setPlayingSection(null);
       setShowPinyin(false);
+      setCurrentCharIndex(0);
 
       const targetId = poemsList[currentIndex].targetId;
       const cached = await getFromDB<PoemDetail>(STORES.POEMS, targetId);
@@ -256,12 +257,14 @@ export default function ListenPage() {
   const handlePrev = () => {
     stopSpeech();
     setIsPlaying(false);
+    setCurrentCharIndex(0);
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : poemsList.length - 1));
   };
 
   const handleNext = () => {
     stopSpeech();
     setIsPlaying(false);
+    setCurrentCharIndex(0);
     setCurrentIndex((prev) => (prev < poemsList.length - 1 ? prev + 1 : 0));
   };
 

@@ -161,6 +161,8 @@ export function LearnCard({
     setIsPaused(false);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPlayingSection(null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentCharIndex(0);
   }, [poemDetail?.poem?.id]);
 
   const checkIfCheckedInToday = useCallback(async () => {

@@ -130,18 +130,15 @@ export function speak(
     console.warn("Speech synthesis error:", errorMsg);
   };
 
-  utterance.onpause = (event) => {
-    const char = event.utterance.text.charAt(event.charIndex);
-    console.log(
-      `Speech paused at character ${event.charIndex} of "${event.utterance.text}", which is "${char}".`,
-    );
-  };
-
-  utterance.onboundary = (event) => {
-    if (onBoundaryCallback) {
-      onBoundaryCallback(event.charIndex);
-    }
-  };
+  // 设置回调
+  if (onBoundary) {
+    onBoundaryCallback = onBoundary;
+    utterance.onboundary = (event) => {
+      if (onBoundaryCallback) {
+        onBoundaryCallback(event.charIndex);
+      }
+    };
+  }
 
   if (onEnd) {
     onSpeechEndCallback = onEnd;
