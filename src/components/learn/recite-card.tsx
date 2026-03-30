@@ -136,6 +136,13 @@ export function ReciteCard({
     loadTimeStats();
   }, [currentUser, poemDetail?.poem?.id]);
 
+  // 弹窗打开时重新加载数据
+  useEffect(() => {
+    if (showTimeDialog && currentUser && poemDetail?.poem?.id) {
+      getReciteTimeStatsByPoem(poemDetail.poem.id, currentUser.user_id).then(setTimeStats);
+    }
+  }, [showTimeDialog, currentUser, poemDetail?.poem?.id]);
+
   // 清理计时器
   useEffect(() => {
     return () => {
@@ -342,18 +349,9 @@ export function ReciteCard({
                       <span className="font-mono text-sm">{formatTime(elapsedSeconds)}</span>
                     </div>
                   )}
-                  {!isTiming && elapsedSeconds > 0 && (
-                    <button
-                      onClick={() => setShowTimeDialog(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-lg text-sm"
-                    >
-                      <Clock className="h-4 w-4" />
-                      {formatTime(elapsedSeconds)}
-                    </button>
-                  )}
                   
                   {/* 统计显示 */}
-                  {timeStats.length > 0 && (
+                  {timeStats.length > 0 && !isTiming && (
                     <button
                       onClick={() => setShowTimeDialog(true)}
                       className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
@@ -419,7 +417,6 @@ export function ReciteCard({
                     saveTimeRecord();
                     setShowTimeDialog(false);
                   }}
-                  className="w-full"
                 >
                   保存本次记录
                 </Button>
