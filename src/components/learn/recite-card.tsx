@@ -70,6 +70,7 @@ export function ReciteCard({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showTimeDialog, setShowTimeDialog] = useState(false);
   const [timeStats, setTimeStats] = useState<ReciteTimeStat[]>([]);
+  const [hasSaved, setHasSaved] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 格式化时间显示
@@ -83,6 +84,7 @@ export function ReciteCard({
   const startTimer = () => {
     setIsTiming(true);
     setElapsedSeconds(0);
+    setHasSaved(false);
     timerRef.current = setInterval(() => {
       setElapsedSeconds(prev => {
         if (prev >= 99 * 60) { // 超过99分钟自动结束
@@ -112,18 +114,25 @@ export function ReciteCard({
   const saveTimeRecord = async () => {
     if (!currentUser || !poemDetail?.poem) return;
     
-    await addReciteTimeStat({
-      user_id: currentUser.user_id,
-      user_name: currentUser.user_name,
-      poem_id: poemDetail.poem.id || 0,
-      title: poemDetail.poem.title || "",
-      author: poemDetail.poem.author || "",
-      recite_spend: elapsedSeconds,
-    });
+    try {
+      await addReciteTimeStat({
+        user_id: currentUser.user_id,
+        user_name: currentUser.user_name,
+        poem_id: poemDetail.poem.id || 0,
+        title: poemDetail.poem.title || "",
+        author: poemDetail.poem.author || "",
+        recite_spend: elapsedSeconds,
+      });
 
-    // 刷新统计数据
-    const stats = await getReciteTimeStatsByPoem(poemDetail.poem.id || 0, currentUser.user_id);
-    setTimeStats(stats);
+      setHasSaved(true);
+
+      // 刷新统计数据
+      const stats = await getReciteTimeStatsByPoem(poemDetail.poem.id || 0, currentUser.user_id);
+      setTimeStats(stats);
+      console.log("保存后刷新统计数据:", stats);
+    } catch (error) {
+      console.error("保存时间记录失败:", error);
+    }
   };
 
   // 加载时间统计
@@ -132,6 +141,7 @@ export function ReciteCard({
       if (!currentUser || !poemDetail?.poem?.id) return;
       const stats = await getReciteTimeStatsByPoem(poemDetail.poem.id, currentUser.user_id);
       setTimeStats(stats);
+      console.log("加载时间统计:", stats, "用户ID:", currentUser.user_id, "诗词ID:", poemDetail.poem.id);
     };
     loadTimeStats();
   }, [currentUser, poemDetail?.poem?.id]);
@@ -404,18 +414,17 @@ export function ReciteCard({
             <DialogHeader>
               <DialogTitle>背诵时间统计</DialogTitle>
               <DialogDescription>
-                {elapsedSeconds > 0 && !timeStats.some(t => t.recite_spend === elapsedSeconds) 
+                {elapsedSeconds > 0 
                   ? `本次背诵花费时间: ${formatTime(elapsedSeconds)}`
                   : "查看背诵时间记录"}
               </DialogDescription>
             </DialogHeader>
             
-            {elapsedSeconds > 0 && !timeStats.some(t => t.recite_spend === elapsedSeconds) && (
+            {elapsedSeconds > 0 && !hasSaved && (
               <div className="py-2">
                 <Button 
-                  onClick={() => {
-                    saveTimeRecord();
-                    setShowTimeDialog(false);
+                  onClick={async () => {
+                    await saveTimeRecord();
                   }}
                 >
                   保存本次记录
