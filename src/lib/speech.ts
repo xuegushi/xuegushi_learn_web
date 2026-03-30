@@ -179,15 +179,16 @@ export function stopSpeech() {
 }
 
 export function loadSpeechSettings(): SpeechSettings {
+  // 服务端返回默认设置
   if (typeof window === "undefined") return DEFAULT_SPEECH_SETTINGS;
 
-  const stored = localStorage.getItem("speechSettings");
-  if (stored) {
-    try {
+  try {
+    const stored = localStorage.getItem("speechSettings");
+    if (stored) {
       return { ...DEFAULT_SPEECH_SETTINGS, ...JSON.parse(stored) };
-    } catch {
-      return DEFAULT_SPEECH_SETTINGS;
     }
+  } catch {
+    // ignore
   }
   return DEFAULT_SPEECH_SETTINGS;
 }

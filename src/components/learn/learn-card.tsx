@@ -11,7 +11,7 @@ import { CheckInSuccessDialog } from "@/components/check-in-success-dialog";
 import { setToDB, getAllFromDB, STORES } from "@/lib/db";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUserStore } from "@/lib/api/user-store";
-import { speak, stopSpeech, pauseSpeech, resumeSpeech, loadSpeechSettings } from "@/lib/speech";
+import { speak, stopSpeech, pauseSpeech, resumeSpeech, loadSpeechSettings, DEFAULT_SPEECH_SETTINGS } from "@/lib/speech";
 import { toast } from "sonner";
 
 interface LearnCardProps {
@@ -51,7 +51,14 @@ export function LearnCard({
   }, [initialize]);
 
   // 加载本地语音设置
-  const speechSettings = loadSpeechSettings();
+  const [speechSettings] = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_SPEECH_SETTINGS;
+    try {
+      const stored = localStorage.getItem("speechSettings");
+      if (stored) return { ...DEFAULT_SPEECH_SETTINGS, ...JSON.parse(stored) };
+    } catch { /* ignore */ }
+    return DEFAULT_SPEECH_SETTINGS;
+  });
 
   // 播放/暂停语音
   const handlePlaySpeech = () => {

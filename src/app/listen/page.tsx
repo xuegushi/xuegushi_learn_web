@@ -28,6 +28,7 @@ import {
   loadSpeechSettings,
   saveSpeechSettings,
   SpeechSettings,
+  DEFAULT_SPEECH_SETTINGS,
 } from "@/lib/speech";
 
 interface VoiceOption {
@@ -50,7 +51,14 @@ export default function ListenPage() {
   const [localDataOpen, setLocalDataOpen] = useState(false);
 
   const [voices, setVoices] = useState<VoiceOption[]>([]);
-  const [speechSettings, setSpeechSettings] = useState<SpeechSettings>(loadSpeechSettings());
+  const [speechSettings, setSpeechSettings] = useState<SpeechSettings>(() => {
+    if (typeof window === "undefined") return DEFAULT_SPEECH_SETTINGS;
+    try {
+      const stored = localStorage.getItem("speechSettings");
+      if (stored) return { ...DEFAULT_SPEECH_SETTINGS, ...JSON.parse(stored) };
+    } catch { /* ignore */ }
+    return DEFAULT_SPEECH_SETTINGS;
+  });
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentPoemDetail, setCurrentPoemDetail] = useState<PoemDetail | null>(null);
