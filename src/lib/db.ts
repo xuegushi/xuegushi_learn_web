@@ -483,12 +483,18 @@ export async function addReciteTimeStat(stat: Omit<ReciteTimeStat, 'id' | 'creat
 
 export async function getReciteTimeStatsByPoem(
   poemId: number,
-  userId?: number
+  userId?: number | string
 ): Promise<ReciteTimeStat[]> {
   try {
     const all = await getAllFromDB<ReciteTimeStat>(STORES.RECITE_TIME_STATS);
     return all
-      .filter(s => s.poem_id === poemId && (!userId || s.user_id === userId))
+      .filter(s => {
+        const poemMatch = s.poem_id === poemId;
+        if (!userId) return poemMatch;
+        // 兼容 user_id 类型可能是 string 或 number
+        const userMatch = String(s.user_id) === String(userId);
+        return poemMatch && userMatch;
+      })
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   } catch {
     return [];
