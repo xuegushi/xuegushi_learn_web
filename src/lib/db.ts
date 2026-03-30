@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const DB_NAME = 'poem_learn_db';
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 
 export const STORES = {
   POEMS: 'poems',
@@ -12,6 +12,7 @@ export const STORES = {
   RECITE_DETAIL: 'recite_detail',
   RECITE_SUMMARY: 'recite_summary',
   LEARNING_PROGRESS: 'learning_progress',
+  RECITE_TIME_STATS: 'recite_time_stats',
 } as const;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -166,6 +167,14 @@ function openDB(): Promise<IDBDatabase> {
           progressStore.createIndex('userId', 'user_id', { unique: false });
           progressStore.createIndex('poemId', 'poem_id', { unique: false });
           progressStore.createIndex('userPoem', ['user_id', 'poem_id'], { unique: true });
+        }
+
+        // 背诵时间统计表
+        if (!db.objectStoreNames.contains(STORES.RECITE_TIME_STATS)) {
+          const timeStatsStore = db.createObjectStore(STORES.RECITE_TIME_STATS, { keyPath: 'id', autoIncrement: true });
+          timeStatsStore.createIndex('userId', 'user_id', { unique: false });
+          timeStatsStore.createIndex('poemId', 'poem_id', { unique: false });
+          timeStatsStore.createIndex('createdAt', 'createdAt', { unique: false });
         }
       }
     };
@@ -446,5 +455,42 @@ export async function updateLearningProgress(
     }
   } catch {
     // ignore
+  }
+}
+
+// 背诵时间统计
+export interface ReciteTimeStat {
+  id?: number;
+  user_id: number;
+  user_name: string;
+  poem_id: number;
+  title: string;
+  author: string;
+  recite_spend: number; // 秒
+  createdAt: string;
+}
+
+export async function addReciteTimeStat(stat: Omit<ReciteTimeStat, 'id' | 'createdAt'>): Promise<void> {
+  try {
+    await setToDB<ReciteTimeStat>(STORES.RECITE_TIME_STATS, {
+      ...stat,
+      createdAt: new Date().toISOString(),
+    });
+  } catch {
+    // ignore
+  }
+}
+
+export async function getReciteTimeStatsByPoem(
+  poemId: number,
+  userId?: number
+): Promise<ReciteTimeStat[]> {
+  try {
+    const all = await getAllFromDB<ReciteTimeStat>(STORES.RECITE_TIME_STATS);
+    return all
+      .filter(s => s.poem_id === poemId && (!userId || s.user_id === userId))
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  } catch {
+    return [];
   }
 }

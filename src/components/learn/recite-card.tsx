@@ -3,12 +3,15 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { PoemDetail } from "@/types/poem";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CircleX, CheckCircle2 } from "lucide-react";
+import { CircleX, CheckCircle2, Timer, Square, Clock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ReciteRecordsDialog } from "@/components/recite-records-dialog";
 import { CreateUserDialog } from "@/components/create-user-dialog";
 import { useUserStore } from "@/lib/api/user-store";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { addReciteTimeStat, getReciteTimeStatsByPoem, ReciteTimeStat } from "@/lib/db";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ReciteCardProps {
   poemDetail: PoemDetail | null;
@@ -61,6 +64,86 @@ export function ReciteCard({
   const [reciteRecordsOpen, setReciteRecordsOpen] = useState(false);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<"mastered"|"not_mastered"|null>(null);
+
+  // 计时相关状态
+  const [isTiming, setIsTiming] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [showTimeDialog, setShowTimeDialog] = useState(false);
+  const [timeStats, setTimeStats] = useState<ReciteTimeStat[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 格式化时间显示
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // 开始计时
+  const startTimer = () => {
+    setIsTiming(true);
+    setElapsedSeconds(0);
+    timerRef.current = setInterval(() => {
+      setElapsedSeconds(prev => {
+        if (prev >= 99 * 60) { // 超过99分钟自动结束
+          stopTimer(true);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 1000);
+  };
+
+  // 停止计时
+  const stopTimer = (auto = false) => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsTiming(false);
+    if (!auto) {
+      setShowTimeDialog(true);
+    } else {
+      setShowTimeDialog(true);
+    }
+  };
+
+  // 保存时间记录
+  const saveTimeRecord = async () => {
+    if (!currentUser || !poemDetail?.poem) return;
+    
+    await addReciteTimeStat({
+      user_id: currentUser.user_id,
+      user_name: currentUser.user_name,
+      poem_id: poemDetail.poem.id || 0,
+      title: poemDetail.poem.title || "",
+      author: poemDetail.poem.author || "",
+      recite_spend: elapsedSeconds,
+    });
+
+    // 刷新统计数据
+    const stats = await getReciteTimeStatsByPoem(poemDetail.poem.id || 0, currentUser.user_id);
+    setTimeStats(stats);
+  };
+
+  // 加载时间统计
+  useEffect(() => {
+    const loadTimeStats = async () => {
+      if (!currentUser || !poemDetail?.poem?.id) return;
+      const stats = await getReciteTimeStatsByPoem(poemDetail.poem.id, currentUser.user_id);
+      setTimeStats(stats);
+    };
+    loadTimeStats();
+  }, [currentUser, poemDetail?.poem?.id]);
+
+  // 清理计时器
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
   const handleCreateUserSubmit = async (userName: string) => {
     const newUser = await addUser(userName);
@@ -237,6 +320,51 @@ export function ReciteCard({
             </ScrollArea>
 
             <div className="mt-auto pt-1 flex-shrink-0">
+              {/* 计时器和时间统计 */}
+              <div className="flex items-center justify-between mb-2">
+                <button
+                  onClick={() => isTiming ? stopTimer() : startTimer()}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    isTiming 
+                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" 
+                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                  }`}
+                >
+                  {isTiming ? <Square className="h-4 w-4" /> : <Timer className="h-4 w-4" />}
+                  {isTiming ? "计时" : "计时"}
+                </button>
+                
+                {/* 计时显示 */}
+                <div className="flex items-center gap-2">
+                  {isTiming && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-lg">
+                      <Clock className="h-4 w-4" />
+                      <span className="font-mono text-sm">{formatTime(elapsedSeconds)}</span>
+                    </div>
+                  )}
+                  {!isTiming && elapsedSeconds > 0 && (
+                    <button
+                      onClick={() => setShowTimeDialog(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-lg text-sm"
+                    >
+                      <Clock className="h-4 w-4" />
+                      {formatTime(elapsedSeconds)}
+                    </button>
+                  )}
+                  
+                  {/* 统计显示 */}
+                  {timeStats.length > 0 && (
+                    <button
+                      onClick={() => setShowTimeDialog(true)}
+                      className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <Clock className="h-3 w-3" />
+                      {timeStats.length}次
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div className="flex gap-4">
                 <button
                   onClick={handleNotMasteredClick}
@@ -266,11 +394,59 @@ export function ReciteCard({
           onOpenChange={setReciteRecordsOpen}
         />
       </div>
-      <CreateUserDialog
-        open={showCreateUser}
-        onOpenChange={setShowCreateUser}
-        onSubmit={handleCreateUserSubmit}
-      />
+        <CreateUserDialog
+          open={showCreateUser}
+          onOpenChange={setShowCreateUser}
+          onSubmit={handleCreateUserSubmit}
+        />
+        
+        {/* 时间统计弹窗 */}
+        <Dialog open={showTimeDialog} onOpenChange={setShowTimeDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>背诵时间统计</DialogTitle>
+              <DialogDescription>
+                {elapsedSeconds > 0 && !timeStats.some(t => t.recite_spend === elapsedSeconds) 
+                  ? `本次背诵花费时间: ${formatTime(elapsedSeconds)}`
+                  : "查看背诵时间记录"}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {elapsedSeconds > 0 && !timeStats.some(t => t.recite_spend === elapsedSeconds) && (
+              <div className="py-2">
+                <Button 
+                  onClick={() => {
+                    saveTimeRecord();
+                    setShowTimeDialog(false);
+                  }}
+                  className="w-full"
+                >
+                  保存本次记录
+                </Button>
+              </div>
+            )}
+            
+            {timeStats.length > 0 && (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="text-sm font-medium">历史记录</div>
+                {timeStats.slice().reverse().map((stat, idx) => (
+                  <div key={idx} className="flex justify-between items-center p-2 bg-muted rounded-lg text-sm">
+                    <span>{formatTime(stat.recite_spend)}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {new Date(stat.createdAt).toLocaleDateString('zh-CN')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setShowTimeDialog(false)}>
+                关闭
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
     </div>
   );
 }
