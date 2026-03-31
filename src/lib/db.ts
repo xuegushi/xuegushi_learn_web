@@ -470,14 +470,21 @@ export interface ReciteTimeStat {
   createdAt: string;
 }
 
-export async function addReciteTimeStat(stat: Omit<ReciteTimeStat, 'id' | 'createdAt'>): Promise<void> {
+export async function addReciteTimeStat(stat: Omit<ReciteTimeStat, 'id' | 'createdAt'>): Promise<boolean> {
   try {
-    await setToDB<ReciteTimeStat>(STORES.RECITE_TIME_STATS, {
+    const data = {
       ...stat,
       createdAt: new Date().toISOString(),
-    });
-  } catch {
-    // ignore
+    };
+    console.log('addReciteTimeStat 开始保存:', data);
+    
+    await setToDB<ReciteTimeStat>(STORES.RECITE_TIME_STATS, data);
+    
+    console.log('addReciteTimeStat 保存成功');
+    return true;
+  } catch (error) {
+    console.error('addReciteTimeStat 失败:', error);
+    return false;
   }
 }
 
@@ -486,8 +493,11 @@ export async function getReciteTimeStatsByPoem(
   userId?: number | string
 ): Promise<ReciteTimeStat[]> {
   try {
+    console.log('getReciteTimeStatsByPoem 查询:', { poemId, userId });
     const all = await getAllFromDB<ReciteTimeStat>(STORES.RECITE_TIME_STATS);
-    return all
+    console.log('getReciteTimeStatsByPoem 全部数据:', all);
+    
+    const filtered = all
       .filter(s => {
         const poemMatch = s.poem_id === poemId;
         if (!userId) return poemMatch;
@@ -496,6 +506,9 @@ export async function getReciteTimeStatsByPoem(
         return poemMatch && userMatch;
       })
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    
+    console.log('getReciteTimeStatsByPoem 过滤后:', filtered);
+    return filtered;
   } catch {
     return [];
   }

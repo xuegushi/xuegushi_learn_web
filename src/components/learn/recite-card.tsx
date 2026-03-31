@@ -112,10 +112,21 @@ export function ReciteCard({
 
   // 保存时间记录
   const saveTimeRecord = async () => {
-    if (!currentUser || !poemDetail?.poem) return;
+    if (!currentUser || !poemDetail?.poem) {
+      console.log('saveTimeRecord: 用户或诗词信息不完整', { currentUser, poemDetail });
+      return;
+    }
+    
+    console.log('saveTimeRecord 开始保存:', {
+      user_id: currentUser.user_id,
+      user_name: currentUser.user_name,
+      poem_id: poemDetail.poem.id,
+      title: poemDetail.poem.title,
+      elapsedSeconds
+    });
     
     try {
-      await addReciteTimeStat({
+      const success = await addReciteTimeStat({
         user_id: currentUser.user_id,
         user_name: currentUser.user_name,
         poem_id: poemDetail.poem.id || 0,
@@ -124,12 +135,16 @@ export function ReciteCard({
         recite_spend: elapsedSeconds,
       });
 
-      setHasSaved(true);
+      console.log('saveTimeRecord 保存结果:', success);
 
-      // 刷新统计数据
-      const stats = await getReciteTimeStatsByPoem(poemDetail.poem.id || 0, currentUser.user_id);
-      setTimeStats(stats);
-      console.log("保存后刷新统计数据:", stats);
+      if (success) {
+        setHasSaved(true);
+        
+        // 刷新统计数据
+        const stats = await getReciteTimeStatsByPoem(poemDetail.poem.id || 0, currentUser.user_id);
+        setTimeStats(stats);
+        console.log("保存后刷新统计数据:", stats);
+      }
     } catch (error) {
       console.error("保存时间记录失败:", error);
     }
