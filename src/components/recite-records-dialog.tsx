@@ -2,13 +2,12 @@
 import React, { useState, useMemo, useEffect, startTransition } from "react";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, ChevronDown, ChevronUp, Calendar as CalendarIcon, RotateCcw, Download, Trash2 } from "lucide-react";
+import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, Calendar as CalendarIcon, RotateCcw, Download, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 import { useReciteRecords } from "@/hooks/use-recite-records";
 import { DynastyArr } from "@/config/poem";
@@ -258,62 +257,42 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
         </DialogHeader>
         <div className="border-b border-gray-200 dark:border-gray-700" />
         <ScrollArea className="h-120 max-h-[70vh]">
-          {!loading && (stats.totalCount > 0 || stats.summaryCount > 0) && (
-            <div className="flex flex-wrap gap-4 px-4 py-3 bg-muted/30 rounded-lg mb-2">
-              <div className="flex items-center gap-1.5 text-sm">
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">背诵明细</span>
-                <span className="font-semibold">{stats.totalCount}</span>
-                <span className="text-muted-foreground">首</span>
+          <div className="p-4 space-y-2">
+            {!loading && stats.totalCount > 0 && (
+              <div className="flex flex-wrap gap-4 px-4 py-3 bg-muted/30 rounded-lg mb-2">
+                <div className="flex items-center gap-1.5 text-sm">
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">背诵明细</span>
+                  <span className="font-semibold">{stats.totalCount}</span>
+                  <span className="text-muted-foreground">首</span>
+                </div>
+                {stats.totalCount > 0 && (
+                  <>
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <CircleCheck className="h-4 w-4 text-green-500" />
+                      <span className="font-semibold text-green-600">
+                        {stats.passCount}
+                      </span>
+                      <span className="text-muted-foreground">掌握</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <CircleX className="h-4 w-4 text-red-500" />
+                      <span className="font-semibold text-red-600">
+                        {stats.unpassCount}
+                      </span>
+                      <span className="text-muted-foreground">未掌握</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm ml-auto">
+                      <span className="text-muted-foreground">掌握率</span>
+                      <span
+                        className={`font-semibold ${stats.passRate >= 70 ? "text-green-600" : stats.passRate >= 40 ? "text-yellow-600" : "text-red-600"}`}>
+                        {stats.passRate}%
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="flex items-center gap-1.5 text-sm">
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">背诵汇总</span>
-                <span className="font-semibold">{stats.summaryCount}</span>
-                <span className="text-muted-foreground">次</span>
-              </div>
-              {stats.totalCount > 0 && (
-                <>
-                  <div className="flex items-center gap-1.5 text-sm">
-                    <CircleCheck className="h-4 w-4 text-green-500" />
-                    <span className="font-semibold text-green-600">
-                      {stats.passCount}
-                    </span>
-                    <span className="text-muted-foreground">掌握</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-sm">
-                    <CircleX className="h-4 w-4 text-red-500" />
-                    <span className="font-semibold text-red-600">
-                      {stats.unpassCount}
-                    </span>
-                    <span className="text-muted-foreground">未掌握</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-sm ml-auto">
-                    <span className="text-muted-foreground">掌握率</span>
-                    <span
-                      className={`font-semibold ${stats.passRate >= 70 ? "text-green-600" : stats.passRate >= 40 ? "text-yellow-600" : "text-red-600"}`}>
-                      {stats.passRate}%
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-          <Tabs defaultValue="detail" data-testid="recite-records-tabs">
-            <TabsList
-              className="grid w-full grid-cols-2"
-              data-testid="recite-records-tablist">
-              <TabsTrigger
-                value="detail"
-                data-testid="recite-records-detail-tab">
-                背诵明细
-              </TabsTrigger>
-              <TabsTrigger
-                value="summary"
-                data-testid="recite-records-summary-tab">
-                背诵汇总
-              </TabsTrigger>
-            </TabsList>
+            )}
             <div
               className="flex flex-wrap items-center gap-2 px-2 py-2 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 overflow-x-auto"
               data-testid="recite-records-filter-bar">
@@ -377,7 +356,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                 重置
               </Button>
             </div>
-            <TabsContent value="detail" className="p-0">
+            <div className="p-0">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs text-muted-foreground">排序</span>
                 <Select
@@ -467,72 +446,8 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   )}
                 </div>
               )}
-            </TabsContent>
-            <TabsContent value="summary" className="p-4 space-y-2">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs text-muted-foreground">排序</span>
-                <Select
-                  value={summarySort}
-                  onValueChange={(v) => v && setSummarySort(v)}>
-                  <SelectTrigger className="w-24 text-xs shrink-0">
-                    <SelectValue>{summarySortLabel}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">最新</SelectItem>
-                    <SelectItem value="oldest">最早</SelectItem>
-                    <SelectItem value="pass-rate">掌握率</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="ml-auto flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-green-600 border-green-200 hover:bg-green-50 cursor-pointer"
-                    onClick={() => exportReciteRecordsJson()}>
-                    <Download className="h-3 w-3 mr-1" />
-                    导出
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-red-600 border-red-200 hover:bg-red-50 cursor-pointer"
-                    onClick={() => setClearConfirmOpen(true)}>
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    清空
-                  </Button>
-                </div>
-              </div>
-              {loading && (
-                <div className="text-center text-muted-foreground py-8">
-                  加载中...
-                </div>
-              )}
-              {!loading && summaries.length === 0 && (
-                <div className="text-center text-muted-foreground py-8">
-                  暂无背诵汇总
-                </div>
-              )}
-              {!loading && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {summaries.slice(0, summaryPage).map((s) => (
-                    <SummaryCard key={s.id} item={s} />
-                  ))}
-                </div>
-              )}
-              {summaries.length > summaryPage && (
-                <div className="flex justify-center mt-2">
-                  <Button
-                    variant="default"
-                    size="default"
-                    className="px-5 cursor-pointer"
-                    data-testid="recite-records-load-more-summaries"
-                    onClick={() => setSummaryPage((p) => p + 9)}>
-                    查看更多
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
         </ScrollArea>
       </DialogContent>
       <Dialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
