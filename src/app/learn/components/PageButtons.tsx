@@ -5,9 +5,7 @@ export function MobileButtons({
   allCompleted,
   onReset,
   onContinue,
-  onEarlyEnd,
   mode,
-  showEarlyEnd,
   showReset = true,
   onSidebarToggle,
   onReciteRecordsClick,
@@ -16,9 +14,7 @@ export function MobileButtons({
   allCompleted: boolean;
   onReset: () => void;
   onContinue: () => void;
-  onEarlyEnd: () => void;
   mode: string;
-  showEarlyEnd: boolean;
   showReset?: boolean;
   onSidebarToggle: () => void;
   onReciteRecordsClick?: () => void;
@@ -75,13 +71,6 @@ export function MobileButtons({
             重新开始
           </button>
         )}
-        {showEarlyEnd && (
-          <button
-            onClick={onEarlyEnd}
-            className="p-2 bg-orange-500/80 text-white rounded-full shadow-lg text-sm">
-            提前结束
-          </button>
-        )}
         {allCompleted && (
           <button
             onClick={onContinue}
@@ -99,9 +88,7 @@ export function PcButtons({
   allCompleted,
   onReset,
   onContinue,
-  onEarlyEnd,
   mode,
-  showEarlyEnd,
   showReset = true,
   onReciteRecordsClick,
   masteredCount = 0,
@@ -109,9 +96,7 @@ export function PcButtons({
   allCompleted: boolean;
   onReset: () => void;
   onContinue: () => void;
-  onEarlyEnd: () => void;
   mode: string;
-  showEarlyEnd: boolean;
   showReset?: boolean;
   onReciteRecordsClick?: () => void;
   masteredCount?: number;
@@ -137,13 +122,6 @@ export function PcButtons({
           onClick={onReset}
           className="px-4 py-2 bg-gray-500/90 text-white rounded-lg shadow-lg text-sm hover:bg-gray-600 transition-colors cursor-pointer">
           重新开始
-        </button>
-      )}
-      {showEarlyEnd && (
-        <button
-          onClick={onEarlyEnd}
-          className="px-4 py-2 bg-orange-500/90 text-white rounded-lg shadow-lg text-sm hover:bg-orange-600 transition-colors cursor-pointer">
-          提前结束
         </button>
       )}
       {allCompleted && (

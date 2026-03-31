@@ -427,7 +427,7 @@ export function ReciteCard({
         <Dialog open={showTimeDialog} onOpenChange={setShowTimeDialog}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>背诵时间统计</DialogTitle>
+              <DialogTitle className="border-b pb-1.5">背诵时间统计</DialogTitle>
               <DialogDescription>
                 {elapsedSeconds > 0 
                   ? `本次背诵花费时间: ${formatTime(elapsedSeconds)}`
@@ -460,12 +460,6 @@ export function ReciteCard({
                 ))}
               </div>
             )}
-            
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setShowTimeDialog(false)}>
-                关闭
-              </Button>
-            </div>
           </DialogContent>
         </Dialog>
     </div>

@@ -305,13 +305,6 @@ export default function LearnPage() {
   );
 
   const handleContinueLearning = () => {
-    // 如果是提前结束，还有跳过的诗词，只关闭弹窗，不跳转下一分册
-    if (skippedCount > 0) {
-      setShowResult(false);
-      setSkippedCount(0);
-      return;
-    }
-
     if (!catalogDetail?.fasciculeList || !selectedFascicule) {
       setShowResult(false);
       resetProgress();
@@ -457,35 +450,6 @@ export default function LearnPage() {
       poems,
     ],
   );
-
-  // 提前结束
-  const handleEarlyEnd = useCallback(() => {
-    setSkippedCount(poems.length - masteredPoems.size - notMasteredPoems.size);
-
-    const user = currentUser;
-    if (user?.user_id) {
-      const poemIds = poems.map((p) => ({
-        poem_id: p.targetId.toString(),
-        title: p.title,
-        status:
-          masteredPoems.has(p.targetId.toString()) ||
-          notMasteredPoems.has(p.targetId.toString())
-            ? masteredPoems.has(p.targetId.toString())
-            : false,
-      }));
-      addReciteSummary({
-        user_id: user.user_id,
-        user_name: user.user_name,
-        poem_ids: poemIds,
-        pass_count: masteredPoems.size,
-        unpass_count: notMasteredPoems.size,
-        skip_count: poems.length - masteredPoems.size - notMasteredPoems.size,
-        createdAt: new Date().toISOString(),
-      });
-    }
-
-    setShowResult(true);
-  }, [poems, masteredPoems.size, notMasteredPoems.size]);
 
   // 生成随机索引
   const generateRandomIndices = useCallback(() => {
@@ -707,9 +671,7 @@ export default function LearnPage() {
               allCompleted={allCompleted}
               onReset={() => resetProgress(mode === "recite")}
               onContinue={handleContinueLearning}
-              onEarlyEnd={handleEarlyEnd}
               mode={mode}
-              showEarlyEnd={mode === "recite" && !allCompleted}
               showReset={false}
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
               onReciteRecordsClick={
@@ -723,9 +685,7 @@ export default function LearnPage() {
               allCompleted={allCompleted}
               onReset={() => resetProgress(mode === "recite")}
               onContinue={handleContinueLearning}
-              onEarlyEnd={handleEarlyEnd}
               mode={mode}
-              showEarlyEnd={mode === "recite" && !allCompleted}
               showReset={false}
               onReciteRecordsClick={
                 mode === "recite" ? () => setReciteRecordsOpen(true) : undefined
