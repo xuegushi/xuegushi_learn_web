@@ -73,25 +73,26 @@ async function migrateExistingData(db: IDBDatabase): Promise<void> {
 }
 
 function openDB(): Promise<IDBDatabase> {
-  if (dbPromise) {
-    return dbPromise.then(db => {
-      // 检查数据库版本是否是最新的
-      if (db.version !== DB_VERSION) {
-        db.close();
-        dbPromise = null;
-        return openDB();
-      }
-      return db;
-    });
-  }
+  if (dbPromise) return dbPromise;
 
   dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = () => reject(request.error);
+    request.onerror = () => {
+      dbPromise = null;
+      reject(request.error);
+    };
 
     request.onsuccess = () => {
       const db = request.result;
+      // 检查版本是否正确
+      if (db.version !== DB_VERSION) {
+        db.close();
+        dbPromise = null;
+        // 重新打开以触发版本升级
+        openDB().then(resolve).catch(reject);
+        return;
+      }
       resolve(db);
     };
 
