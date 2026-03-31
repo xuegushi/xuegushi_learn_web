@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const DB_NAME = 'poem_learn_db';
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 
 export const STORES = {
   POEMS: 'poems',
@@ -183,18 +183,37 @@ function openDB(): Promise<IDBDatabase> {
 
       // Version 7 to 8: 新增背诵时间统计表
       if (oldVersion < 8) {
+        console.log('升级到版本 8，创建 recite_time_stats 表');
         if (!db.objectStoreNames.contains(STORES.RECITE_TIME_STATS)) {
           const timeStatsStore = db.createObjectStore(STORES.RECITE_TIME_STATS, { keyPath: 'id', autoIncrement: true });
           timeStatsStore.createIndex('userId', 'user_id', { unique: false });
           timeStatsStore.createIndex('poemId', 'poem_id', { unique: false });
           timeStatsStore.createIndex('createdAt', 'createdAt', { unique: false });
+          console.log('recite_time_stats 表创建成功');
         }
+      }
+
+      // 检查 recite_time_stats 表是否存在，如果不存在则创建
+      if (!db.objectStoreNames.contains(STORES.RECITE_TIME_STATS)) {
+        console.log('检测到 recite_time_stats 表不存在，正在创建...');
+        const timeStatsStore = db.createObjectStore(STORES.RECITE_TIME_STATS, { keyPath: 'id', autoIncrement: true });
+        timeStatsStore.createIndex('userId', 'user_id', { unique: false });
+        timeStatsStore.createIndex('poemId', 'poem_id', { unique: false });
+        timeStatsStore.createIndex('createdAt', 'createdAt', { unique: false });
+        console.log('recite_time_stats 表创建成功');
       }
     };
   });
 
-  // Always run migration to ensure existing data has timestamp fields
+  // 检查并确保 recite_time_stats 表存在
   dbPromise.then(async (db) => {
+    if (!db.objectStoreNames.contains(STORES.RECITE_TIME_STATS)) {
+      console.log('数据库中不存在 recite_time_stats 表，需要关闭并重新打开以升级');
+      db.close();
+      dbPromise = null;
+      const newDb = await openDB();
+      console.log('数据库已升级，recite_time_stats 表应已创建', newDb.objectStoreNames);
+    }
     try {
       await migrateExistingData(db);
     } catch (e) {
