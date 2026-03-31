@@ -103,11 +103,21 @@ export function ReciteCard({
       timerRef.current = null;
     }
     setIsTiming(false);
-    if (!auto) {
-      setShowTimeDialog(true);
-    } else {
-      setShowTimeDialog(true);
+    // 计时结束时自动保存记录
+    if (elapsedSeconds > 0 && currentUser && poemDetail?.poem) {
+      addReciteTimeStat({
+        user_id: currentUser.user_id,
+        user_name: currentUser.user_name,
+        poem_id: poemDetail?.poem?.id || 0,
+        title: poemDetail?.poem?.title || "",
+        author: poemDetail?.poem?.author || "",
+        recite_spend: elapsedSeconds,
+      }).then(() => {
+        // 刷新统计数据
+        getReciteTimeStatsByPoem(poemDetail?.poem?.id || 0, currentUser.user_id).then(setTimeStats);
+      });
     }
+    setShowTimeDialog(true);
   };
 
   // 保存时间记录
@@ -363,7 +373,7 @@ export function ReciteCard({
                   }`}
                 >
                   {isTiming ? <Square className="h-4 w-4" /> : <Timer className="h-4 w-4" />}
-                  {isTiming ? "计时" : "计时"}
+                  {isTiming ? "结束计时" : "开始计时"}
                 </button>
                 
                 {/* 计时显示 */}
@@ -390,22 +400,8 @@ export function ReciteCard({
 
               <div className="flex gap-4">
                 <button
-                  onClick={handleNotMasteredClick}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-red-100 text-red-700 rounded-xl hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  disabled={isDisabled}>
-                  <CircleX className="h-5 w-5" />
-                  未掌握
-                </button>
-                <button
-                  onClick={handleMasteredClick}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-green-100 text-green-700 rounded-xl hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  disabled={isDisabled}>
-                  <CheckCircle2 className="h-5 w-5" />
-                  掌握
-                </button>
-                <button
                   onClick={onSkip}
-                  className="py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors">
+                  className="flex-1 py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors">
                   跳过
                 </button>
               </div>
@@ -436,14 +432,27 @@ export function ReciteCard({
             </DialogHeader>
             
             {elapsedSeconds > 0 && !hasSaved && (
-              <div className="py-2">
-                <Button 
-                  onClick={async () => {
-                    await saveTimeRecord();
+              <div className="flex gap-3 py-3">
+                <button
+                  onClick={() => {
+                    handleNotMasteredClick();
+                    setShowTimeDialog(false);
                   }}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 text-sm bg-red-100 text-red-700 rounded-xl hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 cursor-pointer transition-colors"
                 >
-                  保存本次记录
-                </Button>
+                  <CircleX className="h-5 w-5" />
+                  未掌握
+                </button>
+                <button
+                  onClick={() => {
+                    handleMasteredClick();
+                    setShowTimeDialog(false);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 text-sm bg-green-100 text-green-700 rounded-xl hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 cursor-pointer transition-colors"
+                >
+                  <CheckCircle2 className="h-5 w-5" />
+                  掌握
+                </button>
               </div>
             )}
             

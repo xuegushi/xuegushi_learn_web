@@ -183,7 +183,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
         </DialogHeader>
         <div className="border-b border-gray-200 dark:border-gray-700" />
         <ScrollArea className="h-120 max-h-[70vh]">
-          <div className="p-4 space-y-2">
+          <div className="space-y-2">
             {!loading && stats.totalCount > 0 && (
               <div className="flex flex-wrap gap-4 px-4 py-3 bg-muted/30 rounded-lg mb-2">
                 <div className="flex items-center gap-1.5 text-sm">
