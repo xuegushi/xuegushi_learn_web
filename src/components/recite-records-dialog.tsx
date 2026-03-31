@@ -117,6 +117,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [exportFormat, setExportFormat] = useState<string>("json");
   const defaultUserSet = React.useRef(false);
 
   const filters = useMemo(() => ({ selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort }), [selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort]);
@@ -322,10 +323,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   </SelectContent>
                 </Select>
                 <div className="ml-auto flex gap-2">
-                  <Select defaultValue="json" onValueChange={(v) => {
-                    if (v === 'json') exportReciteRecordsJson();
-                    else exportReciteRecordsExcel();
-                  }}>
+                  <Select value={exportFormat} onValueChange={(v) => v && setExportFormat(v)}>
                     <SelectTrigger className="w-28 text-xs shrink-0">
                       <SelectValue placeholder="导出格式" />
                     </SelectTrigger>
@@ -334,6 +332,18 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                       <SelectItem value="excel">Excel (CSV)</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-green-600 border-green-200 hover:bg-green-50 cursor-pointer"
+                    data-testid="recite-records-export"
+                    onClick={() => {
+                      if (exportFormat === 'json') exportReciteRecordsJson();
+                      else exportReciteRecordsExcel();
+                    }}>
+                    <Download className="h-3 w-3 mr-1" />
+                    导出
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
