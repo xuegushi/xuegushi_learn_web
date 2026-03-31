@@ -663,6 +663,9 @@ export default function LearnPage() {
                 onShowLastCharChange={setShowLastChar}
                 onShowRandomCharChange={setShowRandomChar}
                 targetId={poems[currentIndex]?.targetId || 0}
+                onReciteRecordsClick={
+                  mode === "recite" ? () => setReciteRecordsOpen(true) : undefined
+                }
               />
             )}
 
@@ -674,9 +677,6 @@ export default function LearnPage() {
               mode={mode}
               showReset={false}
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-              onReciteRecordsClick={
-                mode === "recite" ? () => setReciteRecordsOpen(true) : undefined
-              }
               masteredCount={dbMasteredPoems.size}
             />
 
@@ -687,10 +687,6 @@ export default function LearnPage() {
               onContinue={handleContinueLearning}
               mode={mode}
               showReset={false}
-              onReciteRecordsClick={
-                mode === "recite" ? () => setReciteRecordsOpen(true) : undefined
-              }
-              masteredCount={dbMasteredPoems.size}
             />
           </div>
         </div>
