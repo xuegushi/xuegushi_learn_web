@@ -364,6 +364,42 @@ export async function exportReciteRecordsJson(): Promise<void> {
   }
 }
 
+export async function exportReciteRecordsExcel(): Promise<void> {
+  try {
+    const details = await getAllFromDB<any>(STORES.RECITE_DETAIL);
+    
+    // 生成 CSV 格式（Excel 可直接打开）
+    const headers = ['ID', '用户ID', '用户名', '诗词ID', '标题', '作者', '朝代', '状态', '时间'];
+    const rows = details.map((d: any) => [
+      d.id || '',
+      d.user_id || '',
+      d.user_name || '',
+      d.poem_id || '',
+      d.title || '',
+      d.author || '',
+      d.dynasty || '',
+      d.status ? '掌握' : '未掌握',
+      d.createdAt || '',
+    ]);
+    
+    // 添加 BOM 以支持中文
+    const BOM = '\uFEFF';
+    const csvContent = BOM + [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'recite_records.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch {
+    // ignore
+  }
+}
+
  // Patch 4H duplicates removed
 
 // Patch 3: 背诵记录写入接口

@@ -8,7 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, Calendar as CalendarIcon, RotateCcw, Download, Trash2 } from "lucide-react";
-import { exportReciteRecordsJson, clearReciteRecords, deleteFromDB, STORES } from "@/lib/db";
+import { exportReciteRecordsJson, exportReciteRecordsExcel, clearReciteRecords, deleteFromDB, STORES } from "@/lib/db";
 import { useReciteRecords } from "@/hooks/use-recite-records";
 import { DynastyArr } from "@/config/poem";
 import { useUserStore } from "@/lib/api/user-store";
@@ -322,15 +322,18 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
                   </SelectContent>
                 </Select>
                 <div className="ml-auto flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-green-600 border-green-200 hover:bg-green-50 cursor-pointer"
-                    data-testid="recite-records-export"
-                    onClick={() => exportReciteRecordsJson()}>
-                    <Download className="h-3 w-3 mr-1" />
-                    导出
-                  </Button>
+                  <Select defaultValue="json" onValueChange={(v) => {
+                    if (v === 'json') exportReciteRecordsJson();
+                    else exportReciteRecordsExcel();
+                  }}>
+                    <SelectTrigger className="w-28 text-xs shrink-0">
+                      <SelectValue placeholder="导出格式" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="json">JSON</SelectItem>
+                      <SelectItem value="excel">Excel (CSV)</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Button
                     variant="outline"
                     size="sm"
