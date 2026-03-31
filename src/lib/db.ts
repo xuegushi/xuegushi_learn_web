@@ -168,8 +168,10 @@ function openDB(): Promise<IDBDatabase> {
           progressStore.createIndex('poemId', 'poem_id', { unique: false });
           progressStore.createIndex('userPoem', ['user_id', 'poem_id'], { unique: true });
         }
+      }
 
-        // 背诵时间统计表
+      // Version 7 to 8: 新增背诵时间统计表
+      if (oldVersion < 8) {
         if (!db.objectStoreNames.contains(STORES.RECITE_TIME_STATS)) {
           const timeStatsStore = db.createObjectStore(STORES.RECITE_TIME_STATS, { keyPath: 'id', autoIncrement: true });
           timeStatsStore.createIndex('userId', 'user_id', { unique: false });
