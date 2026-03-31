@@ -289,7 +289,7 @@ export function ReciteCard({
   };
 
   return (
-    <div className="flex items-center justify-center h-[calc(100%-50px)]  px-6 md:px-6 py-5">
+    <div className="flex items-center justify-center h-[100%]  px-6 md:px-6 py-5">
       <div className="relative w-full h-full min-w-80 max-w-4xl">
         <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg z-10">
           {currentIndex + 1}
@@ -369,7 +369,7 @@ export function ReciteCard({
               </div>
             </div>
 
-            <ScrollArea className="flex-1 max-h-[calc(100%-160px)] min-h-40">
+            <ScrollArea className="flex-1 max-h-[calc(100%-140px)] min-h-40">
               <div className="text-center py-4">
                 {poemDetail.poem?.xu && (
                   <div className="text-muted-foreground text-sm mb-2 italic">
@@ -413,13 +413,13 @@ export function ReciteCard({
               </div>
             </ScrollArea>
 
-            <div className="mt-auto pt-1 flex-shrink-0">
+            <div className="mt-auto pt-1 shrink-0">
               {/* 计时器和时间统计 */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => (isTiming ? stopTimer() : startTimer())}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer ${
                       isTiming
                         ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                         : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
@@ -436,7 +436,7 @@ export function ReciteCard({
                   <div className="flex items-center gap-2">
                     {isTiming && (
                       <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-lg">
-                        <Clock className="h-4 w-4" />
+                        <Clock className="h-5 w-5" />
                         <span className="font-mono text-sm">
                           {formatTime(elapsedSeconds)}
                         </span>
@@ -447,25 +447,25 @@ export function ReciteCard({
                     {timeStats.length > 0 && !isTiming && (
                       <button
                         onClick={() => setShowTimeDialog(true)}
-                        className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
-                        <Clock className="h-3 w-3" />
+                        className="flex items-center gap-1 px-2 py-1 text-sm text-muted-foreground hover:text-foreground">
+                        <Clock className="h-4 w-4" />
                         {timeStats.length}次
                       </button>
                     )}
                   </div>
                 </div>
 
-                <div className="flex ml-3 gap-2">
+                <div className="w-full mt-2 sm:mt-0 ml-0 sm:w-auto flex justify-end sm:ml-3 gap-3">
                   {onReciteRecordsClick && (
                     <button
                       onClick={onReciteRecordsClick}
-                      className="py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer transition-colors">
+                      className="py-1.5 px-3 sm:px-2 text-base sm:text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer transition-colors">
                       背诵记录
                     </button>
                   )}
                   <button
                     onClick={onSkip}
-                    className="py-2.5 px-3 sm:px-2 text-base sm:text-sm bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors">
+                    className="py-1.5 px-3 sm:px-2 text-base sm:text-sm bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors">
                     跳过
                   </button>
                 </div>

@@ -2,7 +2,15 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { PanelLeftOpen } from "lucide-react";
-import { getAllFromDB, getFromDB, setToDB, STORES, updateLearningProgress, addReciteDetail, addReciteSummary } from "@/lib/db";
+import {
+  getAllFromDB,
+  getFromDB,
+  setToDB,
+  STORES,
+  updateLearningProgress,
+  addReciteDetail,
+  addReciteSummary,
+} from "@/lib/db";
 import { useUserStore } from "@/lib/api/user-store";
 import { LocalDataManager } from "@/components/local-data-manager";
 import { CheckInRecordsDialog } from "@/components/check-in-records-dialog";
@@ -83,8 +91,12 @@ export default function LearnPage() {
   );
 
   // 背诵记录（从 IndexedDB 加载）
-  const [dbMasteredPoems, setDbMasteredPoems] = useState<Set<string>>(new Set());
-  const [dbNotMasteredPoems, setDbNotMasteredPoems] = useState<Set<string>>(new Set());
+  const [dbMasteredPoems, setDbMasteredPoems] = useState<Set<string>>(
+    new Set(),
+  );
+  const [dbNotMasteredPoems, setDbNotMasteredPoems] = useState<Set<string>>(
+    new Set(),
+  );
 
   const loadDbReciteRecords = useCallback(async () => {
     if (!currentUser?.user_id) {
@@ -154,6 +166,7 @@ export default function LearnPage() {
       author: poem.author,
       dynasty: poem.dynasty,
       grade: fascData.fascicule_name,
+      type: poem.target_type || ''
     }));
   }, [catalogDetail, selectedFascicule]);
 
@@ -259,7 +272,7 @@ export default function LearnPage() {
 
     loadPoemDetail();
   }, [currentIndex, poems]);
-  
+
   // 初始化：仅在首次渲染时尝试应用 URL 中的 mode，后续由用户控制
   const urlModeSynced = useRef(false);
   useEffect(() => {
@@ -267,7 +280,7 @@ export default function LearnPage() {
     try {
       const url = new URL(window.location.href);
       const param = url.searchParams.get("mode");
-      if ((param === "recite" || param === "learn")) {
+      if (param === "recite" || param === "learn") {
         // 仅在首次同步时应用
         setMode(param);
       }
@@ -587,7 +600,9 @@ export default function LearnPage() {
                     const key = poem.targetId.toString();
                     const isMastered = dbMasteredPoems.has(key);
                     const isNotMastered = dbNotMasteredPoems.has(key);
-                    const isCheckedInToday = todayCheckedPoemIds.has(poem.targetId);
+                    const isCheckedInToday = todayCheckedPoemIds.has(
+                      poem.targetId,
+                    );
                     return (
                       <div
                         key={poem.targetId}
@@ -619,6 +634,11 @@ export default function LearnPage() {
                         <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
                           {poem.author} [{poem.dynasty}]
                         </div>
+                        {poem.type && (
+                          <Badge className="absolute bottom-0.5 right-1 text-[8px] h-4 px-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                            {poem.type}
+                          </Badge>
+                        )}
                       </div>
                     );
                   })}
@@ -664,7 +684,9 @@ export default function LearnPage() {
                 onShowRandomCharChange={setShowRandomChar}
                 targetId={poems[currentIndex]?.targetId || 0}
                 onReciteRecordsClick={
-                  mode === "recite" ? () => setReciteRecordsOpen(true) : undefined
+                  mode === "recite"
+                    ? () => setReciteRecordsOpen(true)
+                    : undefined
                 }
               />
             )}

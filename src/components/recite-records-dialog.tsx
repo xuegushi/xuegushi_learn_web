@@ -1,14 +1,14 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, Calendar as CalendarIcon, RotateCcw, Download, Trash2 } from "lucide-react";
-import { exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
+import { exportReciteRecordsJson, clearReciteRecords, deleteFromDB, STORES } from "@/lib/db";
 import { useReciteRecords } from "@/hooks/use-recite-records";
 import { DynastyArr } from "@/config/poem";
 import { useUserStore } from "@/lib/api/user-store";
@@ -115,6 +115,8 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   const [dateTo, setDateTo] = useState<string>("");
   const [detailSort, setDetailSort] = useState<string>("newest");
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const defaultUserSet = React.useRef(false);
 
   const filters = useMemo(() => ({ selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort }), [selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort]);
@@ -138,7 +140,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     const date = new Date(item.createdAt);
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
     return (
-      <div className="p-3 border rounded-lg bg-white relative">
+      <div className="p-3 border rounded-lg bg-white relative group">
         <div className="pr-8">
           <div className="text-sm font-semibold">{item.title}</div>
           <div className="text-xs text-muted-foreground mt-0.5">{item.dynasty} · {item.author}</div>
@@ -156,11 +158,34 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
             <CircleX className="h-5 w-5 text-red-500" />
           )}
         </div>
+        <button
+          onClick={() => item.id !== undefined && handleDeleteDetail(item.id)}
+          className="absolute bottom-2 right-2 p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+          title="删除记录"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
       </div>
     );
   }
 
   const detailSortLabel = detailSort === 'newest' ? '最新' : '最早';
+
+  const handleDeleteDetail = async (id: number) => {
+    setPendingDeleteId(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteDetail = async () => {
+    if (pendingDeleteId !== null) {
+      await deleteFromDB(STORES.RECITE_DETAIL, pendingDeleteId);
+      setPendingDeleteId(null);
+      setDeleteConfirmOpen(false);
+      // 重新加载数据：关闭再打开弹窗
+      onOpenChange(false);
+      setTimeout(() => onOpenChange(true), 100);
+    }
+  };
 
   function resetFilters() {
     setSelectedUser('all');
@@ -400,6 +425,27 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
               确认清空
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>确认删除</DialogTitle>
+            <DialogDescription>
+              确定要删除这条背诵记录吗？此操作不可恢复。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setDeleteConfirmOpen(false)}>
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={confirmDeleteDetail}>
+              确认删除
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Dialog>

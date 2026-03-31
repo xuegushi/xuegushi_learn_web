@@ -182,8 +182,7 @@ export function StatusBar({
         <button
           onClick={onToggleSidebar}
           className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
-          title="切换侧边栏"
-        >
+          title="切换侧边栏">
           <PanelLeft className="h-5 w-5" />
         </button>
 
@@ -196,10 +195,13 @@ export function StatusBar({
             </span>
             <NavButton onClick={onNext} direction="next" />
             {fasciculeList.length > 0 && (
-              <Select value={selectedFascicule} onValueChange={(v) => v && onFasciculeChange(v)}>
+              <Select
+                value={selectedFascicule}
+                onValueChange={(v) => v && onFasciculeChange(v)}>
                 <SelectTrigger className="w-32 h-7 text-xs">
                   <SelectValue className="text-xs">
-                    {fasciculeList.find(f => f._id === selectedFascicule)?.fascicule_name || selectedFascicule}
+                    {fasciculeList.find((f) => f._id === selectedFascicule)
+                      ?.fascicule_name || selectedFascicule}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -235,10 +237,13 @@ export function StatusBar({
             </span>
             <NavButton onClick={onNext} direction="next" />
             {fasciculeList.length > 0 && (
-              <Select value={selectedFascicule} onValueChange={(v) => v && onFasciculeChange(v)}>
+              <Select
+                value={selectedFascicule}
+                onValueChange={(v) => v && onFasciculeChange(v)}>
                 <SelectTrigger className="w-32 h-7 text-xs">
                   <SelectValue className="text-xs">
-                    {fasciculeList.find(f => f._id === selectedFascicule)?.fascicule_name || selectedFascicule}
+                    {fasciculeList.find((f) => f._id === selectedFascicule)
+                      ?.fascicule_name || selectedFascicule}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -263,9 +268,7 @@ export function StatusBar({
           </>
         )}
 
-        {poems.length === 0 && (
-          <div className="text-lg font-medium">0 / 0</div>
-        )}
+        {poems.length === 0 && <div className="text-lg font-medium">0 / 0</div>}
       </div>
 
       {/* 移动端：多行显示 */}
@@ -274,8 +277,7 @@ export function StatusBar({
           <button
             onClick={onToggleSidebar}
             className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
-            title="切换侧边栏"
-          >
+            title="切换侧边栏">
             <PanelLeft className="h-5 w-5" />
           </button>
 
@@ -290,7 +292,9 @@ export function StatusBar({
               <div className="flex gap-2 text-xs ml-auto">
                 <span className="text-red-500">错误：{errorCount}</span>
                 <span className="text-green-500">正确：{correctCount}</span>
-                <span className="text-muted-foreground">正确率：{accuracy}%</span>
+                <span className="text-muted-foreground">
+                  正确率：{accuracy}%
+                </span>
               </div>
             </>
           )}
@@ -320,10 +324,13 @@ export function StatusBar({
         {mode === "learn" && poems.length > 0 && (
           <div className="flex items-center gap-2 mt-2 pb-2">
             {fasciculeList.length > 0 && (
-              <Select value={selectedFascicule} onValueChange={(v) => v && onFasciculeChange(v)}>
-                <SelectTrigger className="w-24 h-7 text-xs">
+              <Select
+                value={selectedFascicule}
+                onValueChange={(v) => v && onFasciculeChange(v)}>
+                <SelectTrigger className="w-26 h-7 text-xs">
                   <SelectValue className="text-xs">
-                    {fasciculeList.find(f => f._id === selectedFascicule)?.fascicule_name || selectedFascicule}
+                    {fasciculeList.find((f) => f._id === selectedFascicule)
+                      ?.fascicule_name || selectedFascicule}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -358,15 +365,35 @@ export function StatusBar({
         {/* 移动端背诵模式状态点 */}
         {mode === "recite" && poems.length > 0 && (
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
-              {poems[currentIndex]?.grade}
-            </span>
+            {fasciculeList.length > 0 && (
+              <Select
+                value={selectedFascicule}
+                onValueChange={(v) => v && onFasciculeChange(v)}>
+                <SelectTrigger className="w-26 h-7 text-xs">
+                  <SelectValue className="text-xs">
+                    {fasciculeList.find((f) => f._id === selectedFascicule)
+                      ?.fascicule_name || selectedFascicule}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {fasciculeList.map((fasc) => (
+                    <SelectItem key={fasc._id} value={fasc._id}>
+                      {fasc.fascicule_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <div className="flex flex-wrap items-center gap-1 flex-1 justify-center">
               {poems.map((poem, idx) => {
                 const key = poem.targetId?.toString();
                 const isMastered = masteredPoems.has(key);
                 const isNotMastered = notMasteredPoems.has(key);
-                const color = isMastered ? "bg-green-500" : isNotMastered ? "bg-red-500" : "bg-gray-300";
+                const color = isMastered
+                  ? "bg-green-500"
+                  : isNotMastered
+                    ? "bg-red-500"
+                    : "bg-gray-300";
                 const isCurrent = idx === currentIndex;
                 return (
                   <div
