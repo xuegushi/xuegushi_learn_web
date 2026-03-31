@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useEffect, startTransition } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, BarChart3, Calendar as CalendarIcon, RotateCcw, Download, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { UserSquare, Clock, CircleCheck, CircleX, BookOpen, Calendar as CalendarIcon, RotateCcw, Download, Trash2 } from "lucide-react";
 import { exportReciteRecordsJson, clearReciteRecords } from "@/lib/db";
 import { useReciteRecords } from "@/hooks/use-recite-records";
 import { DynastyArr } from "@/config/poem";
@@ -96,17 +96,6 @@ export interface ReciteDetail {
   createdAt: string;
 }
 
-export interface ReciteSummary {
-  id?: number;
-  user_id: string;
-  user_name: string;
-  poem_ids: { poem_id: string; title: string; status: boolean }[];
-  pass_count: number;
-  unpass_count: number;
-  skip_count: number;
-  createdAt: string;
-}
-
 export interface ReciteRecordsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -125,13 +114,11 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [detailSort, setDetailSort] = useState<string>("newest");
-  const [summarySort, setSummarySort] = useState<string>("newest");
-  const [expandedSummaries, setExpandedSummaries] = useState<Set<number>>(new Set());
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const defaultUserSet = React.useRef(false);
 
-  const filters = useMemo(() => ({ selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort, summarySort }), [selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort, summarySort]);
-  const { loading, users, todayDetails, historyDetails, summaries, stats, todayPage, historyPage, summaryPage, setTodayPage, setHistoryPage, setSummaryPage } = useReciteRecords(open, filters);
+  const filters = useMemo(() => ({ selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort }), [selectedUser, searchKeyword, selectedDynasty, dateFrom, dateTo, detailSort]);
+  const { loading, users, todayDetails, historyDetails, stats, todayPage, historyPage, setTodayPage, setHistoryPage } = useReciteRecords(open, filters);
 
   useEffect(() => {
     if (!open) {
@@ -142,9 +129,8 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     if (users.length === 0) return;
     defaultUserSet.current = true;
     if (currentUser && users.some(u => u.id === currentUser.user_id)) {
-      startTransition(() => {
-        setSelectedUser(currentUser.user_id.toString());
-      });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedUser(currentUser.user_id.toString());
     }
   }, [open, users, currentUser]);
 
@@ -174,66 +160,7 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     );
   }
 
-  function SummaryCard({ item }: { item: ReciteSummary }) {
-    const date = new Date(item.createdAt);
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-
-    const isExpanded = expandedSummaries.has(item.id || 0);
-
-    return (
-      <div className="p-3 border rounded-lg bg-white">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            <span className="text-red-600 font-semibold">{item.unpass_count}</span> 未掌握
-            <span className="mx-2">|</span>
-            <span className="text-green-600 font-bold text-base">{item.pass_count}</span> 掌握
-            <span className="mx-2">|</span>
-            <span className="text-gray-500 font-semibold">{item.skip_count}</span> 跳过
-          </div>
-          {item.poem_ids.length > 0 && (
-            <button
-              className="text-sm text-blue-600 hover:underline flex items-center gap-1 px-2 py-1 cursor-pointer"
-              onClick={() => {
-                const id = item.id || 0;
-                setExpandedSummaries(prev => {
-                  const next = new Set(prev);
-                  if (next.has(id)) next.delete(id);
-                  else next.add(id);
-                  return next;
-                });
-              }}
-            >
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              {item.poem_ids.length}首
-            </button>
-          )}
-        </div>
-        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-          <UserSquare className="h-3 w-3" />
-          {item.user_name}
-          <Clock className="h-3 w-3 ml-2" />
-          {dateStr}
-        </div>
-        {isExpanded && item.poem_ids.length > 0 && (
-          <div className="mt-2 pt-2 border-t grid grid-cols-3 gap-1">
-            {item.poem_ids.map((p, idx) => (
-              <div key={idx} className="flex items-center gap-1 text-xs">
-                {p.status ? (
-                  <CircleCheck className="h-3 w-3 text-green-500 flex-shrink-0" />
-                ) : (
-                  <CircleX className="h-3 w-3 text-red-500 flex-shrink-0" />
-                )}
-                <span className={p.status ? 'text-green-700 truncate' : 'text-red-700 truncate'}>{p.title}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
   const detailSortLabel = detailSort === 'newest' ? '最新' : '最早';
-  const summarySortLabel = summarySort === 'newest' ? '最新' : summarySort === 'oldest' ? '最早' : '掌握率';
 
   function resetFilters() {
     setSelectedUser('all');
@@ -242,7 +169,6 @@ export function ReciteRecordsDialog({ open, onOpenChange }: ReciteRecordsDialogP
     setDateFrom('');
     setDateTo('');
     setDetailSort('newest');
-    setSummarySort('newest');
   }
 
   return (

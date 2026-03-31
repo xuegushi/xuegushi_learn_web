@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { getAllFromDB, clearReciteRecords, STORES } from "@/lib/db";
-import { DBUser, ReciteDetail, ReciteSummary } from "@/components/recite-records-dialog";
+import { DBUser, ReciteDetail } from "@/components/recite-records-dialog";
 import { useUserStore } from "@/lib/api/user-store";
 
 export interface ReciteRecordsState {
@@ -10,14 +10,11 @@ export interface ReciteRecordsState {
   users: DBUser[];
   todayDetails: ReciteDetail[];
   historyDetails: ReciteDetail[];
-  summaries: ReciteSummary[];
   stats: {
     totalCount: number;
     passCount: number;
     unpassCount: number;
     passRate: number;
-    summaryCount: number;
-    totalSummaryPoems: number;
   };
 }
 
@@ -28,7 +25,6 @@ export interface ReciteFilters {
   dateFrom: string;
   dateTo: string;
   detailSort: string;
-  summarySort: string;
 }
 
 export function useReciteRecords(open: boolean, filters: ReciteFilters) {
@@ -36,10 +32,8 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
   const [loading, setLoading] = useState(false);
   const [todayDetails, setTodayDetails] = useState<ReciteDetail[]>([]);
   const [historyDetails, setHistoryDetails] = useState<ReciteDetail[]>([]);
-  const [summaries, setSummaries] = useState<ReciteSummary[]>([]);
   const [todayPage, setTodayPage] = useState(9);
   const [historyPage, setHistoryPage] = useState(9);
-  const [summaryPage, setSummaryPage] = useState(9);
 
   const users: DBUser[] = storeUsers.map(u => ({ id: u.id, user_name: u.user_name }));
 
@@ -81,34 +75,6 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
       }
       setTodayDetails(today);
       setHistoryDetails(hist);
-
-      const sums = await getAllFromDB<ReciteSummary>(STORES.RECITE_SUMMARY);
-      let filteredSums = [...sums];
-      if (filters.selectedUser !== 'all') {
-        filteredSums = filteredSums.filter((s) => String(s.user_id) === filters.selectedUser);
-      }
-      if (filters.searchKeyword.trim()) {
-        const kw = filters.searchKeyword.toLowerCase();
-        filteredSums = filteredSums.filter((s) =>
-          s.poem_ids.some((p) => p.title.toLowerCase().includes(kw))
-        );
-      }
-      if (filters.dateFrom) filteredSums = filteredSums.filter((s) => s.createdAt >= filters.dateFrom);
-      if (filters.dateTo) filteredSums = filteredSums.filter((s) => s.createdAt <= filters.dateTo + 'T23:59:59.999Z');
-      if (filters.summarySort === 'newest') {
-        filteredSums.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-      } else if (filters.summarySort === 'oldest') {
-        filteredSums.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-      } else if (filters.summarySort === 'pass-rate') {
-        filteredSums.sort((a, b) => {
-          const aTotal = a.pass_count + a.unpass_count;
-          const bTotal = b.pass_count + b.unpass_count;
-          const aRate = aTotal > 0 ? a.pass_count / aTotal : 0;
-          const bRate = bTotal > 0 ? b.pass_count / bTotal : 0;
-          return bRate - aRate;
-        });
-      }
-      setSummaries(filteredSums);
     } catch {
       // ignore
     } finally {
@@ -119,7 +85,6 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
   const resetPagination = useCallback(() => {
     setTodayPage(9);
     setHistoryPage(9);
-    setSummaryPage(9);
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -142,23 +107,18 @@ export function useReciteRecords(open: boolean, filters: ReciteFilters) {
     const passCount = allDetails.filter(d => d.status).length;
     const unpassCount = totalCount - passCount;
     const passRate = totalCount > 0 ? Math.round((passCount / totalCount) * 100) : 0;
-    const summaryCount = summaries.length;
-    const totalSummaryPoems = summaries.reduce((acc, s) => acc + s.poem_ids.length, 0);
-    return { totalCount, passCount, unpassCount, passRate, summaryCount, totalSummaryPoems };
-  }, [todayDetails, historyDetails, summaries]);
+    return { totalCount, passCount, unpassCount, passRate };
+  }, [todayDetails, historyDetails]);
 
   return {
     loading,
     users,
     todayDetails,
     historyDetails,
-    summaries,
     stats,
     todayPage,
     historyPage,
-    summaryPage,
     setTodayPage,
     setHistoryPage,
-    setSummaryPage,
   };
 }
