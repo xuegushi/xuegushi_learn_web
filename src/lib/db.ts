@@ -215,7 +215,8 @@ function openDB(): Promise<IDBDatabase> {
       console.log('数据库已升级，recite_time_stats 表应已创建', newDb.objectStoreNames);
     }
     try {
-      await migrateExistingData(db);
+      const currentDb = await openDB();
+      await migrateExistingData(currentDb);
     } catch (e) {
       console.warn('Migration failed:', e);
     }
