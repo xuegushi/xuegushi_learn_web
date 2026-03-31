@@ -73,7 +73,17 @@ async function migrateExistingData(db: IDBDatabase): Promise<void> {
 }
 
 function openDB(): Promise<IDBDatabase> {
-  if (dbPromise) return dbPromise;
+  if (dbPromise) {
+    return dbPromise.then(db => {
+      // 检查数据库版本是否是最新的
+      if (db.version !== DB_VERSION) {
+        db.close();
+        dbPromise = null;
+        return openDB();
+      }
+      return db;
+    });
+  }
 
   dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
